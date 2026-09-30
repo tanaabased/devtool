@@ -25,7 +25,9 @@ describe('L337 lifecycle (#4)', () => {
   it('reuses built images across processes and reconstructs compose without rebuilding', async () => {
     await f.load().start();
     f.calls.length = 0;
-    const app = f.load(); await app.start();
+    const app = f.load();
+    assert.equal(app.getInfo().services[0].tag, `${app.project}-web:latest`);
+    await app.start();
     assert.equal(f.calls.some(call => call[0] === 'build'), false);
     assert.equal(yaml.load(fs.readFileSync(app.composeFile, 'utf8')).services.web.image, `${app.project}-web:latest`);
   });
