@@ -370,8 +370,8 @@
       "path": "utils/get-buildx-error.js",
       "blob": "d860b1211ab895b537f0d56d83d500db70837aa0",
       "mode": "100644",
-      "adaptedBlob": "610ed86c6c9bb0272bb2db85825947d787f2ad63",
-      "adaptation": "Handle a build failure with no detail lines without masking the original error."
+      "adaptedBlob": "204fdf959311db1882672b73212d5c5d6040b050",
+      "adaptation": "Preserve buildx diagnostics when the final step has no parsed message, including pre-build COPY failures."
     },
     {
       "source": "test/yaml.spec.js",

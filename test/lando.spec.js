@@ -34,6 +34,23 @@ describe('API 4 Lando lifecycle (#5)', () => {
     assert.deepEqual(yaml.load(fs.readFileSync(next.composeFile, 'utf8')), first);
     assert.equal(next.getInfo().services[0].state.APP, 'BUILT');
   });
+  it('stages generated certificate and entrypoint inputs despite excluding generated directories from app copies', async () => {
+    const data = yaml.load(fs.readFileSync(path.join(__dirname, '../examples/lando/.devtool.yml'), 'utf8'));
+    fs.writeFileSync(f.file, yaml.dump(data));
+    for (const name of ['readonly', 'copied', 'app.sh']) fs.copyFileSync(path.join(__dirname, '../examples/lando', name), path.join(f.root, name));
+    const original = f.engine.buildx;
+    let staged = 0;
+    f.engine.buildx = async (file, context) => {
+      for (const source of context.sources) {
+        require('../utils/copy-build-source')(source, context.context, context.excludePaths);
+        assert.ok(fs.existsSync(path.join(context.context, source.target)), source.source);
+        staged++;
+      }
+      return original(file, context);
+    };
+    await f.load().start();
+    assert.ok(staged > 10);
+  });
   it('runs internal-root and user hooks before startup, and repeats after changed hook content', async () => {
     fs.writeFileSync(path.join(f.root, 'hook.sh'), '#!/bin/sh\necho one\n');
     fs.writeFileSync(f.file, yaml.dump({services: {web: service({build: {app: 'hook.sh'}})}}));
@@ -145,6 +162,13 @@ describe('API 4 Lando lifecycle (#5)', () => {
     assert.ok(builds.every(index => index < firstHook));
     assert.ok(states.includes('BUILDING'));
     assert.equal(states.at(-1), 'BUILT');
+  });
+  it('prepares container trust independently of service declaration order', async () => {
+    fs.writeFileSync(f.file, yaml.dump({services: {client: service({certs: false}), server: service({certs: true})}}));
+    const app = f.load(); await app.start();
+    assert.match(fs.readFileSync(app.services[0].imagefile, 'utf8'), /ca-certificates/);
+    f.calls.length = 0; await f.load().start();
+    assert.equal(f.calls.some(call => call[0] === 'build'), false);
   });
   it('supports custom certificate destinations and disabled healthchecks', async () => {
     fs.writeFileSync(f.file, yaml.dump({services: {web: service({certs: {cert: '/custom/server.crt', key: '/custom/server.key'}, healthcheck: false})}}));

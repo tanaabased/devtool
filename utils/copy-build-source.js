@@ -12,9 +12,9 @@ module.exports = ({source, target}, context, excluded = []) => {
   }
   const roots = excluded.map(root => fs.existsSync(root) ? fs.realpathSync(root) : path.resolve(root));
   const visiting = new Set();
-  const copy = (from, to) => {
+  const copy = (from, to, explicit = false) => {
     const real = fs.realpathSync(from);
-    if (roots.some(root => real === root || real.startsWith(`${root}${path.sep}`))) return;
+    if (!explicit && roots.some(root => real === root || real.startsWith(`${root}${path.sep}`))) return;
     if (visiting.has(real)) throw new Error(`Circular build context at ${from}`);
     const stat = fs.statSync(real);
     if (stat.isDirectory()) {
@@ -24,5 +24,5 @@ module.exports = ({source, target}, context, excluded = []) => {
       visiting.delete(real);
     } else fs.copySync(from, to, {dereference: true});
   };
-  copy(source, destination);
+  copy(source, destination, true);
 };
