@@ -43,7 +43,7 @@ query live container health.
 ## Library and configuration
 
 ```js
-const {createDevtool} = require('@tanaab/devtool');
+const {createDevtool} = require('/path/to/devtool');
 
 const runtime = createDevtool({
   identity: 'wrapper',
@@ -54,10 +54,14 @@ const runtime = createDevtool({
   cacheRoot: '/path/to/wrapper-cache',
 });
 
-const app = runtime.loadApp({cwd: '/path/to/project'});
-await app.start();
-await app.exec('web', ['echo', 'hello']);
-await app.stop();
+async function main() {
+  const app = runtime.loadApp({cwd: '/path/to/project'});
+  await app.start();
+  await app.exec('web', ['echo', 'hello']);
+  await app.stop();
+}
+
+main().catch(error => { console.error(error); process.exitCode = 1; });
 ```
 
 Importing the library and creating a runtime performs no host initialization or
