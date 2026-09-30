@@ -17,6 +17,7 @@ services:
       - /data
       - target: /shared
         scope: app
+        owner: fixture:fixture
         permissions: '0770'
       - target: /global
         scope: global

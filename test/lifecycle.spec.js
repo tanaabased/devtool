@@ -27,6 +27,7 @@ describe('L337 lifecycle (#4)', () => {
     f.calls.length = 0;
     const app = f.load();
     assert.equal(app.getInfo().services[0].tag, `${app.project}-web:latest`);
+    assert.equal(Object.hasOwn(app.getInfo().services[0].state, 'APP'), false);
     await app.start();
     assert.equal(f.calls.some(call => call[0] === 'build'), false);
     assert.equal(yaml.load(fs.readFileSync(app.composeFile, 'utf8')).services.web.image, `${app.project}-web:latest`);
