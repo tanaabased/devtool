@@ -8,7 +8,11 @@
       "repository": "https://github.com/lando/core",
       "revision": "3aaa8aaf3f4adae5683897644e8e848fe54aa2cb",
       "pullRequest": 330,
-      "applied": false
+      "applied": true,
+      "scope": [
+        "components/l337-v4.js group syntax/defaults/imported instructions and built-state Compose reconstruction",
+        "hooks/app-run-v4-build-image.js guard adapted into lib/app.js with input and image validation"
+      ]
     },
     "coreNextMain": {
       "repository": "https://github.com/lando/core-next",
@@ -35,375 +39,425 @@
     },
     {
       "source": "builders/lando-v4.js",
-      "path": "vendor/core/builders/lando-v4.js",
+      "path": "builders/lando-v4.js",
       "blob": "e8108a56bb11b955bfb7a2b7c6b10441b8539598",
       "mode": "100644"
     },
     {
       "source": "components/docker-engine.js",
-      "path": "vendor/core/components/docker-engine.js",
+      "path": "components/docker-engine.js",
       "blob": "4a7227848792872848174dad4e022ababd39cd16",
-      "mode": "100644"
+      "mode": "100644",
+      "adaptedBlob": "9e980e124c06f7395b7dbe21b66e95c03f7d4dc9",
+      "adaptation": "Removed import-time executable discovery; use the existing docker executable by default; exclude generated storage from build sources and contain source destinations."
     },
     {
       "source": "components/error.js",
-      "path": "vendor/core/components/error.js",
+      "path": "components/error.js",
       "blob": "961009c5f51bd7f98538ab993826a7c582c3f931",
       "mode": "100644"
     },
     {
       "source": "components/l337-v4.js",
-      "path": "vendor/core/components/l337-v4.js",
+      "path": "components/l337-v4.js",
       "blob": "cf0c2b695a51ff95779c1775b830d88ea2f16c39",
-      "mode": "100644"
+      "mode": "100644",
+      "adaptedBlob": "e10869eba3cabe4853b059888c1fcc7f48615268",
+      "adaptation": "Reconciled bounded PR330 groups/imports/built-image reconstruction; injected per-instance engine; deferred persistence and Compose assembly to app; removed global listener changes, executable discovery and failure containers; corrected Compose args/context, imported image context and repeated source collection."
     },
     {
       "source": "components/yaml.js",
-      "path": "vendor/core/components/yaml.js",
+      "path": "components/yaml.js",
       "blob": "26449a692d1d6af0ea47ce4919f41309659bb9d9",
-      "mode": "100644"
+      "mode": "100644",
+      "adaptedBlob": "91200e75547f0fcfae894a7de92f50f329bfda3c",
+      "adaptation": "Export isolated app YAML load/dump wrappers instead of mutating shared js-yaml; preserve recursive relative import parsing."
     },
     {
       "source": "lib/logger.js",
-      "path": "vendor/core/lib/logger.js",
+      "path": "lib/logger.js",
       "blob": "110ea3565ad88f374131dc8abc4bf105a14a9cd6",
       "mode": "100644"
     },
     {
       "source": "lib/yaml.js",
-      "path": "vendor/core/lib/yaml.js",
+      "path": "lib/yaml.js",
       "blob": "0755385634bbf123dffe974f3aad2ff2fc500800",
-      "mode": "100644"
+      "mode": "100644",
+      "adaptedBlob": "3776c16de62fa588a798eaa2b40ce9c7b573a189",
+      "adaptation": "Resolve relative imported inputs against the loaded file while retaining missing-file error handling."
     },
     {
       "source": "packages/certs/certs.js",
-      "path": "vendor/core/packages/certs/certs.js",
+      "path": "packages/certs/certs.js",
       "blob": "a7fd15718aa69c430fe0926bc8f0402e1153bd13",
       "mode": "100644"
     },
     {
       "source": "packages/git/git.js",
-      "path": "vendor/core/packages/git/git.js",
+      "path": "packages/git/git.js",
       "blob": "4310dfbbfae4198892d19288a16669e6050a1832",
       "mode": "100644"
     },
     {
       "source": "packages/git/install-git.sh",
-      "path": "vendor/core/packages/git/install-git.sh",
+      "path": "packages/git/install-git.sh",
       "blob": "4f131feeac6ad704a47dfab9bcab659eb5b049c4",
       "mode": "100755"
     },
     {
       "source": "packages/proxy/get-proxy-hostnames.js",
-      "path": "vendor/core/packages/proxy/get-proxy-hostnames.js",
+      "path": "packages/proxy/get-proxy-hostnames.js",
       "blob": "b94a0e76846eb8211859228a0a1b32d9634bb039",
       "mode": "100644"
     },
     {
       "source": "packages/proxy/proxy.js",
-      "path": "vendor/core/packages/proxy/proxy.js",
+      "path": "packages/proxy/proxy.js",
       "blob": "d1f7c79531e0f08f8af144b1a0fbdff1f0b32e88",
       "mode": "100644"
     },
     {
       "source": "packages/security/install-ca-certs.sh",
-      "path": "vendor/core/packages/security/install-ca-certs.sh",
+      "path": "packages/security/install-ca-certs.sh",
       "blob": "b3759adae493f2d8a69f4c00c16a6b79f7720d83",
       "mode": "100755"
     },
     {
       "source": "packages/security/security.js",
-      "path": "vendor/core/packages/security/security.js",
+      "path": "packages/security/security.js",
       "blob": "31cabf2a0bb8910d8655e2110430553fc7b698ac",
       "mode": "100644"
     },
     {
       "source": "packages/ssh-agent/check-ssh-agent.sh",
-      "path": "vendor/core/packages/ssh-agent/check-ssh-agent.sh",
+      "path": "packages/ssh-agent/check-ssh-agent.sh",
       "blob": "72afd89caebc3158008ce8b412a83ca642a5a216",
       "mode": "100755"
     },
     {
       "source": "packages/ssh-agent/install-socat.sh",
-      "path": "vendor/core/packages/ssh-agent/install-socat.sh",
+      "path": "packages/ssh-agent/install-socat.sh",
       "blob": "26ec61e658ab0d6f0c8881fc4b17acc6381262fd",
       "mode": "100755"
     },
     {
       "source": "packages/ssh-agent/install-ssh-add.sh",
-      "path": "vendor/core/packages/ssh-agent/install-ssh-add.sh",
+      "path": "packages/ssh-agent/install-ssh-add.sh",
       "blob": "989c89e5f62068ca595f36efdfe98cc5405b95f4",
       "mode": "100755"
     },
     {
       "source": "packages/ssh-agent/ssh-agent.js",
-      "path": "vendor/core/packages/ssh-agent/ssh-agent.js",
+      "path": "packages/ssh-agent/ssh-agent.js",
       "blob": "394fbcb2b5b49363c304604401a3a775ed9f8b40",
       "mode": "100644"
     },
     {
       "source": "packages/sudo/install-sudo.sh",
-      "path": "vendor/core/packages/sudo/install-sudo.sh",
+      "path": "packages/sudo/install-sudo.sh",
       "blob": "3811dfe2240145489fff7ea6f975aa78c74c8416",
       "mode": "100755"
     },
     {
       "source": "packages/sudo/sudo.js",
-      "path": "vendor/core/packages/sudo/sudo.js",
+      "path": "packages/sudo/sudo.js",
       "blob": "a0b1acde0c6bf3750b40ab9b9e8156d317557d11",
       "mode": "100644"
     },
     {
       "source": "packages/user/add-user.sh",
-      "path": "vendor/core/packages/user/add-user.sh",
+      "path": "packages/user/add-user.sh",
       "blob": "696460b7cbb74941eccf6e36c6d9d6ae8231d1c5",
       "mode": "100755"
     },
     {
       "source": "packages/user/install-useradd.sh",
-      "path": "vendor/core/packages/user/install-useradd.sh",
+      "path": "packages/user/install-useradd.sh",
       "blob": "f948497b0a637fe851914fadeee117d68f8bb69c",
       "mode": "100755"
     },
     {
       "source": "packages/user/user.js",
-      "path": "vendor/core/packages/user/user.js",
+      "path": "packages/user/user.js",
       "blob": "f242663d179a0f038ffc8c289eaf616921b969de",
       "mode": "100644"
     },
     {
       "source": "scripts/boot.sh",
-      "path": "vendor/core/scripts/boot.sh",
+      "path": "scripts/boot.sh",
       "blob": "7fa25d86493421ab4637a2d6c9719e76a2c94bd5",
       "mode": "100755"
     },
     {
       "source": "scripts/entrypoint.sh",
-      "path": "vendor/core/scripts/entrypoint.sh",
+      "path": "scripts/entrypoint.sh",
       "blob": "1e6541ca5bbe63c5f863883ea89af6afbaec9e51",
       "mode": "100755"
     },
     {
       "source": "scripts/environment.sh",
-      "path": "vendor/core/scripts/environment.sh",
+      "path": "scripts/environment.sh",
       "blob": "1d018dd53c07cfbe96939e6ca1952d47ffff9ccd",
       "mode": "100755"
     },
     {
       "source": "scripts/exec-multiliner.sh",
-      "path": "vendor/core/scripts/exec-multiliner.sh",
+      "path": "scripts/exec-multiliner.sh",
       "blob": "943a3d28fca295144dc6dce2071952e3ea13b788",
       "mode": "100755"
     },
     {
       "source": "scripts/exec.sh",
-      "path": "vendor/core/scripts/exec.sh",
+      "path": "scripts/exec.sh",
       "blob": "c41b2629bdf2d1a7f62a1ef50e6174b103da755e",
       "mode": "100755"
     },
     {
       "source": "scripts/install-bash.sh",
-      "path": "vendor/core/scripts/install-bash.sh",
+      "path": "scripts/install-bash.sh",
       "blob": "c493bfcd4472eec62cb92cd7dce4b4720d772b59",
       "mode": "100755"
     },
     {
       "source": "scripts/install-updates.sh",
-      "path": "vendor/core/scripts/install-updates.sh",
+      "path": "scripts/install-updates.sh",
       "blob": "723119e755c94e70ef6dc91631352b70327ac463",
       "mode": "100755"
     },
     {
       "source": "scripts/landorc.sh",
-      "path": "vendor/core/scripts/landorc.sh",
+      "path": "scripts/landorc.sh",
       "blob": "09a5da42d380af9d3fa0baffa0f038f30019c452",
       "mode": "100755"
     },
     {
       "source": "scripts/lash.sh",
-      "path": "vendor/core/scripts/lash.sh",
+      "path": "scripts/lash.sh",
       "blob": "97a7fadb6b66c846bda16fbadd123e77b5b1b67b",
       "mode": "100755"
     },
     {
       "source": "scripts/run-hooks.sh",
-      "path": "vendor/core/scripts/run-hooks.sh",
+      "path": "scripts/run-hooks.sh",
       "blob": "d0f1bd5aee647bf069b48954d7140f7e8435876c",
       "mode": "100755"
     },
     {
       "source": "scripts/utils.sh",
-      "path": "vendor/core/scripts/utils.sh",
+      "path": "scripts/utils.sh",
       "blob": "914456eedf3d42a3e4760cb1e6be41b15229050c",
       "mode": "100755"
     },
     {
       "source": "utils/dump-compose-data.js",
-      "path": "vendor/core/utils/dump-compose-data.js",
+      "path": "utils/dump-compose-data.js",
       "blob": "9dbbfeba1bdf486455695b6d2dd24f390a88f887",
       "mode": "100644"
     },
     {
       "source": "utils/exists-sync.js",
-      "path": "vendor/core/utils/exists-sync.js",
+      "path": "utils/exists-sync.js",
       "blob": "cac4e496075322f6f63315ccbe9f5eda9bba3d07",
       "mode": "100644"
     },
     {
       "source": "utils/get-compose-bin-path.js",
-      "path": "vendor/core/utils/get-compose-bin-path.js",
+      "path": "utils/get-compose-bin-path.js",
       "blob": "9cbf030924cfeb8797f9b76d27bbfc586dd03b0c",
       "mode": "100644"
     },
     {
       "source": "utils/get-compose-x.js",
-      "path": "vendor/core/utils/get-compose-x.js",
+      "path": "utils/get-compose-x.js",
       "blob": "79f7eee78f87e6b0344e1a47622fc5f2a4a042d0",
       "mode": "100644"
     },
     {
       "source": "utils/get-docker-bin-path.js",
-      "path": "vendor/core/utils/get-docker-bin-path.js",
+      "path": "utils/get-docker-bin-path.js",
       "blob": "ec4a00f4226e98bd289812e1ca8408308beda273",
       "mode": "100644"
     },
     {
       "source": "utils/get-docker-x.js",
-      "path": "vendor/core/utils/get-docker-x.js",
+      "path": "utils/get-docker-x.js",
       "blob": "81c6ce5f896ec0b2f77d33a6547b49e44f4b20c9",
       "mode": "100644"
     },
     {
       "source": "utils/get-gid.js",
-      "path": "vendor/core/utils/get-gid.js",
+      "path": "utils/get-gid.js",
       "blob": "6743baa34948dacc304b9ebe0fcca42cf2fcc818",
       "mode": "100644"
     },
     {
       "source": "utils/get-mount-matches.js",
-      "path": "vendor/core/utils/get-mount-matches.js",
+      "path": "utils/get-mount-matches.js",
       "blob": "8d3e5d6cae060e84cba6b19382d6949e790db83f",
-      "mode": "100644"
+      "mode": "100644",
+      "adaptedBlob": "7c4eb9922608e89bccc189b7a6f9772b28af4512",
+      "adaptation": "Ignore non-string entries during short-form mount inference instead of calling split on long-form volumes."
     },
     {
       "source": "utils/get-passphraseless-keys.js",
-      "path": "vendor/core/utils/get-passphraseless-keys.js",
+      "path": "utils/get-passphraseless-keys.js",
       "blob": "038118b691bc9fe0c2a6f67fb66688afe5e68287",
       "mode": "100644"
     },
     {
       "source": "utils/get-uid.js",
-      "path": "vendor/core/utils/get-uid.js",
+      "path": "utils/get-uid.js",
       "blob": "bc2499c6cda5cbeff441d29e15bac72df7a8c8c7",
       "mode": "100644"
     },
     {
       "source": "utils/get-username.js",
-      "path": "vendor/core/utils/get-username.js",
+      "path": "utils/get-username.js",
       "blob": "4c11bf6d954e7ad4207de77122115228b48828b8",
       "mode": "100644"
     },
     {
       "source": "utils/get-v4-image-build-error-command.js",
-      "path": "vendor/core/utils/get-v4-image-build-error-command.js",
+      "path": "utils/get-v4-image-build-error-command.js",
       "blob": "d11fa6551166cfe980be7f8ccb7207a4ca189ee9",
       "mode": "100644"
     },
     {
       "source": "utils/has-instructions.js",
-      "path": "vendor/core/utils/has-instructions.js",
+      "path": "utils/has-instructions.js",
       "blob": "c7eb2cc406ce5824df411b195a0f1d0d1b4f815f",
       "mode": "100644"
     },
     {
       "source": "utils/is-disabled.js",
-      "path": "vendor/core/utils/is-disabled.js",
+      "path": "utils/is-disabled.js",
       "blob": "35cde742a0cc978939ca2d308af8929c0d0d0c22",
       "mode": "100644"
     },
     {
       "source": "utils/is-stringy.js",
-      "path": "vendor/core/utils/is-stringy.js",
+      "path": "utils/is-stringy.js",
       "blob": "579b039556e3f08c3ba2a8c206dbf37705e08587",
       "mode": "100644"
     },
     {
       "source": "utils/make-error.js",
-      "path": "vendor/core/utils/make-error.js",
+      "path": "utils/make-error.js",
       "blob": "85f71ed7af20f9588feecab8440fb14cfa52c18d",
       "mode": "100644"
     },
     {
       "source": "utils/make-success.js",
-      "path": "vendor/core/utils/make-success.js",
+      "path": "utils/make-success.js",
       "blob": "8447f7563ab0c1f01325d4aa906fa0bfb2bd9592",
       "mode": "100644"
     },
     {
       "source": "utils/merge-promise.js",
-      "path": "vendor/core/utils/merge-promise.js",
+      "path": "utils/merge-promise.js",
       "blob": "fdf7184e8069f5e41f42cbaffea90b867916d847",
       "mode": "100644"
     },
     {
       "source": "utils/normalize-mounts.js",
-      "path": "vendor/core/utils/normalize-mounts.js",
+      "path": "utils/normalize-mounts.js",
       "blob": "8e82d778cb33434e66ead8f554e73dcbd5867356",
       "mode": "100644"
     },
     {
       "source": "utils/normalize-storage.js",
-      "path": "vendor/core/utils/normalize-storage.js",
+      "path": "utils/normalize-storage.js",
       "blob": "04a6f92edd60e8a56ab58811b48e99cb4417e72b",
       "mode": "100644"
     },
     {
       "source": "utils/parse-v4-pkginstall-opts.js",
-      "path": "vendor/core/utils/parse-v4-pkginstall-opts.js",
+      "path": "utils/parse-v4-pkginstall-opts.js",
       "blob": "0555296e58d6cb3581c603776308d10d5d0c88aa",
       "mode": "100644"
     },
     {
       "source": "utils/parse-v4-ports.js",
-      "path": "vendor/core/utils/parse-v4-ports.js",
+      "path": "utils/parse-v4-ports.js",
       "blob": "403161aedaca7bae6a1e16b0b5b0d078d4f3ef53",
       "mode": "100644"
     },
     {
       "source": "utils/parse-v4-user.js",
-      "path": "vendor/core/utils/parse-v4-user.js",
+      "path": "utils/parse-v4-user.js",
       "blob": "06141056fd10f535232fffecbeffdf6f33189fa1",
       "mode": "100644"
     },
     {
       "source": "utils/read-file.js",
-      "path": "vendor/core/utils/read-file.js",
+      "path": "utils/read-file.js",
       "blob": "654acd22f48a7aebe38e3056998f0d78eb22cdce",
-      "mode": "100644"
+      "mode": "100644",
+      "adaptedBlob": "2141b190c5f6d1fe426cf03217d7e954b48b67b6",
+      "adaptation": "Pass the containing directory as the base for app YAML imports."
     },
     {
       "source": "utils/remove.js",
-      "path": "vendor/core/utils/remove.js",
+      "path": "utils/remove.js",
       "blob": "0e0a53b64b290b9c31d7fbe45d53c148ddb1adb1",
       "mode": "100644"
     },
     {
       "source": "utils/to-posix-path.js",
-      "path": "vendor/core/utils/to-posix-path.js",
+      "path": "utils/to-posix-path.js",
       "blob": "6d5fdd93574c01067aeecea1beb4d0448b7c376f",
       "mode": "100644"
     },
     {
       "source": "utils/traverse-up.js",
-      "path": "vendor/core/utils/traverse-up.js",
+      "path": "utils/traverse-up.js",
       "blob": "18a427c79e1e71896b3f7832be9a39cf8d6f98ca",
       "mode": "100644"
     },
     {
       "source": "utils/write-file.js",
-      "path": "vendor/core/utils/write-file.js",
+      "path": "utils/write-file.js",
       "blob": "10f90ede6c2199f7a3d0ed24e8f915e4eca87c84",
       "mode": "100644"
+    },
+    {
+      "source": "utils/run-command.js",
+      "path": "utils/run-command.js",
+      "blob": "a50c73db4ceb401b708ee2c34664b6a1644f814c",
+      "mode": "100644"
+    },
+    {
+      "source": "utils/get-buildx-error.js",
+      "path": "utils/get-buildx-error.js",
+      "blob": "d860b1211ab895b537f0d56d83d500db70837aa0",
+      "mode": "100644",
+      "adaptedBlob": "610ed86c6c9bb0272bb2db85825947d787f2ad63",
+      "adaptation": "Handle a build failure with no detail lines without masking the original error."
+    },
+    {
+      "source": "test/yaml.spec.js",
+      "path": "test/yaml.spec.js",
+      "blob": "1af9a397a689cf5fa231d853a7db318885a0b126",
+      "mode": "100644",
+      "adaptedBlob": "62c9396c48316fa620ca0355032961bc9d7f0da6",
+      "adaptation": "Port upstream YAML regressions to native assertions and owned temporary fixtures."
+    },
+    {
+      "source": "test/write-file.spec.js",
+      "path": "test/write-file.spec.js",
+      "blob": "ba8b959354368a64f67dc23233d34ed5db67a42a",
+      "mode": "100644",
+      "adaptedBlob": "09944b4de22e9c1eb0ef3f7d2b55421b56c60fd4",
+      "adaptation": "Port upstream write/inode/directory-recovery regressions to native assertions."
+    },
+    {
+      "source": "test/exists-sync.spec.js",
+      "path": "test/exists-sync.spec.js",
+      "blob": "9ff4142f08116b67b014cbf29d8088bed1496509",
+      "mode": "100644",
+      "adaptedBlob": "276c366fca9c148271b431399bb0cbfea4938154",
+      "adaptation": "Port upstream path-value and warning regressions to native assertions and owned temporary fixtures; omit Node24-specific control on the Node20 baseline."
     }
   ]
 }

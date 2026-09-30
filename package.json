@@ -8,10 +8,10 @@
     "type": "git",
     "url": "git+https://github.com/tanaabased/devtool.git"
   },
-  "type": "module",
-  "packageManager": "bun@1.4.2",
+  "type": "commonjs",
+  "packageManager": "npm@10.8.2",
   "engines": {
-    "bun": ">=1.4.2"
+    "node": ">=20.17.0"
   },
   "main": "./lib/devtool.js",
   "exports": "./lib/devtool.js",
@@ -19,11 +19,12 @@
     "devtool": "./bin/devtool.js"
   },
   "scripts": {
-    "devtool": "bun ./bin/devtool.js",
-    "test": "bun run test:unit && bun run test:cli",
-    "test:unit": "bun ./node_modules/mocha/bin/mocha.js 'test/*.spec.js'",
-    "test:cli": "bun run leia examples/source/README.md --shell bash --retry 0 --timeout 10",
-    "leia": "bun ./node_modules/.bin/leia"
+    "devtool": "node ./bin/devtool.js",
+    "test": "npm run test:unit && npm run test:cli",
+    "test:unit": "mocha 'test/*.spec.js'",
+    "test:cli": "leia examples/source/README.md --shell bash --retry 0 --timeout 10",
+    "test:integration": "leia examples/l337/README.md --shell bash --retry 0 --timeout 180",
+    "leia": "leia"
   },
   "dependencies": {
     "ansis": "^4.0.0",
@@ -44,7 +45,7 @@
     "winston": "2.4.5"
   },
   "devDependencies": {
-    "@lando/leia": "^2.0.0",
+    "@lando/leia": "1.0.0-beta.4",
     "mocha": "^11.7.0"
   }
 }

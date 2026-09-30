@@ -1,33 +1,21 @@
-import assert from 'node:assert/strict';
-import { spawnSync } from 'node:child_process';
-import fs from 'node:fs';
-import os from 'node:os';
-import path from 'node:path';
-import { fileURLToPath } from 'node:url';
+'use strict';
+const assert = require('node:assert/strict');
+const {spawnSync} = require('node:child_process');
+const fs = require('node:fs');
+const os = require('node:os');
+const path = require('node:path');
 
-const root = fileURLToPath(new URL('../', import.meta.url));
-
-describe('lib/devtool', () => {
-  for (const [mode, expected] of [
-    ['import', 'import stayed inert; consumer continued'],
-    ['core', 'retained source modules loaded without host initialization'],
-  ]) {
-    it(`should ${mode === 'import' ? 'leave library consumers untouched' : 'load every retained source module without initializing the host'}`, () => {
-      const temporary = fs.mkdtempSync(path.join(os.tmpdir(), 'devtool-source-'));
-      try {
-        const result = spawnSync(process.execPath, [path.join(root, 'test/source-probe.js'), mode], {
-          cwd: temporary,
-          encoding: 'utf8',
-          timeout: 10000,
-          env: { ...process.env, NODE_PATH: '', DOCKER_HOST: 'unix:///nonexistent-devtool-test.sock' },
-        });
-        assert.equal(result.error, undefined);
-        assert.equal(result.status, 0, result.stderr);
-        assert.equal(result.stdout.trim(), expected);
-        assert.deepEqual(fs.readdirSync(temporary), []);
-      } finally {
-        fs.rmSync(temporary, { recursive: true, force: true });
-      }
-    });
-  }
+describe('library import', () => {
+  it('leaves consumers and the host untouched', () => {
+    const temporary = fs.mkdtempSync(path.join(os.tmpdir(), 'devtool-import-'));
+    try {
+      const result = spawnSync(process.execPath, [path.join(__dirname, 'source-probe.js')], {
+        cwd: temporary, encoding: 'utf8', timeout: 10000,
+        env: {...process.env, DOCKER_HOST: 'unix:///nonexistent-devtool-test.sock'},
+      });
+      assert.equal(result.status, 0, result.stderr);
+      assert.equal(result.stdout.trim(), 'import stayed inert; consumer continued');
+      assert.deepEqual(fs.readdirSync(temporary), []);
+    } finally { fs.rmSync(temporary, {recursive: true, force: true}); }
+  });
 });

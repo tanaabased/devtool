@@ -6,7 +6,7 @@ const path = require('path');
 // checks to see if dir is being mounted
 module.exports = (dir, volumes = []) => volumes
   // filter out non string bind mounts
-  .filter(volume => volume.split(':').length === 2 || volume.split(':').length === 3)
+  .filter(volume => typeof volume === 'string' && [2, 3].includes(volume.split(':').length))
   // parse into object format
   .map(volume => ({source: volume.split(':')[0], target: volume.split(':')[1]}))
   // translate relative paths

@@ -1,5 +1,4 @@
-#!/usr/bin/env bun
+#!/usr/bin/env node
+'use strict';
 
-import { runCli } from '../lib/cli.js';
-
-process.exitCode = runCli(process.argv.slice(2));
+require('../lib/cli').runCli(process.argv.slice(2)).then(code => { process.exitCode = code; });

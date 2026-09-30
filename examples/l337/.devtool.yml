@@ -1,0 +1,26 @@
+name: lifecycle
+services:
+  web:
+    api: 4
+    type: l337
+    image:
+      imagefile: !import Dockerfile
+      groups:
+        - id: proof
+          weight: 100
+      steps:
+        - group: post-proof
+          instructions: RUN echo post >> /order
+        - group: proof
+          instructions: !load instructions
+        - group: pre-proof
+          instructions: RUN echo pre > /order
+    command: [sleep, infinity]
+    volumes:
+      - data:/data
+    networks:
+      - app
+volumes:
+  data: {}
+networks:
+  app: {}

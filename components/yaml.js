@@ -62,7 +62,7 @@ const fileloader = {
         return new ImportString(fs.readFileSync(data.file, {encoding: 'utf8'}), data);
       case 'yaml':
       case 'yml':
-        return new ImportObject(yaml.load(data.file), data);
+        return new ImportObject(load(data.file), data);
       default:
         return new ImportString(fs.readFileSync(data.file, {encoding: 'utf8'}), data);
     }
@@ -136,14 +136,14 @@ class ImportObject extends Object {
 }
 
 // old ones
-yaml._load = yaml.load;
-yaml._dump = yaml.dump;
+const rawLoad = yaml.load;
+const rawDump = yaml.dump;
 
-yaml.load = (data, options = {}) => {
+const load = (data, options = {}) => {
   // if data is buffer then just pass it through
-  if (Buffer.isBuffer(data)) return yaml._load(data, {schema: getLandoSchema(options.base), ...options});
+  if (Buffer.isBuffer(data)) return rawLoad(data, {schema: getLandoSchema(options.base), ...options});
   // ditto for multiline strings
-  else if (data.split('\n').length > 1) return yaml._load(data, {schema: getLandoSchema(options.base), ...options});
+  else if (data.split('\n').length > 1) return rawLoad(data, {schema: getLandoSchema(options.base), ...options});
 
   // if we get here its either the path to a file or not
   // if data is actually a file then we do some extra stuff
@@ -153,12 +153,12 @@ yaml.load = (data, options = {}) => {
   }
 
   // pass through
-  return yaml._load(data, {schema: getLandoSchema(options.base), ...options});
+  return rawLoad(data, {schema: getLandoSchema(options.base), ...options});
 };
 
-yaml.dump = (data, options = {}) => {
-  return yaml._dump(data, {schema: getLandoSchema(), quotingType: '"', ...options});
+const dump = (data, options = {}) => {
+  return rawDump(data, {schema: getLandoSchema(), quotingType: '"', ...options});
 };
 
 
-module.exports = yaml;
+module.exports = {...yaml, load, dump};
