@@ -9,7 +9,7 @@ runner-owned temporary directories. No Lando installation or proxy is used.
 ```sh
 # should prepare two isolated source projects
 set -eu
-test "${GITHUB_ACTIONS:-}" = true
+test "$GITHUB_ACTIONS" = true
 test -n "$DEVTOOL_FIXTURE_ROOT"
 ! command -v lando
 mkdir -p "$DEVTOOL_FIXTURE_ROOT/first" "$DEVTOOL_FIXTURE_ROOT/second"
