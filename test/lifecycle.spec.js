@@ -84,4 +84,14 @@ describe('L337 lifecycle (#4)', () => {
     assert.equal(fs.existsSync(f.file), true);
     assert.equal(f.calls.at(-1)[2], first.project);
   });
+  it('can destroy repeatedly without cached image metadata', async () => {
+    const compose = f.engine.compose;
+    f.engine.compose = async (project, file, ...args) => {
+      assert.equal(yaml.load(fs.readFileSync(file, 'utf8')).services.web.image, `${project}-web:latest`);
+      return compose.call(f.engine, project, file, ...args);
+    };
+    await f.load().start();
+    await f.load().destroy();
+    await f.load().destroy();
+  });
 });
