@@ -148,7 +148,7 @@ module.exports = {
       if (contents?.getMetadata) return this.mountScript(contents, {dest: id});
       if (contents.split('\n').length === 1) {
         const file = path.resolve(this.appRoot, contents);
-        if (fs.existsSync(file) && fs.statSync(file).isFile()) return this.mountScript(contents, {dest: id});
+        if (!path.isAbsolute(contents) && fs.existsSync(file) && fs.statSync(file).isFile()) return this.mountScript(contents, {dest: id});
         return contents;
       }
       // otherwise dump-n-mount

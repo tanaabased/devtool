@@ -162,6 +162,13 @@ describe('API 4 Lando lifecycle (#5)', () => {
       assert.ok(!compose.services.web.command.some(value => typeof value !== 'string'));
     }
   });
+  it('keeps absolute container executable paths out of the host build context', async () => {
+    fs.writeFileSync(f.file, yaml.dump({services: {web: service({command: ['sleep', 'infinity'], entrypoint: '/bin/sh'})}}));
+    const app = f.load(); await app.start();
+    const compose = yaml.load(fs.readFileSync(app.composeFile, 'utf8'));
+    assert.equal(compose.services.web.command[0], '/bin/sh');
+    assert.equal(app.services[0].generateBuildContext().sources.some(source => source.source === '/bin/sh'), false);
+  });
   it('prepares every image before any app hook and emits app-state transitions', async () => {
     fs.writeFileSync(f.file, yaml.dump({services: {one: service(), two: service()}}));
     const app = f.load(); const states = [];

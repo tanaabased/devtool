@@ -42,7 +42,7 @@
       "path": "builders/lando-v4.js",
       "blob": "e8108a56bb11b955bfb7a2b7c6b10441b8539598",
       "mode": "100644",
-      "adaptedBlob": "41a5c25a93418cb08a579d4dd8a579fa97044186",
+      "adaptedBlob": "89a10c531769e1c1772f98d7c10babff8531be84",
       "adaptation": "Wire API 4 service to instance-owned metadata and injected engine; remove proxy/bootstrap dependencies; prepare packages deterministically; retain command, mount, app-hook and scoped-storage behavior."
     },
     {
