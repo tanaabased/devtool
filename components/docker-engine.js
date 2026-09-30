@@ -24,13 +24,13 @@ class DockerEngine extends Dockerode {
   static cspace = 'docker-engine';
   static config = {};
   static debug = require('debug')('docker-engine');
-  static builder = require('../utils/get-docker-x')();
-  static orchestrator = require('../utils/get-compose-x')();
+  static builder = undefined;
+  static orchestrator = undefined;
   // @NOTE: is wsl accurate here?
   // static supportedPlatforms = ['linux', 'wsl'];
 
   constructor(config, {
-    builder = DockerEngine.buildx,
+    builder = 'docker',
     debug = DockerEngine.debug,
     orchestrator = DockerEngine.orchestrator,
   } = {}) {
@@ -55,6 +55,7 @@ class DockerEngine extends Dockerode {
       context = path.join(require('os').tmpdir(), nanoid()),
       id = tag,
       sources = [],
+      excludePaths = [],
     } = {}) {
     // handles the promisification of the merged return
     const awaitHandler = async () => {
@@ -127,7 +128,7 @@ class DockerEngine extends Dockerode {
     // move other sources into the build context
     for (const source of sources) {
       try {
-        fs.copySync(source.source, path.join(context, source.target), {dereference: true});
+        require('../utils/copy-build-source')(source, context, excludePaths);
       } catch (error) {
         error.message = `Failed to copy ${source.source} into build context at ${source.target}!: ${error.message}`;
         throw error;
@@ -193,6 +194,7 @@ class DockerEngine extends Dockerode {
       sshKeys = [],
       sshSocket = false,
       sources = [],
+      excludePaths = [],
       stderr = '',
       stdout = '',
     } = {}) {
@@ -226,7 +228,7 @@ class DockerEngine extends Dockerode {
     // move sources into the build context if needed
     for (const source of sources) {
       try {
-        fs.copySync(source.source, path.join(context, source.target), {dereference: true});
+        require('../utils/copy-build-source')(source, context, excludePaths);
       } catch (error) {
         error.message = `Failed to copy ${source.source} into build context at ${source.target}!: ${error.message}`;
         throw error;

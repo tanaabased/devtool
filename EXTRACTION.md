@@ -1,47 +1,54 @@
-# Extraction baseline
+# Extraction provenance
 
-The exact source revisions and every retained file's original Git blob and mode
-are recorded in [extraction.json](./extraction.json). The source checks verify those
-bytes without consulting another checkout or GitHub.
+[extraction.json](extraction.json) records each retained source path, original Git
+blob and executable mode. Adapted files also record their current blob and reason;
+the provenance tests check both inventory and dependency resolution.
 
 | Source | Revision | Use |
 | --- | --- | --- |
-| [Core main](https://github.com/lando/core/tree/7a87f80576c5cdb5c7d616108bc9aff81150d463) | `7a87f80576c5cdb5c7d616108bc9aff81150d463` | Pristine service source and supporting assets |
-| [Core PR #330](https://github.com/lando/core/pull/330) | `3aaa8aaf3f4adae5683897644e8e848fe54aa2cb` | Recorded, not applied; closed without merging |
+| [Core main](https://github.com/lando/core/tree/7a87f80576c5cdb5c7d616108bc9aff81150d463) | `7a87f80576c5cdb5c7d616108bc9aff81150d463` | Service source, engine, assets and utility regressions |
+| [Core PR #330](https://github.com/lando/core/pull/330) | `3aaa8aaf3f4adae5683897644e8e848fe54aa2cb` | Bounded L337 changes reconciled onto the newer source |
 | [Core Next main](https://github.com/lando/core-next/tree/9cc398d21bf35b8662a199fb9815024d24d599c1) | `9cc398d21bf35b8662a199fb9815024d24d599c1` | Structural reference only |
-| [Core Next cli-combine](https://github.com/lando/core-next/tree/9ec49e3bd7a946c5570616d2b53cba0301550636) | `9ec49e3bd7a946c5570616d2b53cba0301550636` | CLI/product/app/configuration boundaries; no copied source |
+| [Core Next cli-combine](https://github.com/lando/core-next/tree/9ec49e3bd7a946c5570616d2b53cba0301550636) | `9ec49e3bd7a946c5570616d2b53cba0301550636` | Configuration/product/app/storage boundaries; no copied source |
 
-## Retained source
+## Ownership and adaptations
 
-Upstream paths are preserved beneath `vendor/core/`, with a CommonJS package
-boundary. The upstream MIT notice is retained in [LICENSE](./LICENSE).
+Retained CommonJS code now lives directly in `components/`, `builders/`, `lib/`,
+`utils/`, `packages/` and `scripts/`. There is no duplicate vendor implementation.
+The upstream MIT notice remains in [LICENSE](LICENSE).
 
-| Upstream area | Purpose |
-| --- | --- |
-| `components/l337-v4.js`, `components/docker-engine.js`, `builders/lando-v4.js` | Service and engine source, deferred behind `loadCore()` |
-| `components/error.js`, `components/yaml.js`, selected `lib/` and `utils/` files | Import closure, Compose output, YAML tags, errors, mounts, storage, execution, and executable resolution |
-| `scripts/` | Boot, entrypoint, exec/multiline exec, hook runner, shell environment, lash, and required in-container installation scripts |
-| `packages/{certs,git,security,ssh-agent,sudo,user}/` | Required container helpers and their shell assets |
-| `packages/proxy/` helpers | Hardcoded builder imports; no proxy service or orchestration is enabled |
+The source runtime uses the pinned Core Node.js version and npm. The source CLI
+harness uses Core's Leia 1 release because Leia 2 requires Node 24. Bun is deferred.
 
-All copied files are unmodified at this step. Root entrypoints, tests, and package
-metadata are authored for devtool. Runtime dependencies are declared directly in
-`package.json`; built-in modules need no npm dependency.
+The bounded PR #330 port includes pre/post group syntax, group stage/default
+behavior, imported image instructions, constructor-time reconstruction of built
+Compose image data, and the app-level built-image guard. The guard additionally
+checks input fingerprints and image existence. Newer Core bind-source safeguards
+remain intact.
 
-## Deferred behavior and exclusions
+Runtime adaptations remove import-time executable discovery and global listener
+changes, isolate app YAML parsing, inject engines per service, and move Compose
+assembly/cache persistence into the app lifecycle. Failed builds propagate errors
+instead of producing fallback containers. Integration fixes preserve Compose build
+arguments and relative contexts, imported image contexts, and long-form mount
+handling. Repeated context generation deduplicates sources.
 
-PR #330's pre/post group syntax, stage/default changes, imported image instructions,
-and reconstruction of Compose image data belong to [issue #3](https://github.com/tanaabased/devtool/issues/3).
-Its built-image guard belongs to [issue #4](https://github.com/tanaabased/devtool/issues/4).
-Reconcile these changes onto the pinned newer Core source; preserve its bind-source
-safeguards rather than replacing the file with the older branch version.
+The previously deferred build path required `utils/run-command.js` and
+`utils/get-buildx-error.js`; both come from the pinned Core revision. All original
+shell assets remain inventoried. YAML, write-file and exists-sync regression tests
+are ported to native assertions and owned temporary fixtures.
 
-The configurable runtime, service registration, app loading, lifecycle commands,
-certificate/network wiring, and container behavior checks remain in issues #2–#7.
-Source loading here is not evidence that services can run.
+## Boundaries
 
-Excluded: Core's legacy CLI/product/app/plugin bootstrap, API 3 builders and recipes,
-plugin discovery/installation, host engine installation, proxy orchestration,
-update/telemetry machinery, inherited scenario suites, compiled artifacts, publication,
-and the Core Next `bun-me` prototype. Required in-container install scripts remain;
-host installers do not. No Core Next source or staged user changes were copied.
+The retained `builders/lando-v4.js` and its container helpers are reserved for #5;
+they are not registered or initialized by the L337 runtime. Hardcoded proxy helper
+imports remain in that future builder, with no proxy service or orchestration.
+
+Excluded: the legacy CLI/product/app/plugin bootstrap, API 3 builders and recipes,
+external plugin discovery/installation, host engine installation, proxy orchestration,
+update/telemetry machinery, compiled artifacts and publication. Core Next's
+`bun-me` checkout and staged changes are not extraction input.
+
+Local validation uses temporary fixtures and injected engines/processes. Real
+container lifecycle scenarios run only in disposable CI. Broader service and
+platform coverage remains in #5–#7.

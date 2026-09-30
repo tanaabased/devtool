@@ -1,31 +1,95 @@
 # devtool
 
-Tanaab-based development environments. This source extraction baseline provides
-package entrypoints and pinned L337/Lando 4 source. Service lifecycle commands are
-not available yet.
+Tanaab-based development environments. This extraction assembles the existing
+Node.js runtime and L337 service into one configurable library and source CLI.
+Bun, compilation, publication, and Lando 4 service support belong to later work.
 
-Use the Bun version declared in `.bun-version`:
+Use the Node.js version in `.node-version` and npm:
 
 ```sh
-bun install --frozen-lockfile
-bun run devtool --help
-bun run devtool --version
-bun run test
+npm ci
+npm test
+node bin/devtool.js --help
 ```
 
-The source library can be imported without running the CLI or initializing the host:
+A project needs a `.devtool.yml` (or `.devtool.yaml`):
+
+```yaml
+name: example
+services:
+  web:
+    type: l337
+    image: alpine:3.20
+    command: [sleep, infinity]
+```
+
+With an existing Docker Engine, Buildx and Compose installation:
+
+```sh
+node /path/to/devtool/bin/devtool.js start
+node /path/to/devtool/bin/devtool.js exec web -- cat /etc/os-release
+node /path/to/devtool/bin/devtool.js info --json
+node /path/to/devtool/bin/devtool.js stop
+node /path/to/devtool/bin/devtool.js restart
+node /path/to/devtool/bin/devtool.js rebuild
+node /path/to/devtool/bin/devtool.js destroy
+```
+
+The CLI searches upward for an app file; `--file` selects one explicitly. `exec`
+passes arguments after `--` unchanged and returns the container command's failure
+status. Add `--interactive` to attach a terminal. `info` reports recorded lifecycle
+state; it does not query container health.
+
+## Library and configuration
 
 ```js
-import { name, version, loadCore } from '@tanaab/devtool';
+const {createDevtool} = require('@tanaab/devtool');
 
-console.log(name, version);
-// Explicitly load the unadapted source modules when needed.
-const { L337, DockerEngine, lando } = loadCore();
+const runtime = createDevtool({
+  identity: 'wrapper',
+  commandName: 'wrapper',
+  envPrefix: 'WRAPPER',
+  appFiles: ['.wrapper.yml'],
+  dataRoot: '/path/to/wrapper-data',
+  cacheRoot: '/path/to/wrapper-cache',
+});
+
+const app = runtime.loadApp({cwd: '/path/to/project'});
+await app.start();
+await app.exec('web', ['echo', 'hello']);
+await app.stop();
 ```
 
-`loadCore()` loads upstream modules, including their global listener and executable
-discovery behavior. It does not construct services or provide the configurable
-runtime planned for the next extraction step. Constructing those services requires
-the upstream app/product context.
+Importing the library and creating a runtime performs no host initialization or
+engine access. `loadApp` reads configuration and prepares service artifacts;
+lifecycle methods explicitly operate Docker. Each runtime can receive an injected
+`engine` for embedding or tests. The CLI adapter in `lib/cli.js` accepts that same
+runtime.
 
-See [EXTRACTION.md](./EXTRACTION.md) for source revisions, retained assets, and exclusions.
+Configuration precedence is defaults, then an explicit `configFile`, then prefixed
+environment variables, then explicit API/CLI options. Arrays replace earlier
+arrays. The prefix is selected by `envPrefix` or derived from the constructor's
+`identity`; it is not changed by the file being loaded. Product YAML uses ordinary
+YAML parsing. App YAML additionally supports relative `!import` and `!load` inputs.
+
+Defaults use product `devtool`, command `devtool`, prefix `DEVTOOL`, data under
+`~/.devtool`, and cache under its `cache` directory. `--help` lists CLI overrides.
+`cache: false` / `--no-cache` disables persistent cache reads and writes without
+removing existing cache. Necessary Compose and build artifacts still use the data
+root. Image reuse checks recorded inputs and image existence; `rebuild` forces the
+build path, including refreshing mutable remote inputs through Docker's normal
+build behavior.
+
+Project identity includes the product and canonical project path. `destroy`
+removes the project's containers, Compose networks/volumes and generated files;
+external resources, source files, other projects and global storage remain.
+Built image tags are retained. Only `l337` services are registered. Plugin loading,
+host engine installation, global container names and host networking are excluded.
+
+## Testing
+
+`npm test` runs unit/provenance checks and Docker-free source CLI scenarios. The
+[L337 lifecycle scenario](examples/l337/README.md) runs only in disposable CI and
+exercises the real engine; do not run container scenarios on the developer machine.
+
+[EXTRACTION.md](EXTRACTION.md) records source revisions, adaptations and exclusions.

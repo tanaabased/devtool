@@ -16,8 +16,7 @@ const {generateDockerFileFromArray} = require('dockerfile-generator/lib/dockerGe
 const {nanoid} = require('nanoid');
 const {EventEmitter} = require('events');
 
-// set more appropirate lando limit
-EventEmitter.setMaxListeners(64);
+// Listener limits belong to each service, never the consuming process.
 
 // @TODO: should these be methods as well? static or otherwise?
 const getMountMatches = require('../utils/get-mount-matches');
@@ -28,11 +27,12 @@ class L337ServiceV4 extends EventEmitter {
   #app
   #data
   #lando
+  #engine
 
   static debug = require('debug')('@lando/l337-service-v4');
   static bengineConfig = {};
-  static builder = require('../utils/get-docker-x')();
-  static orchestrator = require('../utils/get-compose-x')();
+  static builder = undefined;
+  static orchestrator = undefined;
 
   static getBengine(config = L337ServiceV4.bengineConfig,
     {
@@ -49,11 +49,13 @@ class L337ServiceV4 extends EventEmitter {
       groups: {
         context: {
           description: 'A group for adding and copying sources to the image',
+          stage: 'image',
           weight: 0,
           user: 'root',
         },
         default: {
           description: 'A default general purpose build group around which other groups can be added',
+          stage: 'image',
           weight: 1000,
           user: 'root',
         },
@@ -69,7 +71,6 @@ class L337ServiceV4 extends EventEmitter {
       },
       sources: [],
       stages: {
-        default: 'image',
         image: 'Instructions to help generate an image',
       },
       states: {
@@ -90,7 +91,7 @@ class L337ServiceV4 extends EventEmitter {
       merge(this.#app.info.find(service => service.service === this.id) ?? {}, data);
     }
     this.emit('state', this.#data.info);
-    this.#app.v4.updateComposeCache();
+    // App lifecycle owns persistence after successful work.
   }
 
   get info() {
@@ -106,6 +107,7 @@ class L337ServiceV4 extends EventEmitter {
     // buildArgs = {},
     context = path.join(os.tmpdir(), project, 'build-contexts', id),
     config = {},
+    engine,
     debug = L337ServiceV4.debug,
     groups = {},
     info = {},
@@ -124,6 +126,8 @@ class L337ServiceV4 extends EventEmitter {
   } = {}, app, lando) {
     // instantiate ee immedately
     super();
+    this.setMaxListeners(64);
+    this.#engine = engine;
 
     // set top level required stuff
     this.id = id;
@@ -153,7 +157,7 @@ class L337ServiceV4 extends EventEmitter {
     // initialize our private data
     this.#app = app;
     this.#lando = lando;
-    this.#data = merge(this.#init(), {groups}, {stages}, {states}, {volumes: Object.keys(tlvolumes)});
+    this.#data = merge(this.#init(), {groups}, {stages}, {states}, {volumes: Object.keys(tlvolumes)}, {groups: this.#init().groups});
 
     // rework info based on whatever is passed in
     this.info = merge({}, {state: states}, {primary, service: id, type}, info);
@@ -191,6 +195,9 @@ class L337ServiceV4 extends EventEmitter {
       // debug
       this.debug('%o autoset appmount to %o, did not select %o', this.id, this.appMount, appMounts);
     }
+    if (this.info?.state?.IMAGE === 'BUILT' && this.tag) {
+      this.addComposeData({services: {[this.id]: {image: this.tag}}});
+    }
   }
 
   // passed in build args that can be used
@@ -209,7 +216,7 @@ class L337ServiceV4 extends EventEmitter {
 
     // we should def be an array at this point so lets standardize as best we can
     args = args
-      .map(arg => typeof arg === 'string' ? arg.split('=') : arg)
+      .map(arg => typeof arg === 'string' ? [arg.slice(0, arg.indexOf('=')), arg.slice(arg.indexOf('=') + 1)] : arg)
       .filter(arg => arg !== null && arg !== undefined)
       .filter(([key]) => key !== null && key !== undefined)
       .filter(([, value]) => value !== null && value !== undefined)
@@ -226,11 +233,12 @@ class L337ServiceV4 extends EventEmitter {
     // if data is a string then its the context and it should be
     if (typeof data === 'string') data = {context: data};
     // if no context then set to app root
-    if (!data.context) data.context = this.appRoot;
+    data.context = path.resolve(this.appRoot, data.context ?? '.');
     // ensure dockerfile is set
     if (!data.dockerfile) data.dockerfile = 'Dockerfile';
     // now pass the imagefile stuff into image parsing
     this.setBaseImage(path.join(data.context, data.dockerfile), data);
+    if (data.args) this.addBuildArgs(data.args);
     // make sure we are adding the dockerfile context directly as a source so COPY/ADD instructions work
     // @NOTE: we are not adding a "context" because that also injects dockerfile instructions which we might already have
     this.#data.sources.push(({source: data.context, target: '.'}));
@@ -250,10 +258,10 @@ class L337ServiceV4 extends EventEmitter {
     });
 
     // update app with new stuff
-    this.#app.compose = require('../utils/dump-compose-data')(this.#app.composeData, this.#app._dir);
+    // Compose fragments remain in memory until the app assembles them.
 
     // update and log
-    this.#app.v4.updateComposeCache();
+    // App lifecycle owns persistence after successful work.
   }
 
   // adds files/dirs to the build context
@@ -346,11 +354,11 @@ class L337ServiceV4 extends EventEmitter {
         }
 
         // merge in
-        this.#data.groups = merge({}, this.#data.groups, {[group.id || group.name]: {
-          description: group.description || `Build group: ${group.id || group.name}`,
-          weight: group.weight || this.#data.groups.default.weight || 1000,
-          stage: group.stage || this.#data.stages.default || 'image',
-          user: group.user || 'root',
+        this.#data.groups = merge({}, this.#data.groups, {[group.id ?? group.name]: {
+          description: group.description ?? `Build group: ${group.id ?? group.name}`,
+          weight: group.weight ?? this.#data.groups.default.weight ?? 1000,
+          stage: group.stage ?? this.#data.groups.default.stage ?? 'image',
+          user: group.user ?? this.#data.groups.default.user ?? 'root',
         }});
 
         this.debug('%o added build group %o', this.id, group);
@@ -362,7 +370,7 @@ class L337ServiceV4 extends EventEmitter {
   // @TODO: helper methods to add particular parts of build data eg image, files, steps, groups, etc
   addImageData(data) {
     // make sure data is in object format if its a string then we assume it sets the "imagefile" value
-    if (typeof data === 'string') data = {imagefile: data};
+    if (isStringy(data)) data = {imagefile: data};
     // map dockerfile key to image key if it is set and imagefile isnt
     if (!data.imagefile && data.dockerfile) data.imagefile = data.dockerfile;
     // now pass the imagefile stuff into image parsing
@@ -390,7 +398,7 @@ class L337ServiceV4 extends EventEmitter {
     if (data.tag) this.tag = data.tag;
 
     // finally make sure we honor buildkit disabling
-    if (require('../utils/is-disabled')((data.buildkit || data.buildx) ?? this.buildkit)) this.buildkit = false;
+    if (require('../utils/is-disabled')(data.buildkit ?? data.buildx ?? this.buildkit)) this.buildkit = false;
   }
 
   // lando runs a small superset of docker-compose that augments the image key so it can contain imagefile data
@@ -436,7 +444,7 @@ class L337ServiceV4 extends EventEmitter {
 
         // we should have stnadardized groups at this point so we can rebase on defaults as
         step = merge({},
-          {stage: this.#data.stages.default},
+          {stage: this.#data.groups.default.stage},
           {weight: this.#data.groups.default.weight, user: this.#data.groups.default.user},
           this.#data.groups[step.group],
           step,
@@ -511,7 +519,7 @@ class L337ServiceV4 extends EventEmitter {
   // build the image
   async buildImage() {
     // get build func
-    const bengine = L337ServiceV4.getBengine(L337ServiceV4.bengineConfig, {
+    const bengine = this.#engine ?? L337ServiceV4.getBengine(L337ServiceV4.bengineConfig, {
       builder: L337ServiceV4.builder,
       debug: this.debug,
       orchestrator: L337ServiceV4.orchestrator,
@@ -552,13 +560,7 @@ class L337ServiceV4 extends EventEmitter {
       this.debug('image %o build failed with code %o error %o', context.id, error.code ?? 1, error.message);
       this.debug('%o', error?.stack ?? error);
 
-      // inject helpful failing stuff to compose
-      this.addComposeData({services: {[context.id]: {
-        command: require('../utils/get-v4-image-build-error-command')(error),
-        image: 'busybox',
-        user: 'root',
-        volumes: [`${error.logfile}:/tmp/error.log`],
-      }}});
+      // Failed builds never produce a runnable fallback service.
 
       // set the image stuff into the info
       this.info = {error: error.short, image: undefined, state: {IMAGE: 'BUILD FAILURE'}, tag: undefined};
@@ -646,7 +648,8 @@ class L337ServiceV4 extends EventEmitter {
       buildArgs: this.buildArgs,
       context: this.context,
       imagefile: this.imagefile,
-      sources: this.#data.sources.flat(Number.POSITIVE_INFINITY).filter(Boolean).filter(source => !source.url),
+      sources: [...new Map(this.#data.sources.flat(Number.POSITIVE_INFINITY).filter(Boolean)
+        .filter(source => !source.url).map(source => [JSON.stringify(source), source])).values()],
       sshSocket: this.sshSocket,
       sshKeys: require('../utils/get-passphraseless-keys')(this.sshKeys),
       tag: this.tag,
@@ -663,9 +666,11 @@ class L337ServiceV4 extends EventEmitter {
   // gets group overrides or returns false if there are none
   getGroupOverrides(group) {
     // break the group into parts
-    const parts = group.replace(`${this.getOverrideGroup(group)}`, '').split('-');
-    // there will always be a leading '' element so dump it
-    parts.shift();
+    const parts = group.replace(`${this.getOverrideGroup(group)}`, '').split('-').filter(Boolean);
+    if (['pre', 'post'].includes(parts[0])) {
+      parts[0] = parts[0] === 'pre' ? 'before' : 'after';
+      if (parts.length === 1) parts.push('1');
+    }
 
     // if we have nothing then lets return false at this point
     if (parts.length === 0) return false;
@@ -697,7 +702,7 @@ class L337ServiceV4 extends EventEmitter {
     // this should ensure we end up with an ordered by closest match list
     const candidates = Object.keys(this.#data.groups)
       .sort((a, b) => b.length - a.length)
-      .filter(group => data.startsWith(group));
+      .filter(group => data.startsWith(`${group}-`) || data === group || data.startsWith(`pre-${group}`) || data.startsWith(`post-${group}`));
 
     // if there is a closest match that is not the group itself then its an override otherwise fise
     return candidates.length > 0 && candidates[0] !== data ? candidates[0] : false;
@@ -791,13 +796,19 @@ class L337ServiceV4 extends EventEmitter {
 
   // sets the base image for the service
   setBaseImage(image, buildArgs = {}) {
+    const imported = image?.getMetadata?.();
+    if (imported?.file) {
+      this.#data.imageFileContext = path.dirname(imported.file);
+      image = String(image);
+    }
+    if (typeof image !== 'string' || !image.trim()) throw new Error(`Service ${this.id} requires an image or build input`);
     // if the data is raw imagefile instructions then dump it to a file and set to that file
-    if (image.split('\n').length > 1) {
+    if (imported || image.split('\n').length > 1) {
       const content = image;
       image = path.join(this.tmpdir, 'Imagefile');
       fs.mkdirSync(path.dirname(image), {recursive: true});
       write(image, content);
-      this.#data.imageFileContext = this.appRoot;
+      this.#data.imageFileContext = imported?.file ? path.dirname(imported.file) : this.appRoot;
     }
 
     // if imagefile is not an absolute path then test it with the approot as a base
@@ -805,6 +816,8 @@ class L337ServiceV4 extends EventEmitter {
       image = path.resolve(this.appRoot, image);
       this.#data.imageFileContext = path.dirname(image);
     }
+
+    if (!imported && fs.existsSync(image)) this.#data.imageFileContext ??= path.dirname(image);
 
     // at this point we have either a dockerfile or a tagged image, lets set the base first
     this.#data.image = image;
