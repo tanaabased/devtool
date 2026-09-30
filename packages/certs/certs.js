@@ -30,10 +30,10 @@ module.exports = async (service, certs) => {
 
   // build the volumes
   const volumes = uniq([
-    ...certs.cert.map(file => `${certPath}:${file}`),
-    ...certs.key.map(file => `${keyPath}:${file}`),
-    `${certPath}:/etc/lando/certs/cert.crt`,
-    `${keyPath}:/etc/lando/certs/cert.key`,
+    ...certs.cert.map(file => `${certPath}:${file}:ro`),
+    ...certs.key.map(file => `${keyPath}:${file}:ro`),
+    `${certPath}:/etc/lando/certs/cert.crt:ro`,
+    `${keyPath}:/etc/lando/certs/cert.key:ro`,
   ]);
 
   // add things

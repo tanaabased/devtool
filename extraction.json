@@ -80,7 +80,7 @@
       "path": "packages/certs/certs.js",
       "blob": "a7fd15718aa69c430fe0926bc8f0402e1153bd13",
       "mode": "100644",
-      "adaptedBlob": "277531e7ac587a13d4beaf5371861e746c64dac2",
+      "adaptedBlob": "97189e6aafec8ec191f927707154cf352209849b",
       "adaptation": "Generate project-owned certificates without proxy domains or host trust."
     },
     {

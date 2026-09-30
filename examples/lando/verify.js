@@ -58,6 +58,7 @@ switch (process.argv[2]) {
     assert.ok(exec('web', 'cat', '/etc/ssl/certs/ca-certificates.crt').includes(fs.readFileSync(path.join(process.env.DEVTOOL_DATA_ROOT, 'projects', project(), 'certs', 'ca.crt'), 'utf8').trim()));
     assert.equal(exec('web', 'printf', '%s', 'a b;$HOME'), 'a b;$HOME');
     assert.equal(exec('web', 'stat', '-c', '%u:%g', '/data'), `${process.getuid()}:${process.getgid()}`);
+    assert.equal(exec('web', 'stat', '-c', '%a', '/shared'), '770');
     exec('web', 'sh', '-c', 'echo shared > /shared/value; echo global > /global/value; echo persisted > /data/value');
     assert.equal(exec('peer', 'cat', '/shared/value'), 'shared');
     fs.writeFileSync(snapshot, JSON.stringify({image: docker('image', 'inspect', `${project()}-web:latest`, '--format', '{{.Id}}'), state: state(), project: project()}));
@@ -95,6 +96,10 @@ switch (process.argv[2]) {
     assert.equal(fs.existsSync(path.join(process.env.DEVTOOL_CACHE_ROOT, 'projects', id)), false);
     const globals = docker('volume', 'ls', '-q', '--filter', 'label=dev.lando.storage-scope=global').split('\n').filter(Boolean);
     assert.ok(globals.length > 0);
+    cli('start');
+    assert.equal(exec('web', 'cat', '/global/value'), 'global');
+    exec('web', 'sh', '-c', '! test -f /data/value');
+    cli('destroy');
     break;
   }
   default: throw new Error('Unknown Lando assertion');

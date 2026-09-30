@@ -48,8 +48,12 @@ describe('API 4 Lando lifecycle (#5)', () => {
       }
       return original(file, context);
     };
-    await f.load().start();
+    const app = f.load(); await app.start();
     assert.ok(staged > 10);
+    const mounts = yaml.load(fs.readFileSync(app.composeFile, 'utf8')).services.web.volumes;
+    for (const target of ['/app', '/read-only', '/data', '/shared', '/global', '/etc/lando/certs/cert.crt', '/etc/lando/build/app/user.d/app.sh']) {
+      assert.ok(mounts.some(mount => mount.target === target), target);
+    }
   });
   it('runs internal-root and user hooks before startup, and repeats after changed hook content', async () => {
     fs.writeFileSync(path.join(f.root, 'hook.sh'), '#!/bin/sh\necho one\n');
@@ -136,7 +140,10 @@ describe('API 4 Lando lifecycle (#5)', () => {
     const cert = new X509Certificate(fs.readFileSync(file));
     assert.equal(cert.checkHost('fixture.internal'), 'fixture.internal');
     assert.ok(cert.verify(new X509Certificate(fs.readFileSync(app.certificates.caCert)).publicKey));
-    assert.equal(fs.statSync(file.replace(/\.crt$/, '.key')).mode & 0o777, 0o600);
+    assert.equal(fs.statSync(file.replace(/\.crt$/, '.key')).mode & 0o777, 0o644);
+    assert.equal(fs.statSync(app.certificates.directory).mode & 0o777, 0o700);
+    assert.equal(fs.statSync(app.certificates.caKey).mode & 0o777, 0o600);
+    assert.ok(compose.services.web.volumes.filter(mount => mount.target.startsWith('/etc/lando/certs/')).every(mount => mount.read_only));
     assert.match(fs.readFileSync(app.services[0].imagefile, 'utf8'), /ca-certificates/);
     f.calls.length = 0; await f.load().start();
     assert.equal(f.calls.some(call => call[0] === 'build'), false);
