@@ -17,10 +17,6 @@ jobs:
   lifecycle:
     runs-on: ubuntu-24.04
     timeout-minutes: 15
-    env:
-      DEVTOOL_FIXTURE_ROOT: ${{ runner.temp }}/devtool-fixture
-      DEVTOOL_DATA_ROOT: ${{ runner.temp }}/devtool-data
-      DEVTOOL_CACHE_ROOT: ${{ runner.temp }}/devtool-cache
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -28,6 +24,11 @@ jobs:
           node-version-file: .node-version
           cache: npm
       - run: npm ci
+      - name: Set fixture paths
+        run: |
+          echo "DEVTOOL_FIXTURE_ROOT=$RUNNER_TEMP/devtool-fixture" >> "$GITHUB_ENV"
+          echo "DEVTOOL_DATA_ROOT=$RUNNER_TEMP/devtool-data" >> "$GITHUB_ENV"
+          echo "DEVTOOL_CACHE_ROOT=$RUNNER_TEMP/devtool-cache" >> "$GITHUB_ENV"
       - name: Check existing engine
         run: |
           docker version
