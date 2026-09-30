@@ -23,7 +23,6 @@ module.exports = async (service, certs) => {
   // generate certs
   const {certPath, keyPath} = await service.generateCert(`${service.id}.${service.project}`, {
     domains: [
-      ...service.packages?.proxy?.domains ?? [],
       ...service.hostnames,
       service.id,
     ],

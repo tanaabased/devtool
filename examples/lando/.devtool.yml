@@ -1,0 +1,51 @@
+name: lando-source
+services:
+  web:
+    api: 4
+    type: lando
+    image: alpine:3.20
+    user: fixture
+    command: [sleep, infinity]
+    packages:
+      ssh-agent: false
+    mounts:
+      - ./readonly:/read-only:ro
+      - type: copy
+        source: copied
+        target: /copied
+    storage:
+      - /data
+      - target: /shared
+        scope: app
+        permissions: '0770'
+      - target: /global
+        scope: global
+    build:
+      image: |
+        test "$(id -un)" = fixture
+        printf 'image\n' > /tmp/image-proof
+      app: ./app.sh
+    healthcheck:
+      command: test -f /app/app-proof
+      retry: 2
+      delay: 0
+  peer:
+    api: 4
+    type: lando
+    image: |
+      FROM alpine:3.20
+      CMD ["sleep", "infinity"]
+    user: fixture
+    certs: false
+    packages:
+      git: false
+      sudo: false
+      ssh-agent: false
+    entrypoint: |
+      #!/bin/sh
+      set -eu
+      echo entrypoint > /app/entrypoint-proof
+      exec "$@"
+    storage:
+      - target: /shared
+        scope: app

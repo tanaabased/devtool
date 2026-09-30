@@ -173,7 +173,7 @@ class L337ServiceV4 extends EventEmitter {
     });
     this.addServiceData({ports});
 
-    // handle legacy and deprecated settings in lando-v4 and above services
+    // Preserve API 4 HTTP port metadata.
     this.addComposeData({services: {[this.id]: {labels: {
       'dev.lando.http-ports': http.join(','),
       'dev.lando.https-ports': https.join(','),
@@ -545,7 +545,6 @@ class L337ServiceV4 extends EventEmitter {
       success.info = await bengine.getImage(context.tag).inspect();
 
       // add the final compose data with the updated image tag on success
-      // @NOTE: ideally its sufficient for this to happen ONLY here but in v3 its not
       this.addComposeData({services: {[context.id]: {image: context.tag}}});
       // set the image stuff into the info
       this.info = {image: imagefile, state: {IMAGE: 'BUILT'}, tag: context.tag};

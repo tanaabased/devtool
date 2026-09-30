@@ -94,6 +94,10 @@ module.exports = {
   builder: (parent, defaults) => class LandoServiceV4 extends parent {
     static debug = require('debug')('@lando/l337-service-v4');
 
+    #prepared = false;
+    #engine;
+    appHooks = [];
+
     #run = {
       environment: [],
       labels: {},
@@ -103,7 +107,6 @@ module.exports = {
     #installers = {
       'certs': require('../packages/certs/certs'),
       'git': require('../packages/git/git'),
-      'proxy': require('../packages/proxy/proxy'),
       'security': require('../packages/security/security'),
       'sudo': require('../packages/sudo/sudo'),
       'user': require('../packages/user/user'),
@@ -121,7 +124,7 @@ module.exports = {
 
     #addRunLabels(data = {}) {
       // if data is an array we need to put into object format
-      if (Array.isArray(data)) data = Object.fromEntries(data).map(datum => datum.split('='));
+      if (Array.isArray(data)) data = Object.fromEntries(data.map(datum => { const i = datum.indexOf('='); return [datum.slice(0, i), datum.slice(i + 1)]; }));
       // if data is an object then we can merge to #labels
       if (isObject(data)) this.#run.labels = merge(this.#run.labels, data);
     }
@@ -134,14 +137,20 @@ module.exports = {
       // and then munge it all 2gether
       this.#run.mounts = uniq([
         ...this.#run.mounts,
-        ...this.normalizeVolumes(data).map(volume => `${volume.source}:${volume.target}`),
+        ...this.normalizeVolumes(data).map(volume => `${volume.source}:${volume.target}${volume.read_only ? ':ro' : ''}`),
       ]);
     }
 
     #handleScriptyInput(contents, {id = undefined} = {}) {
       // @TODO: handle non-stringy inputs?
       // if its a single line string then lets not overly complicate things
-      if (contents.split('\n').length === 1) return contents;
+      if (Array.isArray(contents)) return contents;
+      if (contents?.getMetadata) return this.mountScript(contents, {dest: id});
+      if (contents.split('\n').length === 1) {
+        const file = path.resolve(this.appRoot, contents);
+        if (fs.existsSync(file) && fs.statSync(file).isFile()) return this.mountScript(contents, {dest: id});
+        return contents;
+      }
       // otherwise dump-n-mount
       return this.mountScript(contents, {dest: id});
     }
@@ -228,16 +237,16 @@ module.exports = {
 
     #setupStorage() {
       // add top level volumes
-      this.tlvolumes = Object.fromEntries(this.storage
+      this.tlvolumes = {...this.tlvolumes, ...Object.fromEntries(this.storage
         .filter(volume => volume.type === 'volume')
-        .map(volume => ([volume.source, {external: true}])));
+        .map(volume => ([volume.source, {external: true}])))};
 
       // storage volumes
       this.volumes.push(...this.storage
         .filter(volume => volume.type === 'volume' || volume.type === 'bind')
         .map(data => {
           // blow it up
-          const {destination, labels, name, owner, permissions, scope, ...volume} = data; // eslint-disable-line no-unused-vars
+          const {destination, id, labels, name, owner, permissions, scope, ...volume} = data; // eslint-disable-line no-unused-vars
           // return what we need
           return volume;
         }),
@@ -282,7 +291,7 @@ module.exports = {
       // @TODO: command as a full script?
 
       // get stuff from config
-      const {caCert, caDomain, gid, uid, username} = lando.config;
+      const {caCert, gid, uid, username} = lando.config;
       // before we call super we need to separate things
       const {config, ...upstream} = merge({}, defaults, options);
       // consolidate user info with any incoming stuff
@@ -294,14 +303,19 @@ module.exports = {
       upstream.user = user.name;
 
       // add a user build group
-      groups.user = {
+      const serviceGroups = merge({}, groups);
+      serviceGroups.user = {
         description: 'Catch all group for things that should be run as the user',
         weight: 2000,
         user: user.name,
       };
 
       // get this
-      super(id, merge({}, {stages}, {groups}, {states}, upstream), app, lando);
+      super(id, merge({}, {stages}, {groups: serviceGroups}, {states}, upstream), app, lando);
+
+      this.#engine = options.engine;
+      this.sourceConfig = config;
+      this.storageNamespace = lando.config.storageNamespace;
 
       // props
       this.api = 4;
@@ -315,7 +329,7 @@ module.exports = {
       this.user = user;
 
       // top level stuff
-      this.tlnetworks = {[this.network]: {external: true}};
+      this.tlnetworks = {[this.network]: {}};
 
       // config
       this.appMount = config.appMount ?? config.appmount ?? config['app-mount'];
@@ -326,7 +340,7 @@ module.exports = {
       this.overrides = config.overrides;
       this.packages = config.packages;
       this.security = config.security;
-      this.security.cas.push(caCert, path.join(path.dirname(caCert), `${caDomain}.pem`));
+      if (caCert) this.security.cas.push(caCert);
       this.storage = require('../utils/normalize-storage')([...config.storage, ...config['persistent-storage']], this);
       this.volumes = config.volumes;
       this.workdir = undefined;
@@ -362,14 +376,6 @@ module.exports = {
       this.packages.security = this.security;
       this.packages.user = this.user;
 
-      // if the proxy is on then set the package
-      if (lando.config?.proxy === 'ON') {
-        this.packages.proxy = {
-          volume: `${lando.config.proxyName}_proxy_config`,
-          domains: require('../packages/proxy/get-proxy-hostnames')(app?.config?.proxy?.[id] ?? []),
-        };
-      }
-
       // user app build stuff
       // @TODO: app:first, app:changed, app:every
       // @TODO: handle array content?
@@ -395,11 +401,11 @@ module.exports = {
       }
 
       // info things
-      this.info = {hostnames: this.hostnames};
+      this.info = {hostnames: this.hostnames, healthy: options.info?.healthy ?? 'unknown'};
 
       // auth stuff
       // @TODO: make this into a package?
-      this.setNPMRC(lando.config.pluginConfigFile);
+      if (lando.config.npmrc) this.setNPMRC(lando.config.npmrc);
 
       // add in top level things
       this.addComposeData({networks: this.tlnetworks, volumes: this.tlvolumes});
@@ -410,10 +416,10 @@ module.exports = {
         LANDO: 'ON',
         LANDO_DEBUG: lando.debuggy ? '1' : '',
         LANDO_HOST_IP: 'host.lando.internal',
-        LANDO_HOST_GID: require('../utils/get-gid')(),
+        LANDO_HOST_GID: gid,
         LANDO_HOST_OS: process.platform,
-        LANDO_HOST_UID: require('../utils/get-uid')(),
-        LANDO_HOST_USER: require('../utils/get-username')(),
+        LANDO_HOST_UID: uid,
+        LANDO_HOST_USER: username,
         LANDO_LEIA: lando.config.leia === false ? '0' : '1',
         LANDO_PROJECT: this.project,
         LANDO_SERVICE_API: 4,
@@ -426,8 +432,8 @@ module.exports = {
       // labels
       const labels = merge({}, app.labels, {
         'dev.lando.container': 'TRUE',
-        'dev.lando.id': lando.config.id,
-        'dev.lando.landofiles': app.configFiles.map(file => path.basename(file)).join(','),
+        'dev.lando.id': lando.config.identity,
+        'dev.lando.landofiles': [app.file].map(file => path.basename(file)).join(','),
         'dev.lando.root': app.root,
         'dev.lando.src': app.root,
         'io.lando.http-ports': '80,443',
@@ -471,6 +477,8 @@ module.exports = {
         fs.chmodSync(file, '755');
       }
 
+      file = path.resolve(this.appRoot, file);
+
       // image stage should add directly to the build context
       if (stage === 'image') {
         this.addContext(
@@ -481,6 +489,7 @@ module.exports = {
       // app context should mount into the app
       } else if (stage === 'app') {
         const volumes = [`${file}:/etc/lando/build/app/${hook}.d/${path.basename(file)}`];
+        this.appHooks.push(file);
         this.addLandoServiceData({volumes});
       }
     }
@@ -534,29 +543,15 @@ module.exports = {
 
     // buildapp
     async buildApp() {
-      // create storage if needed
-      // @TODO: should this be in try block below?
-      if (this.storage.filter(volume => volume.type === 'volume').length > 0) {
-        // get existing volumes
-        const estorage = (await this.getStorageVolumes()).map(volume => volume.id);
-
-        // find any service level volumes we might need to create
-        // @TODO: note that app/project/global storage is created at the app level and not here
-        const cstorage = this.storage
-          .filter(volume => volume.type === 'volume')
-          .filter(volume => !estorage.includes(volume.id))
-          .filter(volume => volume.scope === 'service')
-          .filter(volume => volume?.labels?.['dev.lando.storage-volume'] === 'TRUE');
-
-        await Promise.all(cstorage.map(async volume => {
-          const bengine = this.getBengine();
-          await bengine.createVolume({Name: volume.source, Labels: volume.labels});
-          this.debug('created service storage volume %o with metadata %o', volume.id, volume.labels);
-        }));
-      }
-
-      // build app
       try {
+        const existing = await this.getStorageVolumes();
+        for (const volume of this.storage.filter(volume => volume.type === 'volume' && volume.labels?.['dev.lando.storage-volume'] === 'TRUE')) {
+          const found = existing.find(item => item.id === volume.source);
+          if (found && (found.scope !== volume.scope || (volume.scope !== 'global' && found.project !== this.project))) {
+            throw new Error(`Storage ownership mismatch: ${volume.source}`);
+          }
+          if (!found) await this.getBengine().createVolume({Name: volume.source, Labels: volume.labels});
+        }
         // set state
         this.info = {state: {APP: 'BUILDING'}};
         // run internal root app build first
@@ -582,9 +577,14 @@ module.exports = {
       }
     }
 
-    async buildImage() {
-      // go through all packages and install them
+    async prepare() {
+      if (this.#prepared) return;
       await this.installPackages();
+      this.#prepared = true;
+    }
+
+    async buildImage() {
+      await this.prepare();
 
       // build the image
       const image = await super.buildImage();
@@ -645,11 +645,7 @@ module.exports = {
     }
 
     getBengine() {
-      return LandoServiceV4.getBengine(LandoServiceV4.bengineConfig, {
-        builder: LandoServiceV4.builder,
-        debug: this.debug,
-        orchestrator: LandoServiceV4.orchestrator,
-      });
+      return this.#engine;
     }
 
     async getStorageVolumes() {
@@ -671,17 +667,17 @@ module.exports = {
     }
 
     async installPackages() {
-      await Promise.all(Object.entries(this.packages).map(async ([id, data]) => {
+      for (const [id, data] of Object.entries(this.packages)) {
         this.debug('adding package %o with args: %o', id, data);
         if (!require('../utils/is-disabled')(data)) {
           await this.addPackage(id, data);
         }
-      }));
+      }
     }
 
     mountScript(contents, {dest = `tmp/${nanoid()}.sh`} = {}) {
       // normalize to a file
-      const file = this.normalizeFileInput(contents);
+      const file = this.normalizeFileInput(contents, {dest});
       // make executable
       fs.chmodSync(file, '755');
       // now complete the final mapping for container injection

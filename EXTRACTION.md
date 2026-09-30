@@ -40,9 +40,8 @@ are ported to native assertions and owned temporary fixtures.
 
 ## Boundaries
 
-The retained `builders/lando-v4.js` and its container helpers are reserved for #5;
-they are not registered or initialized by the L337 runtime. Hardcoded proxy helper
-imports remain in that future builder, with no proxy service or orchestration.
+The retained `builders/lando-v4.js` is registered explicitly as API 4 `lando`;
+its container helpers resolve from this checkout. There is no API 3 bootstrap.
 
 Excluded: the legacy CLI/product/app/plugin bootstrap, API 3 builders and recipes,
 external plugin discovery/installation, host engine installation, proxy orchestration,
@@ -50,5 +49,30 @@ update/telemetry machinery, compiled artifacts and publication. Core Next's
 `bun-me` checkout and staged changes are not extraction input.
 
 Local validation uses temporary fixtures and injected engines/processes. Real
-container lifecycle scenarios run only in disposable CI. Broader service and
-platform coverage remains in #5–#7.
+container lifecycle scenarios run only in disposable CI. The selected API 4 scenarios and downstream consumer run on Ubuntu 24 CI;
+other platforms are not claimed by this milestone.
+
+## API 4 completion (#5–#7)
+
+Only API 4 `l337` and `lando` services are registered. Lando extends the extracted
+L337 implementation. Legacy logger/YAML facades, installed-engine discovery and
+proxy helpers have been removed; `extraction.json` records the excluded paths.
+Shared YAML/file helpers and container scripts remain because API 4 uses them.
+
+Lando receives instance-owned user metadata, a project network, an injected engine
+and project-owned certificates. The `mkcert` library generates certificates without
+installing host trust. Packages are prepared before image fingerprinting; completed
+images reconstruct their command/entrypoint and package mounts on reuse. App hooks
+run after all images, before startup. Healthchecks record `unknown`, `true` or
+`false`; an unhealthy running service remains running, matching the retained warning
+semantics. Build and exec failures propagate to the caller.
+
+Storage names and labels distinguish service, app and product-global scope. Project
+destruction removes only its owned service/app storage; global and explicitly
+external storage survive. Disposable CI separately removes its own global namespace.
+The API 4 exec wrapper loads container environment without evaluating caller argv;
+use an explicit shell when shell expansion is intended.
+
+[The assertion map](examples/ASSERTIONS.md) separates executable coverage from
+excluded and absent behavior. The downstream example imports the source package
+from outside its checkout; it makes no compiled-distribution or publication claim.
