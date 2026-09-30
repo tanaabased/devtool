@@ -45,7 +45,8 @@ switch (process.argv[2]) {
     assert.equal(exec('web', 'pwd'), '/app');
     assert.equal(exec('web', 'cat', '/copied'), 'copied');
     assert.equal(exec('web', 'cat', '/read-only'), 'read only');
-    exec('web', 'sh', '-c', '! test -w /read-only');
+    exec('web', 'sh', '-c', '! printf overwritten > /read-only');
+    assert.equal(exec('web', 'cat', '/read-only'), 'read only');
     assert.equal(exec('web', 'cat', '/app/app-proof'), 'app');
     for (let i = 0; i < 30 && !fs.existsSync(path.join(root, 'entrypoint-proof')); i++) Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 100);
     assert.equal(fs.readFileSync(path.join(root, 'entrypoint-proof'), 'utf8').trim(), 'entrypoint');

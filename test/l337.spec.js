@@ -85,6 +85,12 @@ describe('L337 characterization (#3)', () => {
     assert.ok(text.indexOf('RUN echo middle') < text.indexOf('RUN echo after'));
     assert.equal(text.includes('RUN echo not-image'), false);
   });
+  it('preserves explicit working directories and reports the mounted app location', () => {
+    write(f, {image: 'alpine', working_dir: '/site/subdirectory', volumes: ['./:/site']});
+    const app = f.load();
+    assert.equal(app.assemble().services.web.working_dir, '/site/subdirectory');
+    assert.equal(app.getInfo().services[0].appMount, '/site');
+  });
   it('normalizes HTTP ports and retains long syntax', () => {
     const result = ports(['8080:80/http', '8443:443/https', '9000-9002/tcp', {target: 53, published: '5353', protocol: 'udp'}]);
     assert.deepEqual(result.http, [80]); assert.deepEqual(result.https, [443]);

@@ -102,7 +102,10 @@ describe('API 4 Lando lifecycle (#5)', () => {
   });
   it('keeps configured users and package settings isolated between instances', async () => {
     const first = f.load();
-    const second = f.load({username: 'another', uid: 1234});
+    fs.writeFileSync(f.file, yaml.dump({services: {web: service({user: {name: 'another', uid: 1234, gid: 1234}})}}));
+    const second = f.load();
+    assert.equal(first.services[0]._data.groups.user.user, 'builder');
+    assert.equal(second.services[0]._data.groups.user.user, 'another');
     second.services[0].packages.git = true;
     assert.equal(first.services[0].packages.git, false);
     await first.start();
