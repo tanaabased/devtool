@@ -20,7 +20,7 @@ describe('exists-sync upstream regressions', () => {
     for (const value of [file, Buffer.from(file), pathToFileURL(file)]) assert.equal(exists(value), true);
     for (const value of [file + '-absent', Buffer.from(file + '-absent'), pathToFileURL(file + '-absent')]) assert.equal(exists(value), false);
   });
-  it('does not warn for invalid values when deprecations are fatal', () => {
-    execFileSync(process.execPath, ['--throw-deprecation', '-e', `const exists=require('./utils/exists-sync'); for(const value of [undefined,null,{},[],42,true]) if(exists(value)!==false) throw Error('expected false')`], {cwd: path.join(__dirname, '..')});
+  it('does not emit warnings for invalid values', () => {
+    execFileSync(process.execPath, ['-e', `process.emitWarning = () => { throw Error('unexpected warning'); }; const exists=require('./utils/exists-sync'); for(const value of [undefined,null,{},[],42,true]) if(exists(value)!==false) throw Error('expected false')`], {cwd: path.join(__dirname, '..')});
   });
 });

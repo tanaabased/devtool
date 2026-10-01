@@ -11,28 +11,28 @@ changes or developer SSH keys are needed.
 set -eu
 test "$GITHUB_ACTIONS" = true
 ! command -v lando
-node verify.js setup
+bun verify.js setup
 ```
 
-## Testing
+## Testing CLI
 
 ```sh
 # should run mapped users, ordered builds, packages, mounts, certificates and shared storage
-node verify.js start
+bun verify.js start
 
 # should reuse images and app state across processes and preserve data across rebuilds
-node verify.js cache
+bun verify.js cache
 
 # should propagate image, app and exec failures and recover on retry
-node verify.js failures
+bun verify.js failures
 
 # should destroy project storage while retaining product-global storage
-node verify.js destroy
+bun verify.js destroy
 ```
 
 ## Cleanup
 
 ```sh
 # should remove the selected project even after a failed assertion
-node ../../bin/devtool.js --file "$DEVTOOL_FIXTURE_ROOT/lando/.devtool.yml" destroy
+bun ../../bin/devtool.js --file "$DEVTOOL_FIXTURE_ROOT/lando/.devtool.yml" destroy
 ```

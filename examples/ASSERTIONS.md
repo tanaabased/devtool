@@ -21,7 +21,8 @@ Final acceptance requires the source and lifecycle jobs at the delivered revisio
 | `events`: API 4 build/state events and ordering | `test/l337.spec.js`, `test/lando.spec.js`; image/app markers | Retained service events/hooks; legacy app-event dispatcher and custom CLI event aliases excluded |
 | `tooling`: service user, environment, argv, execution failures | explicit `exec` in both container fixtures; `test/lifecycle.spec.js`, `test/lando.spec.js` | Retained primitives; dynamic alias parser, background CLI orchestration and API 3 services excluded |
 | #5 failure/cache additions | unit image/app/start/exec failures, cross-process reconstruction; container image/app/exec failures and recovery | Added; no success inferred from placeholders |
-| #7 downstream and import boundaries | `test/source-probe.js`, `test/consumer.spec.js`, external copy of `examples/consumer` | Node source import, host-read/write/process boundaries and independent products; Bun wording superseded by repository policy |
+| #7 downstream and import boundaries | `test/source-probe.js`, `test/consumer.spec.js`, external copy of `examples/consumer` | Bun source library import, host-read/write/process boundaries and independent products |
+| #11 exec responsiveness | `examples/l337/latency.js` through the source CLI and equivalent direct Docker command | First output before delayed completion; initial/repeated timings, median and p95; container startup and OS-cold caches excluded from measurements |
 
 Unimplemented upstream features stay absent: `app:first`/`app:changed`/`app:every`,
 worker orchestration, extra-user installation and richer build-step shorthand.
@@ -29,3 +30,7 @@ Proxy orchestration, host engine/trust installation, plugin discovery, API 3,
 compilation, distribution compatibility and publication are outside this extraction.
 No inherited pending tests count as passed coverage. Container scenarios run only
 on disposable Ubuntu 24 CI, with fixture-owned paths and no installed Lando runtime.
+
+CLI coverage uses `Testing CLI`; the downstream consumer uses `Testing Library`.
+All current scenarios target source under Bun. Compiled and installed targets
+belong to #16; the layout contract is in [AGENTS.md](AGENTS.md).

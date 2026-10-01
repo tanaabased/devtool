@@ -8,22 +8,20 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: oven-sh/setup-bun@v2
         with:
-          node-version-file: .node-version
-          cache: npm
-      - run: npm ci
-      - run: npm test
+          bun-version-file: .bun-version
+      - run: bun install --frozen-lockfile --ignore-scripts
+      - run: bun run test
   lifecycle:
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: oven-sh/setup-bun@v2
         with:
-          node-version-file: .node-version
-          cache: npm
-      - run: npm ci
+          bun-version-file: .bun-version
+      - run: bun install --frozen-lockfile --ignore-scripts
       - name: Set fixture paths
         run: |
           echo "DEVTOOL_FIXTURE_ROOT=$RUNNER_TEMP/devtool-fixture" >> "$GITHUB_ENV"
@@ -34,7 +32,14 @@ jobs:
           docker version
           docker compose version
           docker buildx version
-      - run: npm run test:integration
+      - run: bun run test:integration
+      - name: Save exec latency baseline
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: bun-source-exec-latency
+          path: ${{ runner.temp }}/devtool-fixture/exec-latency.json
+          if-no-files-found: ignore
       - name: Capture diagnostics
         if: failure()
         run: |
@@ -43,4 +48,4 @@ jobs:
           cat "$DEVTOOL_FIXTURE_ROOT/build-error" "$DEVTOOL_FIXTURE_ROOT/lando/failure.log" 2>/dev/null || true
       - name: Clean fixture resources
         if: always()
-        run: node examples/cleanup.js
+        run: bun examples/cleanup.js
