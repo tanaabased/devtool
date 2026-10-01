@@ -7,3 +7,8 @@ declare module 'string-argv' {
 declare module 'dockerfile-generator/lib/dockerGenerator.js' {
   export function generateDockerFileFromArray(instructions: Record<string, unknown>[]): string;
 }
+
+declare module '*.sh' {
+  const file: string;
+  export default file;
+}

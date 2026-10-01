@@ -104,6 +104,27 @@ external resources, source files, other projects and global storage remain.
 Built image tags are retained. Only API 4 `l337` and `lando` services are registered; API 3 is rejected. Plugin loading,
 host engine installation, global container names and host networking are excluded.
 
+## Standalone CLI
+
+With the pinned Bun installed, `bun run build` produces `dist/devtool` for the
+current platform with embedded Bun bytecode and all 19 retained shell assets.
+Copy the executable outside the checkout and invoke it directly; no separately
+installed JavaScript runtime or `node_modules` is required. Docker Engine,
+Compose and Buildx remain explicit host prerequisites for lifecycle commands.
+
+The compiled CLI ignores incidental `.env`, `bunfig.toml`, `tsconfig.json` and
+`package.json` files. Use product YAML, prefixed environment variables and CLI
+options through the existing configuration contract. Build inputs materialize
+only when preparing a Lando image, under the selected project's data directory;
+unchanged files are reused and damaged bytes or modes are restored atomically.
+Library operations continue to use ordinary module-relative asset files.
+
+`bun run test:compiled` checks the built executable without contacting Docker.
+Disposable CI additionally isolates it from the checkout, dependencies and
+installed runtimes, then runs the existing L337/Lando lifecycle scenarios.
+Platform support and measured startup results are recorded after executable and
+lifecycle verification; cross-compilation alone does not establish support.
+
 ## Testing
 
 `bun run test` runs unit/provenance checks and Docker-free source CLI/library scenarios. The

@@ -11,9 +11,9 @@
   configuration, returned values, errors, isolated instances and inert imports.
   Shared lifecycle expectations can reuse fixtures and assertion helpers, but a
   library test must not route its calls through the CLI.
-- Interface and target are independent choices. Current scenarios use source
-  under Bun. Compiled CLI and installed package targets belong to #16; select
-  those explicitly when introduced, without changing the feature directory.
+- Interface and target are independent choices. CLI scenarios select source under Bun or the compiled executable explicitly;
+  library scenarios use source under Bun. Installed package targets belong to #16.
+  Missing targets must fail, without falling back to source.
 - Run Leia under Bun via `bun run leia`. Select sections with
   `--test-header 'Testing CLI'` or `--test-header 'Testing Library'`; those are
   case-sensitive header prefixes. Keep setup with its scenario,

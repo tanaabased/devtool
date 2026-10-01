@@ -96,3 +96,17 @@ files. Package metadata uses a static JSON import. The synchronous file reader r
 explicit `createRequire` boundary for caller-selected JavaScript data files; npmrc paths are
 parsed as JSON. Neither path is service discovery. The import audit parses TypeScript syntax,
 including literal dynamic imports, instead of searching for CommonJS calls.
+
+## Standalone compilation (#13)
+
+The explicit `lib/shell-assets.ts` registry imports the 19 retained shell files
+with Bun's built-in file loader. Their source bytes and executable modes remain
+unchanged. Library calls resolve ordinary module-relative paths; the compiled CLI
+materializes only requested files under service-owned temporary storage before
+image fingerprinting. Atomic replacement preserves exact bytes and mode `0755`,
+including repair after corruption. Changes feed the existing build fingerprint.
+
+Lando boot inputs and image hook registration now run in `prepare()` alongside
+package installation, keeping extraction off `exec` and `info`. Builder and
+package adaptations are recorded in `extraction.json`. No prototype or Core Next
+source was imported.

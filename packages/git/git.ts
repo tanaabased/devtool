@@ -1,8 +1,8 @@
+import shellAsset from '../../lib/shell-assets.ts';
 import type { PackageService } from '../../lib/types.ts';
-import path from 'node:path';
 
 export default async (service: PackageService) => {
-  service.addHookFile(path.join(import.meta.dirname, 'install-git.sh'), { hook: 'boot' });
+  service.addHookFile(shellAsset('packages/git/install-git.sh', service.tmpdir), { hook: 'boot' });
   service.addHookFile(
     `
     if command -v git > /dev/null 2>&1; then

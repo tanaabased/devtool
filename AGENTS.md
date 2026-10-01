@@ -4,7 +4,7 @@
 - Use Bun for installation, development and validation; read the pin from `.bun-version` and keep `packageManager` aligned. Use frozen `bun.lock` installs. Project Node execution is reserved for npm deployment if that pipeline requires it; only then add its authoritative `.node-version`.
 - Shared GitHub Actions may use runner-provided Node internally; do not add project Node setup or a development pin for action infrastructure.
 - devtool-owned source is strict TypeScript ESM. Bun compatibility does not establish a Node consumer support range; `engines.node` is a separate declaration requiring evidence before publication.
-- Keep strict typechecking separate from Bun execution and bundling. Compilation and publication belong to later work.
+- Keep strict typechecking separate from Bun execution and bundling. Publication belongs to later work.
 - Retained Core source lives in devtool-owned directories. Preserve source notices and record intentional adaptations in `extraction.json` and `EXTRACTION.md`.
 - Core Next is a structural reference only. Do not use its `bun-me` checkout or staged changes as extraction input.
 - Keep library imports inert. Initialize services, inspect host configuration, or contact Docker only after an explicit caller action.

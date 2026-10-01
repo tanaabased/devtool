@@ -1,3 +1,4 @@
+import shellAsset from '../lib/shell-assets.ts';
 import { ImportString } from '../components/yaml.ts';
 import type L337ServiceV4 from '../components/l337-v4.ts';
 import type {
@@ -234,20 +235,17 @@ export default {
       }
 
       #setupBoot() {
-        this.addContext(`${path.join(import.meta.dirname, '..', 'scripts', 'lash.sh')}:/bin/lash`);
-        this.addLSF(path.join(import.meta.dirname, '..', 'scripts', 'boot.sh'));
-        this.addLSF(path.join(import.meta.dirname, '..', 'scripts', 'entrypoint.sh'));
-        this.addLSF(path.join(import.meta.dirname, '..', 'scripts', 'exec.sh'));
-        this.addLSF(path.join(import.meta.dirname, '..', 'scripts', 'exec-multiliner.sh'));
-        this.addLSF(path.join(import.meta.dirname, '..', 'scripts', 'run-hooks.sh'));
-        this.addLSF(path.join(import.meta.dirname, '..', 'scripts', 'landorc.sh'), 'landorc');
-        this.addLSF(path.join(import.meta.dirname, '..', 'scripts', 'utils.sh'));
-        this.addLSF(
-          path.join(import.meta.dirname, '..', 'scripts', 'environment.sh'),
-          'environment',
-        );
-        this.addLSF(path.join(import.meta.dirname, '..', 'scripts', 'install-updates.sh'));
-        this.addLSF(path.join(import.meta.dirname, '..', 'scripts', 'install-bash.sh'));
+        this.addContext(`${shellAsset('scripts/lash.sh', this.tmpdir)}:/bin/lash`);
+        this.addLSF(shellAsset('scripts/boot.sh', this.tmpdir));
+        this.addLSF(shellAsset('scripts/entrypoint.sh', this.tmpdir));
+        this.addLSF(shellAsset('scripts/exec.sh', this.tmpdir));
+        this.addLSF(shellAsset('scripts/exec-multiliner.sh', this.tmpdir));
+        this.addLSF(shellAsset('scripts/run-hooks.sh', this.tmpdir));
+        this.addLSF(shellAsset('scripts/landorc.sh', this.tmpdir), 'landorc');
+        this.addLSF(shellAsset('scripts/utils.sh', this.tmpdir));
+        this.addLSF(shellAsset('scripts/environment.sh', this.tmpdir), 'environment');
+        this.addLSF(shellAsset('scripts/install-updates.sh', this.tmpdir));
+        this.addLSF(shellAsset('scripts/install-bash.sh', this.tmpdir));
         this.addSteps({
           group: 'boot',
           instructions: `
@@ -480,10 +478,6 @@ export default {
 
         // @TODO: add in tmp-storage and home-storage?
 
-        // boot stuff
-        this.#setupBoot();
-        // hook system
-        this.#setupHooks();
         // mounting system
         this.#setupMounts();
         // storage system
@@ -741,6 +735,8 @@ export default {
 
       async prepare() {
         if (this.#prepared) return;
+        this.#setupBoot();
+        this.#setupHooks();
         await this.installPackages();
         this.#prepared = true;
       }
