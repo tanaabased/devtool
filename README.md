@@ -1,7 +1,7 @@
 # devtool
 
 Tanaab-based development environments. This extraction assembles the existing
-JavaScript runtime and API 4 L337 and Lando services into one configurable library
+TypeScript ESM runtime and API 4 L337 and Lando services into one configurable library
 and source CLI. Development and validation run on Bun; compilation and publication
 belong to later work.
 
@@ -13,7 +13,7 @@ dependencies and link the source entrypoint into a directory on your `PATH`:
 ```sh
 bun install --frozen-lockfile --ignore-scripts
 mkdir -p "$HOME/.local/bin"
-ln -s "$PWD/bin/devtool.js" "$HOME/.local/bin/devtool"
+ln -s "$PWD/bin/devtool.ts" "$HOME/.local/bin/devtool"
 export PATH="$HOME/.local/bin:$PATH"
 devtool --help
 ```
@@ -54,7 +54,7 @@ query live container health.
 ## Library and configuration
 
 ```js
-const {createDevtool} = require('/path/to/devtool');
+import { createDevtool } from '/path/to/devtool/lib/devtool.ts';
 
 const runtime = createDevtool({
   identity: 'wrapper',
@@ -66,19 +66,22 @@ const runtime = createDevtool({
 });
 
 async function main() {
-  const app = runtime.loadApp({cwd: '/path/to/project'});
+  const app = runtime.loadApp({ cwd: '/path/to/project' });
   await app.start();
   await app.exec('web', ['echo', 'hello']);
   await app.stop();
 }
 
-main().catch(error => { console.error(error); process.exitCode = 1; });
+main().catch((error) => {
+  console.error(error);
+  process.exitCode = 1;
+});
 ```
 
 Importing the library and creating a runtime performs no host initialization or
 engine access. `loadApp` reads configuration and prepares service artifacts;
 lifecycle methods explicitly operate Docker. Each runtime can receive an injected
-`engine` for embedding or tests. The CLI adapter in `lib/cli.js` accepts that same
+`engine` for embedding or tests. The CLI adapter in `lib/cli.ts` accepts that same
 runtime.
 
 Configuration precedence is defaults, then an explicit `configFile`, then prefixed

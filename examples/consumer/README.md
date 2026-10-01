@@ -11,19 +11,19 @@ proof only in disposable CI. Unit tests exercise it with an injected engine.
 set -eu
 test "$GITHUB_ACTIONS" = true
 mkdir -p "$DEVTOOL_FIXTURE_ROOT/consumer"
-cp index.js .wrapper.yml "$DEVTOOL_FIXTURE_ROOT/consumer/"
+cp index.ts .wrapper.yml "$DEVTOOL_FIXTURE_ROOT/consumer/"
 ```
 
 ## Testing Library
 
 ```sh
 # should isolate two downstream products through the actual engine
-bun "$DEVTOOL_FIXTURE_ROOT/consumer/index.js" "$PWD/../.." "$DEVTOOL_FIXTURE_ROOT/consumer"
+bun "$DEVTOOL_FIXTURE_ROOT/consumer/index.ts" "$PWD/../.." "$DEVTOOL_FIXTURE_ROOT/consumer"
 ```
 
 ## Cleanup
 
 ```sh
 # should remove both downstream projects even after failure
-bun ../cleanup.js consumer
+bun ../cleanup.ts consumer
 ```

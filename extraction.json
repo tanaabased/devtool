@@ -25,11 +25,7 @@
       "referenceOnly": true
     }
   },
-  "seeds": [
-    "components/l337-v4.js",
-    "components/docker-engine.js",
-    "builders/lando-v4.js"
-  ],
+  "seeds": ["components/l337-v4.ts", "components/docker-engine.ts", "builders/lando-v4.ts"],
   "files": [
     {
       "source": "LICENSE",
@@ -39,55 +35,59 @@
     },
     {
       "source": "builders/lando-v4.js",
-      "path": "builders/lando-v4.js",
+      "path": "builders/lando-v4.ts",
       "blob": "e8108a56bb11b955bfb7a2b7c6b10441b8539598",
       "mode": "100644",
-      "adaptedBlob": "89a10c531769e1c1772f98d7c10babff8531be84",
-      "adaptation": "Wire API 4 service to instance-owned metadata and injected engine; remove proxy/bootstrap dependencies; prepare packages deterministically; retain command, mount, app-hook and scoped-storage behavior."
+      "adaptedBlob": "286ff9b484bf6a6ac91cc40fa5e653c9345c5866",
+      "adaptation": "Wire API 4 service to instance-owned metadata and injected engine; remove proxy/bootstrap dependencies; prepare packages deterministically; retain command, mount, app-hook and scoped-storage behavior. Renamed to TypeScript ESM; add strict contracts, module-relative paths and typed dependency boundaries."
     },
     {
       "source": "components/docker-engine.js",
-      "path": "components/docker-engine.js",
+      "path": "components/docker-engine.ts",
       "blob": "4a7227848792872848174dad4e022ababd39cd16",
       "mode": "100644",
-      "adaptedBlob": "9e980e124c06f7395b7dbe21b66e95c03f7d4dc9",
-      "adaptation": "Removed import-time executable discovery; use the existing docker executable by default; exclude generated storage from build sources and contain source destinations."
+      "adaptedBlob": "85b70fcbd9dbb8bd52e8b8636eeca584b8856530",
+      "adaptation": "Removed import-time executable discovery; use the existing docker executable by default; exclude generated storage from build sources and contain source destinations. Renamed to TypeScript ESM; add strict contracts, module-relative paths and typed dependency boundaries."
     },
     {
       "source": "components/error.js",
-      "path": "components/error.js",
+      "path": "components/error.ts",
       "blob": "961009c5f51bd7f98538ab993826a7c582c3f931",
-      "mode": "100644"
+      "mode": "100644",
+      "adaptedBlob": "f908e922e9cbd1980b59987920cde702497dc0a4",
+      "adaptation": "Renamed to TypeScript ESM; add strict contracts, module-relative paths and typed dependency boundaries."
     },
     {
       "source": "components/l337-v4.js",
-      "path": "components/l337-v4.js",
+      "path": "components/l337-v4.ts",
       "blob": "cf0c2b695a51ff95779c1775b830d88ea2f16c39",
       "mode": "100644",
-      "adaptedBlob": "eb07d6da88ba943a6fe97138ca1bf4a1c45c59df",
-      "adaptation": "Retain API 4 source builder, injected engines, group/import changes and failure propagation; remove obsolete API 3 commentary."
+      "adaptedBlob": "f9382bca09de328cde8a450d5f06da3f6472cc60",
+      "adaptation": "Retain API 4 source builder, injected engines, group/import changes and failure propagation; remove obsolete API 3 commentary. Renamed to TypeScript ESM; add strict contracts, module-relative paths and typed dependency boundaries."
     },
     {
       "source": "components/yaml.js",
-      "path": "components/yaml.js",
+      "path": "components/yaml.ts",
       "blob": "26449a692d1d6af0ea47ce4919f41309659bb9d9",
       "mode": "100644",
-      "adaptedBlob": "91200e75547f0fcfae894a7de92f50f329bfda3c",
-      "adaptation": "Export isolated app YAML load/dump wrappers instead of mutating shared js-yaml; preserve recursive relative import parsing."
+      "adaptedBlob": "36ba6a6c5344e62b455b3c2c01f00ade8e1f0eef",
+      "adaptation": "Export isolated app YAML load/dump wrappers instead of mutating shared js-yaml; preserve recursive relative import parsing. Renamed to TypeScript ESM; add strict contracts, module-relative paths and typed dependency boundaries."
     },
     {
       "source": "packages/certs/certs.js",
-      "path": "packages/certs/certs.js",
+      "path": "packages/certs/certs.ts",
       "blob": "a7fd15718aa69c430fe0926bc8f0402e1153bd13",
       "mode": "100644",
-      "adaptedBlob": "97189e6aafec8ec191f927707154cf352209849b",
-      "adaptation": "Generate project-owned certificates without proxy domains or host trust."
+      "adaptedBlob": "4bcb277d5ce0c5779f9fdaf57f8bba33a0d1f439",
+      "adaptation": "Generate project-owned certificates without proxy domains or host trust. Renamed to TypeScript ESM; add strict contracts, module-relative paths and typed dependency boundaries."
     },
     {
       "source": "packages/git/git.js",
-      "path": "packages/git/git.js",
+      "path": "packages/git/git.ts",
       "blob": "4310dfbbfae4198892d19288a16669e6050a1832",
-      "mode": "100644"
+      "mode": "100644",
+      "adaptedBlob": "09b63232ee089632076da681a868fd1969f0ba5a",
+      "adaptation": "Renamed to TypeScript ESM; add strict contracts, module-relative paths and typed dependency boundaries."
     },
     {
       "source": "packages/git/install-git.sh",
@@ -103,11 +103,11 @@
     },
     {
       "source": "packages/security/security.js",
-      "path": "packages/security/security.js",
+      "path": "packages/security/security.ts",
       "blob": "31cabf2a0bb8910d8655e2110430553fc7b698ac",
       "mode": "100644",
-      "adaptedBlob": "c94b913e026bd2deaf304257fcf34ee23edd8adf",
-      "adaptation": "Use stable filenames for inline certificate inputs so equivalent source builds reuse cache."
+      "adaptedBlob": "833b01a8dbcfac039cd937e67718d203da69926a",
+      "adaptation": "Use stable filenames for inline certificate inputs so equivalent source builds reuse cache. Renamed to TypeScript ESM; add strict contracts, module-relative paths and typed dependency boundaries."
     },
     {
       "source": "packages/ssh-agent/check-ssh-agent.sh",
@@ -129,9 +129,11 @@
     },
     {
       "source": "packages/ssh-agent/ssh-agent.js",
-      "path": "packages/ssh-agent/ssh-agent.js",
+      "path": "packages/ssh-agent/ssh-agent.ts",
       "blob": "394fbcb2b5b49363c304604401a3a775ed9f8b40",
-      "mode": "100644"
+      "mode": "100644",
+      "adaptedBlob": "6c96f754a1d63ef90d5a5eadc561d64d568adb0f",
+      "adaptation": "Renamed to TypeScript ESM; add strict contracts, module-relative paths and typed dependency boundaries."
     },
     {
       "source": "packages/sudo/install-sudo.sh",
@@ -141,9 +143,11 @@
     },
     {
       "source": "packages/sudo/sudo.js",
-      "path": "packages/sudo/sudo.js",
+      "path": "packages/sudo/sudo.ts",
       "blob": "a0b1acde0c6bf3750b40ab9b9e8156d317557d11",
-      "mode": "100644"
+      "mode": "100644",
+      "adaptedBlob": "0ebbdf22afa328b9d14ac71c2d23ad48b5f93ef5",
+      "adaptation": "Renamed to TypeScript ESM; add strict contracts, module-relative paths and typed dependency boundaries."
     },
     {
       "source": "packages/user/add-user.sh",
@@ -159,9 +163,11 @@
     },
     {
       "source": "packages/user/user.js",
-      "path": "packages/user/user.js",
+      "path": "packages/user/user.ts",
       "blob": "f242663d179a0f038ffc8c289eaf616921b969de",
-      "mode": "100644"
+      "mode": "100644",
+      "adaptedBlob": "28aa206775842f3729f824f42913f8bc59a49871",
+      "adaptation": "Renamed to TypeScript ESM; add strict contracts, module-relative paths and typed dependency boundaries."
     },
     {
       "source": "scripts/boot.sh",
@@ -233,169 +239,203 @@
     },
     {
       "source": "utils/exists-sync.js",
-      "path": "utils/exists-sync.js",
+      "path": "utils/exists-sync.ts",
       "blob": "cac4e496075322f6f63315ccbe9f5eda9bba3d07",
-      "mode": "100644"
+      "mode": "100644",
+      "adaptedBlob": "cb73070eb7666b32d14c7a485644e958eb25a329",
+      "adaptation": "Renamed to TypeScript ESM; add strict contracts, module-relative paths and typed dependency boundaries."
     },
     {
       "source": "utils/get-mount-matches.js",
-      "path": "utils/get-mount-matches.js",
+      "path": "utils/get-mount-matches.ts",
       "blob": "8d3e5d6cae060e84cba6b19382d6949e790db83f",
       "mode": "100644",
-      "adaptedBlob": "7c4eb9922608e89bccc189b7a6f9772b28af4512",
-      "adaptation": "Ignore non-string entries during short-form mount inference instead of calling split on long-form volumes."
+      "adaptedBlob": "45a3e728da6a1786ffbe73d04dfeb28c5cbb6cb8",
+      "adaptation": "Ignore non-string entries during short-form mount inference instead of calling split on long-form volumes. Renamed to TypeScript ESM; add strict contracts, module-relative paths and typed dependency boundaries."
     },
     {
       "source": "utils/get-passphraseless-keys.js",
-      "path": "utils/get-passphraseless-keys.js",
+      "path": "utils/get-passphraseless-keys.ts",
       "blob": "038118b691bc9fe0c2a6f67fb66688afe5e68287",
-      "mode": "100644"
+      "mode": "100644",
+      "adaptedBlob": "de584adfbdb4138aefa599a944502506b176c83c",
+      "adaptation": "Renamed to TypeScript ESM; add strict contracts, module-relative paths and typed dependency boundaries."
     },
     {
       "source": "utils/get-v4-image-build-error-command.js",
-      "path": "utils/get-v4-image-build-error-command.js",
+      "path": "utils/get-v4-image-build-error-command.ts",
       "blob": "d11fa6551166cfe980be7f8ccb7207a4ca189ee9",
-      "mode": "100644"
+      "mode": "100644",
+      "adaptedBlob": "b55eb0aee7ba5367c5d3d8593a779b7eff1e826c",
+      "adaptation": "Renamed to TypeScript ESM; add strict contracts, module-relative paths and typed dependency boundaries."
     },
     {
       "source": "utils/has-instructions.js",
-      "path": "utils/has-instructions.js",
+      "path": "utils/has-instructions.ts",
       "blob": "c7eb2cc406ce5824df411b195a0f1d0d1b4f815f",
-      "mode": "100644"
+      "mode": "100644",
+      "adaptedBlob": "0f4ac8c9e5006ad2199301fa308e64c33327612e",
+      "adaptation": "Renamed to TypeScript ESM; add strict contracts, module-relative paths and typed dependency boundaries."
     },
     {
       "source": "utils/is-disabled.js",
-      "path": "utils/is-disabled.js",
+      "path": "utils/is-disabled.ts",
       "blob": "35cde742a0cc978939ca2d308af8929c0d0d0c22",
-      "mode": "100644"
+      "mode": "100644",
+      "adaptedBlob": "f3482a261ed31cc6dc25fdcd35a99e2470c612ae",
+      "adaptation": "Renamed to TypeScript ESM; add strict contracts, module-relative paths and typed dependency boundaries."
     },
     {
       "source": "utils/is-stringy.js",
-      "path": "utils/is-stringy.js",
+      "path": "utils/is-stringy.ts",
       "blob": "579b039556e3f08c3ba2a8c206dbf37705e08587",
-      "mode": "100644"
+      "mode": "100644",
+      "adaptedBlob": "6f3411c0bb9257a42802270a6dc0a984993f2750",
+      "adaptation": "Renamed to TypeScript ESM; add strict contracts, module-relative paths and typed dependency boundaries."
     },
     {
       "source": "utils/make-error.js",
-      "path": "utils/make-error.js",
+      "path": "utils/make-error.ts",
       "blob": "85f71ed7af20f9588feecab8440fb14cfa52c18d",
-      "mode": "100644"
+      "mode": "100644",
+      "adaptedBlob": "23c34ad5617b7264318f83e9e9865c5852d18741",
+      "adaptation": "Renamed to TypeScript ESM; add strict contracts, module-relative paths and typed dependency boundaries."
     },
     {
       "source": "utils/make-success.js",
-      "path": "utils/make-success.js",
+      "path": "utils/make-success.ts",
       "blob": "8447f7563ab0c1f01325d4aa906fa0bfb2bd9592",
-      "mode": "100644"
+      "mode": "100644",
+      "adaptedBlob": "b5d5cf7ebde4f20ba8fc8aa4623ede4131f6d115",
+      "adaptation": "Renamed to TypeScript ESM; add strict contracts, module-relative paths and typed dependency boundaries."
     },
     {
       "source": "utils/merge-promise.js",
-      "path": "utils/merge-promise.js",
+      "path": "utils/merge-promise.ts",
       "blob": "fdf7184e8069f5e41f42cbaffea90b867916d847",
-      "mode": "100644"
+      "mode": "100644",
+      "adaptedBlob": "7904dc1959aadca970ed27ee8ecd0ba20752695b",
+      "adaptation": "Renamed to TypeScript ESM; add strict contracts, module-relative paths and typed dependency boundaries."
     },
     {
       "source": "utils/normalize-mounts.js",
-      "path": "utils/normalize-mounts.js",
+      "path": "utils/normalize-mounts.ts",
       "blob": "8e82d778cb33434e66ead8f554e73dcbd5867356",
       "mode": "100644",
-      "adaptedBlob": "f239325f5cecea5e8a2d304953c458c297fcebef",
-      "adaptation": "Validate mount objects before normalization."
+      "adaptedBlob": "caffb0aaaa2e9b36ff647071194650b17716526b",
+      "adaptation": "Validate mount objects before normalization. Renamed to TypeScript ESM; add strict contracts, module-relative paths and typed dependency boundaries."
     },
     {
       "source": "utils/normalize-storage.js",
-      "path": "utils/normalize-storage.js",
+      "path": "utils/normalize-storage.ts",
       "blob": "04a6f92edd60e8a56ab58811b48e99cb4417e72b",
       "mode": "100644",
-      "adaptedBlob": "126ea64da8f92962265ecb0de26e6eb0766bf9c6",
-      "adaptation": "Namespace global storage per product/data root and record explicit volume identity and ownership labels."
+      "adaptedBlob": "acc99aa84c668bb235deb1f8ec3d6bd73493d484",
+      "adaptation": "Namespace global storage per product/data root and record explicit volume identity and ownership labels. Renamed to TypeScript ESM; add strict contracts, module-relative paths and typed dependency boundaries."
     },
     {
       "source": "utils/parse-v4-pkginstall-opts.js",
-      "path": "utils/parse-v4-pkginstall-opts.js",
+      "path": "utils/parse-v4-pkginstall-opts.ts",
       "blob": "0555296e58d6cb3581c603776308d10d5d0c88aa",
-      "mode": "100644"
+      "mode": "100644",
+      "adaptedBlob": "669a4bb3882009b52e7a8cc7c833dc531060f3db",
+      "adaptation": "Renamed to TypeScript ESM; add strict contracts, module-relative paths and typed dependency boundaries."
     },
     {
       "source": "utils/parse-v4-ports.js",
-      "path": "utils/parse-v4-ports.js",
+      "path": "utils/parse-v4-ports.ts",
       "blob": "403161aedaca7bae6a1e16b0b5b0d078d4f3ef53",
-      "mode": "100644"
+      "mode": "100644",
+      "adaptedBlob": "83c5ad25084e518f0b5854b52538f6dd760a834c",
+      "adaptation": "Renamed to TypeScript ESM; add strict contracts, module-relative paths and typed dependency boundaries."
     },
     {
       "source": "utils/parse-v4-user.js",
-      "path": "utils/parse-v4-user.js",
+      "path": "utils/parse-v4-user.ts",
       "blob": "06141056fd10f535232fffecbeffdf6f33189fa1",
-      "mode": "100644"
+      "mode": "100644",
+      "adaptedBlob": "3a5fa429757436fdcdda2a768b1857d43c0cca9b",
+      "adaptation": "Renamed to TypeScript ESM; add strict contracts, module-relative paths and typed dependency boundaries."
     },
     {
       "source": "utils/read-file.js",
-      "path": "utils/read-file.js",
+      "path": "utils/read-file.ts",
       "blob": "654acd22f48a7aebe38e3056998f0d78eb22cdce",
       "mode": "100644",
-      "adaptedBlob": "2141b190c5f6d1fe426cf03217d7e954b48b67b6",
-      "adaptation": "Pass the containing directory as the base for app YAML imports."
+      "adaptedBlob": "0ed5ff365c3840533663bb2ef47e130ea975ad34",
+      "adaptation": "Pass the containing directory as the base for app YAML imports. Renamed to TypeScript ESM; add strict contracts, module-relative paths and typed dependency boundaries."
     },
     {
       "source": "utils/remove.js",
-      "path": "utils/remove.js",
+      "path": "utils/remove.ts",
       "blob": "0e0a53b64b290b9c31d7fbe45d53c148ddb1adb1",
-      "mode": "100644"
+      "mode": "100644",
+      "adaptedBlob": "3048052db59634163bd5238d1877f35d61b775e6",
+      "adaptation": "Renamed to TypeScript ESM; add strict contracts, module-relative paths and typed dependency boundaries."
     },
     {
       "source": "utils/to-posix-path.js",
-      "path": "utils/to-posix-path.js",
+      "path": "utils/to-posix-path.ts",
       "blob": "6d5fdd93574c01067aeecea1beb4d0448b7c376f",
-      "mode": "100644"
+      "mode": "100644",
+      "adaptedBlob": "478757f9c35fa1cf5e5172e6f6df0f3e5ea1aa4b",
+      "adaptation": "Renamed to TypeScript ESM; add strict contracts, module-relative paths and typed dependency boundaries."
     },
     {
       "source": "utils/traverse-up.js",
-      "path": "utils/traverse-up.js",
+      "path": "utils/traverse-up.ts",
       "blob": "18a427c79e1e71896b3f7832be9a39cf8d6f98ca",
-      "mode": "100644"
+      "mode": "100644",
+      "adaptedBlob": "9eeddf6dc15762c047a1e80cbe7cdd13243e2f99",
+      "adaptation": "Renamed to TypeScript ESM; add strict contracts, module-relative paths and typed dependency boundaries."
     },
     {
       "source": "utils/write-file.js",
-      "path": "utils/write-file.js",
+      "path": "utils/write-file.ts",
       "blob": "10f90ede6c2199f7a3d0ed24e8f915e4eca87c84",
-      "mode": "100644"
+      "mode": "100644",
+      "adaptedBlob": "c22c554ab373e4758c7d2634493f7efe273b5c58",
+      "adaptation": "Renamed to TypeScript ESM; add strict contracts, module-relative paths and typed dependency boundaries."
     },
     {
       "source": "utils/run-command.js",
-      "path": "utils/run-command.js",
+      "path": "utils/run-command.ts",
       "blob": "a50c73db4ceb401b708ee2c34664b6a1644f814c",
-      "mode": "100644"
+      "mode": "100644",
+      "adaptedBlob": "64d59a4b4c131f9bb2bd3d3f45620889f7391443",
+      "adaptation": "Renamed to TypeScript ESM; add strict contracts, module-relative paths and typed dependency boundaries."
     },
     {
       "source": "utils/get-buildx-error.js",
-      "path": "utils/get-buildx-error.js",
+      "path": "utils/get-buildx-error.ts",
       "blob": "d860b1211ab895b537f0d56d83d500db70837aa0",
       "mode": "100644",
-      "adaptedBlob": "204fdf959311db1882672b73212d5c5d6040b050",
-      "adaptation": "Preserve buildx diagnostics when the final step has no parsed message, including pre-build COPY failures."
+      "adaptedBlob": "978a006662d8ed6ba4f2b1b82d79bf3d8a4bd877",
+      "adaptation": "Preserve buildx diagnostics when the final step has no parsed message, including pre-build COPY failures. Renamed to TypeScript ESM; add strict contracts, module-relative paths and typed dependency boundaries."
     },
     {
       "source": "test/yaml.spec.js",
-      "path": "test/yaml.spec.js",
+      "path": "test/yaml.spec.ts",
       "blob": "1af9a397a689cf5fa231d853a7db318885a0b126",
       "mode": "100644",
-      "adaptedBlob": "a2433e8134e01a83e50783f2aadf2aad3270085f",
-      "adaptation": "Port YAML regressions to retained API 4 read/write helpers; remove legacy logger facade assertions."
+      "adaptedBlob": "9047f6f1a3af722c5f3413ddad5dedbd5aeae85b",
+      "adaptation": "Port YAML regressions to retained API 4 read/write helpers; remove legacy logger facade assertions. Renamed to TypeScript ESM; add strict contracts, module-relative paths and typed dependency boundaries."
     },
     {
       "source": "test/write-file.spec.js",
-      "path": "test/write-file.spec.js",
+      "path": "test/write-file.spec.ts",
       "blob": "ba8b959354368a64f67dc23233d34ed5db67a42a",
       "mode": "100644",
-      "adaptedBlob": "09944b4de22e9c1eb0ef3f7d2b55421b56c60fd4",
-      "adaptation": "Port upstream write/inode/directory-recovery regressions to native assertions."
+      "adaptedBlob": "6c0b8658f7898fd5b18bcc0d265e6c53b6abbe14",
+      "adaptation": "Port upstream write/inode/directory-recovery regressions to native assertions. Renamed to TypeScript ESM; add strict contracts, module-relative paths and typed dependency boundaries."
     },
     {
       "source": "test/exists-sync.spec.js",
-      "path": "test/exists-sync.spec.js",
+      "path": "test/exists-sync.spec.ts",
       "blob": "9ff4142f08116b67b014cbf29d8088bed1496509",
       "mode": "100644",
-      "adaptedBlob": "db030f809438296fefc74c649fbbf9b9dab2e8d8",
-      "adaptation": "Ported to native assertions and owned temporary fixtures; trap warnings explicitly under Bun instead of using the ignored Node --throw-deprecation flag."
+      "adaptedBlob": "54c25ca9d58f6a5688b69b94ccf580f50d3f8dff",
+      "adaptation": "Ported to native assertions and owned temporary fixtures; trap warnings explicitly under Bun instead of using the ignored Node --throw-deprecation flag. Renamed to TypeScript ESM; add strict contracts, module-relative paths and typed dependency boundaries."
     }
   ],
   "excludedFiles": [

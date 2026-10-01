@@ -8,27 +8,34 @@
     "type": "git",
     "url": "git+https://github.com/tanaabased/devtool.git"
   },
-  "type": "commonjs",
+  "type": "module",
   "packageManager": "bun@1.4.2",
-  "engines": {
-    "node": ">=20.17.0"
+  "main": "./lib/devtool.ts",
+  "exports": {
+    ".": {
+      "types": "./lib/devtool.ts",
+      "import": "./lib/devtool.ts"
+    }
   },
-  "main": "./lib/devtool.js",
-  "exports": "./lib/devtool.js",
   "bin": {
-    "devtool": "./bin/devtool.js"
+    "devtool": "./bin/devtool.ts"
   },
   "scripts": {
-    "devtool": "bun ./bin/devtool.js",
+    "devtool": "bun ./bin/devtool.ts",
     "test": "bun run test:unit && bun run test:cli && bun run test:library",
-    "test:unit": "bun --bun ./node_modules/mocha/bin/mocha.js 'test/*.spec.js'",
+    "test:unit": "bun --bun ./node_modules/mocha/bin/mocha.js 'test/*.spec.ts'",
     "test:cli": "bun run prepare:source-cli && bun run leia examples/source/README.md --test-header 'Testing CLI' --shell bash --retry 0 --timeout 10",
     "test:library": "bun run leia examples/source/README.md --test-header 'Testing Library' --shell bash --retry 0 --timeout 10",
     "test:integration": "bun run test:integration:cli && bun run test:integration:library",
     "test:integration:cli": "bun run prepare:source-cli && bun run leia examples/l337/README.md examples/lando/README.md --test-header 'Testing CLI' --shell bash --retry 0 --timeout 300",
     "test:integration:library": "bun run leia examples/consumer/README.md --test-header 'Testing Library' --shell bash --retry 0 --timeout 300",
     "leia": "bun ./node_modules/.bin/leia",
-    "prepare:source-cli": "bun ./scripts/prepare-source-cli.js"
+    "prepare:source-cli": "bun ./scripts/prepare-source-cli.ts",
+    "lint:eslint": "bun --bun eslint .",
+    "format:check": "bun --bun prettier . --check --ignore-unknown",
+    "format:write": "bun --bun prettier . --write --ignore-unknown",
+    "lint": "bun run lint:eslint && bun run format:check",
+    "typecheck": "bun --bun tsc --noEmit"
   },
   "dependencies": {
     "ansis": "^4.0.0",
@@ -48,7 +55,24 @@
     "valid-path": "^2.1.0"
   },
   "devDependencies": {
+    "@eslint/js": "^10",
     "@lando/leia": "2.0.0",
-    "mocha": "^11.7.0"
-  }
+    "@types/bun": "1.4.2",
+    "@types/debug": "^4.1.13",
+    "@types/dockerode": "^2",
+    "@types/fs-extra": "^11.0.4",
+    "@types/glob": "^7",
+    "@types/js-yaml": "^4.0.9",
+    "@types/jsonfile": "^6.1.4",
+    "@types/lodash": "^4.17.25",
+    "@types/mocha": "^10",
+    "eslint": "^10",
+    "eslint-config-prettier": "^10",
+    "globals": "^17",
+    "mocha": "^11.7.0",
+    "prettier": "^3",
+    "typescript": "~5.9.3",
+    "typescript-eslint": "^8"
+  },
+  "types": "./lib/devtool.ts"
 }
