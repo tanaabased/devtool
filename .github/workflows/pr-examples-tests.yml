@@ -5,7 +5,7 @@ permissions:
   contents: read
 jobs:
   examples:
-    name: ${{ matrix.suite }} / ${{ matrix.interface }}
+    name: ${{ matrix.example }} / ${{ matrix.interface }}
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     defaults:
@@ -15,23 +15,20 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - suite: source
+          - example: source
             interface: CLI
-            scenarios: examples/source/README.md
             timeout: 10
-          - suite: source
+          - example: source
             interface: Library
-            scenarios: examples/source/README.md
             timeout: 10
-          - suite: lifecycle
+          - example: l337
             interface: CLI
-            scenarios: |
-              examples/l337/README.md
-              examples/lando/README.md
             timeout: 300
-          - suite: lifecycle
+          - example: lando
+            interface: CLI
+            timeout: 300
+          - example: consumer
             interface: Library
-            scenarios: examples/consumer/README.md
             timeout: 300
     env:
       LEIA_TEST_HEADER: Testing ${{ matrix.interface }}
@@ -40,45 +37,16 @@ jobs:
       - uses: actions/checkout@v7
       - uses: tanaabased/actions/setup-bun@v1
       - run: bun install --frozen-lockfile --ignore-scripts
-      - name: Set fixture paths
-        id: fixtures
-        if: matrix.suite == 'lifecycle'
-        env:
-          DEVTOOL_TEST_INTERFACE: ${{ matrix.interface }}
-        run: |
-          echo "DEVTOOL_FIXTURE_ROOT=$RUNNER_TEMP/devtool-$DEVTOOL_TEST_INTERFACE/fixture" >> "$GITHUB_ENV"
-          echo "DEVTOOL_DATA_ROOT=$RUNNER_TEMP/devtool-$DEVTOOL_TEST_INTERFACE/data" >> "$GITHUB_ENV"
-          echo "DEVTOOL_CACHE_ROOT=$RUNNER_TEMP/devtool-$DEVTOOL_TEST_INTERFACE/cache" >> "$GITHUB_ENV"
-      - name: Prepare source command
-        if: matrix.interface == 'CLI'
+      - name: Prepare source fixtures
         run: |
           bun run prepare:source-cli
           echo "$GITHUB_WORKSPACE/node_modules/.bin" >> "$GITHUB_PATH"
-      - name: Check existing engine
-        if: matrix.suite == 'lifecycle'
-        run: |
-          docker version
-          docker compose version
-          docker buildx version
-      - name: Run Leia scenarios
-        uses: tanaabased/actions/run-leia@v1
+          echo "DEVTOOL_FIXTURE_ROOT=$RUNNER_TEMP/devtool/fixture" >> "$GITHUB_ENV"
+          echo "DEVTOOL_DATA_ROOT=$RUNNER_TEMP/devtool/data" >> "$GITHUB_ENV"
+          echo "DEVTOOL_CACHE_ROOT=$RUNNER_TEMP/devtool/cache" >> "$GITHUB_ENV"
+      - uses: tanaabased/actions/run-leia@v1
         with:
-          scenarios: ${{ matrix.scenarios }}
+          scenarios: examples/${{ matrix.example }}/README.md
           shell: bash
           retry: 0
           stdin: false
-      - name: Measure paired source startup
-        if: matrix.suite == 'lifecycle' && matrix.interface == 'CLI'
-        continue-on-error: true
-        env:
-          DEVTOOL_BASE_SHA: ${{ github.event.pull_request.base.sha }}
-        run: bun scripts/measure-source-startup.ts
-      - name: Capture diagnostics
-        if: failure() && matrix.suite == 'lifecycle'
-        run: |
-          docker ps --all
-          find "$DEVTOOL_FIXTURE_ROOT" "$DEVTOOL_DATA_ROOT" "$DEVTOOL_CACHE_ROOT" -maxdepth 8 -type f -name '*.json' -print -exec cat {} \; || true
-          cat "$DEVTOOL_FIXTURE_ROOT/build-error" "$DEVTOOL_FIXTURE_ROOT/lando/failure.log" 2>/dev/null || true
-      - name: Clean fixture resources
-        if: always() && matrix.suite == 'lifecycle' && steps.fixtures.conclusion == 'success'
-        run: bun examples/cleanup.ts

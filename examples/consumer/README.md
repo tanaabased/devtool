@@ -20,10 +20,3 @@ cp index.ts .wrapper.yml "$DEVTOOL_FIXTURE_ROOT/consumer/"
 # should isolate two downstream products through the actual engine
 bun "$DEVTOOL_FIXTURE_ROOT/consumer/index.ts" "$PWD/../.." "$DEVTOOL_FIXTURE_ROOT/consumer"
 ```
-
-## Cleanup
-
-```sh
-# should remove both downstream projects even after failure
-bun ../cleanup.ts consumer
-```

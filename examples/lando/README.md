@@ -130,10 +130,3 @@ test "$(devtool --file "$file" exec web -- cat /global/value)" = global
 devtool --file "$file" exec web -- sh -c '! test -f /data/value'
 devtool --file "$file" destroy
 ```
-
-## Cleanup
-
-```sh
-# should remove the selected project even after a failed assertion
-devtool --file "$DEVTOOL_FIXTURE_ROOT/lando/.devtool.yml" destroy
-```

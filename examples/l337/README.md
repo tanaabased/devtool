@@ -78,12 +78,3 @@ devtool --file "$DEVTOOL_FIXTURE_ROOT/first/.devtool.yml" destroy
 bun verify.ts destroyed
 test "$(devtool --file "$DEVTOOL_FIXTURE_ROOT/second/.devtool.yml" exec web -- cat /marker)" = original
 ```
-
-## Cleanup
-
-```sh
-# should remove only these fixture projects even after failure
-set -eu
-devtool --file "$DEVTOOL_FIXTURE_ROOT/second/.devtool.yml" destroy
-devtool --file "$DEVTOOL_FIXTURE_ROOT/first/.devtool.yml" destroy
-```
