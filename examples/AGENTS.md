@@ -30,7 +30,6 @@
 - Invoke CLI scenarios as `devtool`, through the prepared source symlink.
   `bun run test:cli` and `bun run test:integration:cli` prepare that alias; CI
   runs `bun run prepare:source-cli` and adds `node_modules/.bin` to `PATH`.
-  Keep `bin/devtool.js` as the compiler input. Use Bun explicitly for helper
-  scripts and library examples. Keep CommonJS examples until the module migration
-  in #12. Do not imply that Bun test results
+  Keep `bin/devtool.ts` as the compiler input. Use Bun explicitly for helper
+  scripts and library examples. Use TypeScript ESM examples. Do not imply that Bun test results
   prove a Node support range or compiled/installed compatibility.

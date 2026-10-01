@@ -67,6 +67,12 @@ jobs:
           shell: bash
           retry: 0
           stdin: false
+      - name: Measure paired source startup
+        if: matrix.suite == 'lifecycle' && matrix.interface == 'CLI'
+        continue-on-error: true
+        env:
+          DEVTOOL_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: bun scripts/measure-source-startup.ts
       - name: Capture diagnostics
         if: failure() && matrix.suite == 'lifecycle'
         run: |
@@ -75,4 +81,4 @@ jobs:
           cat "$DEVTOOL_FIXTURE_ROOT/build-error" "$DEVTOOL_FIXTURE_ROOT/lando/failure.log" 2>/dev/null || true
       - name: Clean fixture resources
         if: always() && matrix.suite == 'lifecycle' && steps.fixtures.conclusion == 'success'
-        run: bun examples/cleanup.js
+        run: bun examples/cleanup.ts

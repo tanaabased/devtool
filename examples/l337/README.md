@@ -32,19 +32,19 @@ test "$(devtool --file "$DEVTOOL_FIXTURE_ROOT/first/.devtool.yml" exec web -- ca
 set -eu
 devtool --file "$DEVTOOL_FIXTURE_ROOT/first/.devtool.yml" info --json > "$DEVTOOL_FIXTURE_ROOT/first.json"
 devtool --file "$DEVTOOL_FIXTURE_ROOT/second/.devtool.yml" info --json > "$DEVTOOL_FIXTURE_ROOT/second.json"
-bun verify.js info
+bun verify.ts info
 
 # should reuse a valid image across source CLI invocations
 set -eu
-bun verify.js snapshot
+bun verify.ts snapshot
 devtool --file "$DEVTOOL_FIXTURE_ROOT/first/.devtool.yml" start
-bun verify.js reused
+bun verify.ts reused
 
 # should stop and restart with persisted volume contents
 set -eu
 devtool --file "$DEVTOOL_FIXTURE_ROOT/first/.devtool.yml" exec web -- sh -c 'echo retained > /data/value'
 devtool --file "$DEVTOOL_FIXTURE_ROOT/first/.devtool.yml" stop
-bun verify.js stopped
+bun verify.ts stopped
 devtool --file "$DEVTOOL_FIXTURE_ROOT/first/.devtool.yml" restart
 test "$(devtool --file "$DEVTOOL_FIXTURE_ROOT/first/.devtool.yml" exec web -- cat /data/value)" = retained
 
@@ -54,7 +54,7 @@ printf 'changed\n' > "$DEVTOOL_FIXTURE_ROOT/first/marker"
 devtool --file "$DEVTOOL_FIXTURE_ROOT/first/.devtool.yml" start
 test "$(devtool --file "$DEVTOOL_FIXTURE_ROOT/first/.devtool.yml" exec web -- cat /marker)" = changed
 devtool --file "$DEVTOOL_FIXTURE_ROOT/first/.devtool.yml" rebuild
-bun verify.js changed
+bun verify.ts changed
 
 # should preserve a failing container command exit code
 status=0
@@ -68,14 +68,14 @@ printf 'RUN exit 23\n' > "$DEVTOOL_FIXTURE_ROOT/first/instructions"
 status=0
 devtool --file "$DEVTOOL_FIXTURE_ROOT/first/.devtool.yml" rebuild 2> "$DEVTOOL_FIXTURE_ROOT/build-error" || status=$?
 test "$status" -ne 0
-bun verify.js failed
+bun verify.ts failed
 cp instructions "$DEVTOOL_FIXTURE_ROOT/first/instructions"
 devtool --file "$DEVTOOL_FIXTURE_ROOT/first/.devtool.yml" start
 
 # should destroy only the selected project
 set -eu
 devtool --file "$DEVTOOL_FIXTURE_ROOT/first/.devtool.yml" destroy
-bun verify.js destroyed
+bun verify.ts destroyed
 test "$(devtool --file "$DEVTOOL_FIXTURE_ROOT/second/.devtool.yml" exec web -- cat /marker)" = original
 ```
 

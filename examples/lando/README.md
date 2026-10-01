@@ -12,7 +12,7 @@ are needed.
 set -eu
 test "$GITHUB_ACTIONS" = true
 ! command -v lando
-bun verify.js setup
+bun verify.ts setup
 ```
 
 ## Testing CLI
@@ -22,7 +22,7 @@ bun verify.js setup
 set -eu
 file="$DEVTOOL_FIXTURE_ROOT/lando/.devtool.yml"
 devtool --file "$file" start
-bun verify.js state
+bun verify.ts state
 test "$(devtool --file "$file" exec web -- id -u)" = "$(id -u)"
 test "$(devtool --file "$file" exec web -- id -g)" = "$(id -g)"
 test "$(devtool --file "$file" exec web -- pwd)" = /app
@@ -40,7 +40,7 @@ set -eu
 file="$DEVTOOL_FIXTURE_ROOT/lando/.devtool.yml"
 test "$(devtool --file "$file" exec web -- cat /tmp/image-proof)" = image
 test "$(devtool --file "$file" exec web -- cat /app/app-proof)" = app
-bun verify.js entrypoint
+bun verify.ts entrypoint
 
 # should provide packages container trust and unchanged exec arguments
 set -eu
@@ -52,7 +52,7 @@ test "$(devtool --file "$file" exec web -- printf '%s' 'a b;$HOME')" = 'a b;$HOM
 
 # should mount certificates signed by the project ca with the service hostname
 set -eu
-bun verify.js certificates
+bun verify.ts certificates
 
 # should share storage with the declared ownership and permissions
 set -eu
@@ -62,14 +62,14 @@ test "$(devtool --file "$file" exec web -- stat -c '%u:%g' /shared)" = "$(id -u)
 test "$(devtool --file "$file" exec web -- stat -c '%a' /shared)" = 770
 devtool --file "$file" exec web -- sh -c 'echo shared > /shared/value; echo global > /global/value; echo persisted > /data/value'
 test "$(devtool --file "$file" exec peer -- cat /shared/value)" = shared
-bun verify.js snapshot
+bun verify.ts snapshot
 
 # should reuse images and app state across cli invocations
 set -eu
 file="$DEVTOOL_FIXTURE_ROOT/lando/.devtool.yml"
 devtool --file "$file" start
 test "$(devtool --file "$file" exec web -- cat /app/app-proof)" = app
-bun verify.js cached
+bun verify.ts cached
 
 # should preserve volume contents and app state across stop and restart
 set -eu
@@ -93,19 +93,19 @@ printf '#!/bin/sh\nexit 19\n' > "$DEVTOOL_FIXTURE_ROOT/lando/app.sh"
 status=0
 devtool --file "$file" start > "$DEVTOOL_FIXTURE_ROOT/lando/failure.log" 2>&1 || status=$?
 test "$status" -eq 19
-bun verify.js failed
+bun verify.ts failed
 cp app.sh "$DEVTOOL_FIXTURE_ROOT/lando/app.sh"
 devtool --file "$file" start
 
 # should propagate image failure without successful state and recover on retry
 set -eu
 file="$DEVTOOL_FIXTURE_ROOT/lando/.devtool.yml"
-bun verify.js break-image
+bun verify.ts break-image
 status=0
 devtool --file "$file" rebuild > "$DEVTOOL_FIXTURE_ROOT/lando/failure.log" 2>&1 || status=$?
 test "$status" -ne 0
-bun verify.js failed
-bun verify.js restore-image
+bun verify.ts failed
+bun verify.ts restore-image
 devtool --file "$file" start
 
 # should preserve a failing exec exit code
@@ -120,7 +120,7 @@ set -eu
 file="$DEVTOOL_FIXTURE_ROOT/lando/.devtool.yml"
 devtool --file "$file" destroy
 devtool --file "$file" destroy
-bun verify.js destroyed
+bun verify.ts destroyed
 
 # should recover retained global contents without restoring destroyed service storage
 set -eu

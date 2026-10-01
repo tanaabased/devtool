@@ -4,22 +4,21 @@
 blob and executable mode. Adapted files also record their current blob and reason;
 the provenance tests check both inventory and dependency resolution.
 
-| Source | Revision | Use |
-| --- | --- | --- |
-| [Core main](https://github.com/lando/core/tree/7a87f80576c5cdb5c7d616108bc9aff81150d463) | `7a87f80576c5cdb5c7d616108bc9aff81150d463` | Service source, engine, assets and utility regressions |
-| [Core PR #330](https://github.com/lando/core/pull/330) | `3aaa8aaf3f4adae5683897644e8e848fe54aa2cb` | Bounded L337 changes reconciled onto the newer source |
-| [Core Next main](https://github.com/lando/core-next/tree/9cc398d21bf35b8662a199fb9815024d24d599c1) | `9cc398d21bf35b8662a199fb9815024d24d599c1` | Structural reference only |
+| Source                                                                                                    | Revision                                   | Use                                                            |
+| --------------------------------------------------------------------------------------------------------- | ------------------------------------------ | -------------------------------------------------------------- |
+| [Core main](https://github.com/lando/core/tree/7a87f80576c5cdb5c7d616108bc9aff81150d463)                  | `7a87f80576c5cdb5c7d616108bc9aff81150d463` | Service source, engine, assets and utility regressions         |
+| [Core PR #330](https://github.com/lando/core/pull/330)                                                    | `3aaa8aaf3f4adae5683897644e8e848fe54aa2cb` | Bounded L337 changes reconciled onto the newer source          |
+| [Core Next main](https://github.com/lando/core-next/tree/9cc398d21bf35b8662a199fb9815024d24d599c1)        | `9cc398d21bf35b8662a199fb9815024d24d599c1` | Structural reference only                                      |
 | [Core Next cli-combine](https://github.com/lando/core-next/tree/9ec49e3bd7a946c5570616d2b53cba0301550636) | `9ec49e3bd7a946c5570616d2b53cba0301550636` | Configuration/product/app/storage boundaries; no copied source |
 
 ## Ownership and adaptations
 
-Retained CommonJS code now lives directly in `components/`, `builders/`, `lib/`,
+Retained code, adapted to strict TypeScript ESM, now lives directly in `components/`, `builders/`, `lib/`,
 `utils/`, `packages/` and `scripts/`. There is no duplicate vendor implementation.
 The upstream MIT notice remains in [LICENSE](LICENSE).
 
 Development and source validation use Bun 1.4.2, a frozen Bun lockfile, Mocha
-running explicitly under Bun, and Leia 2.0.0. JavaScript/CommonJS and the original
-source revisions remain intact. The exists-sync regression traps warnings directly
+running explicitly under Bun, and Leia 2.0.0. Original source revisions and blob hashes remain recorded alongside renamed paths and adaptation hashes. The exists-sync regression traps warnings directly
 in its child process instead of relying on Node's `--throw-deprecation` flag,
 which Bun ignores. The source import probe also verifies its Bun runtime.
 
@@ -36,14 +35,14 @@ instead of producing fallback containers. Integration fixes preserve Compose bui
 arguments and relative contexts, imported image contexts, and long-form mount
 handling. Repeated context generation deduplicates sources.
 
-The previously deferred build path required `utils/run-command.js` and
-`utils/get-buildx-error.js`; both come from the pinned Core revision. All original
+The previously deferred build path required `utils/run-command.ts` and
+`utils/get-buildx-error.ts`; both come from the pinned Core revision. All original
 shell assets remain inventoried. YAML, write-file and exists-sync regression tests
 are ported to native assertions and owned temporary fixtures.
 
 ## Boundaries
 
-The retained `builders/lando-v4.js` is registered explicitly as API 4 `lando`;
+The retained `builders/lando-v4.ts` is registered explicitly as API 4 `lando`;
 its container helpers resolve from this checkout. There is no API 3 bootstrap.
 
 Excluded: the legacy CLI/product/app/plugin bootstrap, API 3 builders and recipes,
@@ -79,3 +78,18 @@ use an explicit shell when shell expansion is intended.
 [The assertion map](examples/ASSERTIONS.md) separates executable coverage from
 excluded and absent behavior. The downstream example imports the source package
 from outside its checkout; it makes no compiled-distribution or publication claim.
+
+## TypeScript ESM migration (#12)
+
+Owned modules, tests and helpers use TypeScript ESM without moving their owning directories.
+Public exports expose the Bun source entrypoint and its configuration, engine, lifecycle and
+state types; distribution declarations and compiled artifacts remain later work. ESLint,
+standalone Prettier and strict `tsc --noEmit` run separately.
+
+Engine and certificate dependencies load through literal dynamic imports when explicitly needed.
+The retained Docker adapter uses composition to preserve its build/run wrappers without claiming
+to implement incompatible Dockerode overloads. Module-relative shell assets remain ordinary
+files. Package metadata uses a static JSON import. The synchronous file reader retains one
+explicit `createRequire` boundary for caller-selected JavaScript data files; npmrc paths are
+parsed as JSON. Neither path is service discovery. The import audit parses TypeScript syntax,
+including literal dynamic imports, instead of searching for CommonJS calls.

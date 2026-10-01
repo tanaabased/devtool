@@ -28,7 +28,7 @@ devtool | grep -F 'Usage: devtool'
 set -eu
 unset FORCE_COLOR
 export NO_COLOR=1
-expected=$(bun -p "require('../../package.json').version")
+expected=$(bun -p "(await import('../../package.json')).default.version")
 actual=$(devtool --version)
 test "$actual" = "$expected"
 
@@ -37,15 +37,15 @@ set -eu
 unset FORCE_COLOR
 export NO_COLOR=1
 devtool -h | grep -F 'Usage: devtool'
-test "$(devtool -v)" = "$(bun -p "require('../../package.json').version")"
+test "$(devtool -v)" = "$(bun -p "(await import('../../package.json')).default.version")"
 
 # should resolve the prepared source command and launch through its bun shebang
 set -eu
 unset FORCE_COLOR
 export NO_COLOR=1
-expected=$(bun -p "require('node:path').resolve('../../node_modules/.bin/devtool')")
+expected=$(bun -p "(await import('node:path')).resolve('../../node_modules/.bin/devtool')")
 test "$(command -v devtool)" = "$expected"
-test "$(devtool --version)" = "$(bun -p "require('../../package.json').version")"
+test "$(devtool --version)" = "$(bun -p "(await import('../../package.json')).default.version")"
 
 # should reject a missing app file with a nonzero exit
 set -eu
@@ -72,5 +72,5 @@ printf '%s\n' "$output" | grep -F 'error:'
 ```sh
 # should import the public package and create a runtime without host side effects
 set -eu
-bun ../../test/source-probe.js | grep -Fx 'import stayed inert; consumer continued'
+bun ../../test/source-probe.ts | grep -Fx 'import stayed inert; consumer continued'
 ```
