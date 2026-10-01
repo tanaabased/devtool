@@ -28,6 +28,11 @@ describe('process and build boundaries', () => {
     assert.equal(fs.readFileSync(path.join(context, 'input'), 'utf8'), 'source');
     assert.equal(fs.readFileSync(path.join(context, 'Dockerfile'), 'utf8'), 'FROM alpine\n');
   });
+  it('preserves useful diagnostics when buildx reports a failure without step output', () => {
+    const parse = require('../utils/get-buildx-error');
+    assert.match(parse({stderr: '#1 ERROR: missing COPY source\n'}).message, /missing COPY source/);
+    assert.match(parse({stderr: '\nfailed to solve: missing file'}).message, /missing file/);
+  });
   it('rejects builder failures rather than resolving successful image state', async () => {
     const builder = path.join(directory, 'builder');
     fs.writeFileSync(builder, `#!${process.execPath}\nconsole.error('broken image build');process.exit(23);\n`);

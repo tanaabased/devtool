@@ -5,7 +5,7 @@ const kebabCase = require('lodash/kebabCase');
 const merge = require('lodash/merge');
 const toPosixPath = require('./to-posix-path');
 
-module.exports = (volumes = [], {_data, appRoot, id, normalizeVolumes, project, user}) => {
+module.exports = (volumes = [], {_data, appRoot, id, normalizeVolumes, project, storageNamespace, user}) => {
   return volumes.map(volume => {
     // if volume is a single string then its either a bind mount
     if (typeof volume === 'string' && toPosixPath(volume).split(':').length > 1) {
@@ -44,7 +44,7 @@ module.exports = (volumes = [], {_data, appRoot, id, normalizeVolumes, project, 
       // if the dont have a source that means we are not referencing an already created volume and need to create one
       if (!volume.source) {
         // give it a name based on scope and target
-        if (volume.scope === 'global') volume.source = `lando-${kebabCase(volume.target)}`;
+        if (volume.scope === 'global') volume.source = `${storageNamespace}-${kebabCase(volume.target)}`;
         else if (volume.scope === 'project') volume.source = `${project}-${kebabCase(volume.target)}`;
         else if (volume.scope === 'app') volume.source = `${project}-${kebabCase(volume.target)}`;
         else volume.source = `${project}-${id}-${kebabCase(volume.target)}`;
@@ -52,6 +52,7 @@ module.exports = (volumes = [], {_data, appRoot, id, normalizeVolumes, project, 
         // we also add labels here because we only want to set labels with the FIRST service that creates the volume
         volume.labels['dev.lando.storage-volume'] = 'TRUE';
         volume.labels['dev.lando.storage-scope'] = volume.scope;
+        volume.labels['dev.devtool.storage-owner'] = storageNamespace;
 
         // for non-global mounets lets add additional labels so we know which service should remove which volumes
         if (volume.scope !== 'global') {
@@ -61,6 +62,8 @@ module.exports = (volumes = [], {_data, appRoot, id, normalizeVolumes, project, 
       }
     }
 
+    if (!['service', 'app', 'project', 'global'].includes(volume.scope ?? 'service')) throw new Error(`Unsupported storage scope: ${volume.scope}`);
+    volume.id = volume.source;
     return volume;
   });
 };

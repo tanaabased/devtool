@@ -6,6 +6,8 @@ const fs = require('node:fs');
 const http = require('node:http');
 const https = require('node:https');
 const net = require('node:net');
+const path = require('node:path');
+const os = require('node:os');
 const yaml = require('js-yaml');
 const load = yaml.load;
 const forbid = () => { throw new Error('library import attempted a host side effect'); };
@@ -16,6 +18,13 @@ for (const method of ['writeFileSync', 'writeFile', 'mkdirSync', 'mkdir', 'rmSyn
 for (const method of ['spawn', 'spawnSync', 'exec', 'execSync', 'execFile', 'execFileSync', 'fork']) childProcess[method] = forbid;
 net.connect = net.createConnection = http.request = https.request = forbid;
 globalThis.fetch = forbid;
+const read = fs.readFileSync;
+const source = path.resolve(__dirname, '..') + path.sep;
+fs.readFileSync = (file, ...args) => {
+  if (typeof file !== 'string' || !path.resolve(file).startsWith(source)) forbid();
+  return read(file, ...args);
+};
+os.homedir = os.userInfo = forbid;
 process.exit = forbid;
 process.argv.push('--version', '--unknown-consumer-option');
 const argv = [...process.argv];

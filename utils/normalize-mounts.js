@@ -19,7 +19,7 @@ module.exports = (mounts, {_data, appRoot, normalizeVolumes, tmpdir, user}) => {
     }
 
     // throw if not an object by now
-    if (!isObject) {
+    if (!isObject(mount)) {
       const error = new Error('Mount is not an object!');
       error.details = mount;
       throw error;

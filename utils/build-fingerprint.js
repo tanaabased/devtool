@@ -10,9 +10,9 @@ module.exports = (service, excluded = []) => {
   excluded = excluded.map(root => fs.existsSync(root) ? fs.realpathSync(root) : path.resolve(root));
   const visiting = new Set();
   const add = value => hash.update(JSON.stringify(value));
-  const visit = file => {
+  const visit = (file, explicit = false) => {
     const real = fs.realpathSync(file);
-    if (excluded.some(root => real === root || real.startsWith(`${root}${path.sep}`))) return;
+    if (!explicit && excluded.some(root => real === root || real.startsWith(`${root}${path.sep}`))) return;
     if (visiting.has(real)) throw new Error(`Circular build context at ${file}`);
     visiting.add(real);
     const stat = fs.statSync(real);
@@ -23,9 +23,9 @@ module.exports = (service, excluded = []) => {
     visiting.delete(real);
   };
   const context = service.generateBuildContext();
-  add({config: service.config, args: context.buildArgs, buildkit: service.buildkit});
+  add({config: service.sourceConfig ?? service.config, args: context.buildArgs, buildkit: service.buildkit});
   hash.update(fs.readFileSync(context.imagefile));
-  for (const source of context.sources) { add(source); visit(source.source); }
+  for (const source of context.sources) { add(source); visit(source.source, true); }
   // An image reference that changes remotely is refreshed by explicit rebuild.
   return hash.digest('hex');
 };

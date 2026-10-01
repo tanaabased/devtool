@@ -5,26 +5,26 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
-const Yaml = require('../lib/yaml');
+const read = require('../utils/read-file');
+const write = require('../utils/write-file');
 
 describe('retained YAML and file regressions', () => {
   let directory;
   beforeEach(() => { directory = fs.mkdtempSync(path.join(os.tmpdir(), 'devtool-yaml-')); });
   afterEach(() => fs.rmSync(directory, {recursive: true, force: true}));
-  it('constructs the upstream logger-backed YAML helper', () => assert.ok(new Yaml().log));
   it('loads YAML objects and arrays from disk', () => {
     const file = path.join(directory, 'config.yml');
     fs.writeFileSync(file, 'obiwan: kenobi\nqui:\n- gon\n- jinn\n');
-    assert.deepEqual(new Yaml().load(file), {obiwan: 'kenobi', qui: ['gon', 'jinn']});
+    assert.deepEqual(read(file), {obiwan: 'kenobi', qui: ['gon', 'jinn']});
   });
-  it('reports a missing YAML file through the configured logger', () => {
-    const yaml = new Yaml({error: () => { throw new Error('missing'); }});
-    assert.throws(() => yaml.load(path.join(directory, 'absent.yml')), /missing/);
+  it('propagates missing YAML files to the caller', () => {
+    assert.throws(() => read(path.join(directory, 'absent.yml')), /ENOENT/);
   });
-  it('creates parent directories, returns the file and round-trips YAML', () => {
-    const yaml = new Yaml(); const file = path.join(directory, 'nested', 'file.yml');
+  it('round-trips YAML through the retained API 4 file helpers', () => {
+    const file = path.join(directory, 'nested', 'file.yml');
     const data = {obiwan: 'kenobi', qui: ['gon', 'jinn']};
-    assert.equal(yaml.dump(file, data), file);
-    assert.deepEqual(yaml.load(file), data);
+    fs.mkdirSync(path.dirname(file), {recursive: true});
+    write(file, data);
+    assert.deepEqual(read(file), data);
   });
 });

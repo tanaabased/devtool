@@ -23,7 +23,7 @@
     "test": "npm run test:unit && npm run test:cli",
     "test:unit": "mocha 'test/*.spec.js'",
     "test:cli": "leia examples/source/README.md --shell bash --retry 0 --timeout 10",
-    "test:integration": "leia examples/l337/README.md --shell bash --retry 0 --timeout 180",
+    "test:integration": "leia examples/l337/README.md examples/lando/README.md examples/consumer/README.md --shell bash --retry 0 --timeout 300",
     "leia": "leia"
   },
   "dependencies": {
@@ -37,12 +37,11 @@
     "jsonfile": "^2.4.0",
     "listr2": "^6.6.1",
     "lodash": "^4.17.21",
+    "mkcert": "3.2.0",
     "nanoid": "^3",
-    "shelljs": "^0.8.4",
     "slugify": "^1.6.5",
     "string-argv": "0.1.1",
-    "valid-path": "^2.1.0",
-    "winston": "2.4.5"
+    "valid-path": "^2.1.0"
   },
   "devDependencies": {
     "@lando/leia": "1.0.0-beta.4",

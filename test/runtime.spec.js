@@ -40,7 +40,7 @@ describe('configurable runtime (#2)', () => {
     assert.equal(fs.readFileSync(cached.stateFile, 'utf8'), previous);
   });
   it('rejects all unsupported services before creating generated directories', () => {
-    fs.writeFileSync(f.file, 'services:\n  web:\n    type: l337\n    image: alpine\n  bad:\n    type: lando\n    image: alpine\n');
+    fs.writeFileSync(f.file, 'services:\n  web:\n    type: l337\n    image: alpine\n  bad:\n    type: lando\n    api: 3\n    image: alpine\n');
     assert.throws(() => f.load(), /Unsupported service type/);
     assert.equal(fs.existsSync(f.options.dataRoot), false);
     assert.deepEqual(f.calls, []);

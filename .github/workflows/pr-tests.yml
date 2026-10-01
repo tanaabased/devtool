@@ -16,7 +16,7 @@ jobs:
       - run: npm test
   lifecycle:
     runs-on: ubuntu-24.04
-    timeout-minutes: 15
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -40,12 +40,7 @@ jobs:
         run: |
           docker ps --all
           find "$DEVTOOL_DATA_ROOT" "$DEVTOOL_CACHE_ROOT" -maxdepth 5 -type f -name '*.json' -print -exec cat {} \; || true
-          cat "$DEVTOOL_FIXTURE_ROOT/build-error" 2>/dev/null || true
+          cat "$DEVTOOL_FIXTURE_ROOT/build-error" "$DEVTOOL_FIXTURE_ROOT/lando/failure.log" 2>/dev/null || true
       - name: Clean fixture resources
         if: always()
-        run: |
-          for project in first second; do
-            if [ -f "$DEVTOOL_FIXTURE_ROOT/$project/.devtool.yml" ]; then
-              node bin/devtool.js --file "$DEVTOOL_FIXTURE_ROOT/$project/.devtool.yml" destroy
-            fi
-          done
+        run: node examples/cleanup.js

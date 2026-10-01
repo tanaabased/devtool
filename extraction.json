@@ -41,7 +41,9 @@
       "source": "builders/lando-v4.js",
       "path": "builders/lando-v4.js",
       "blob": "e8108a56bb11b955bfb7a2b7c6b10441b8539598",
-      "mode": "100644"
+      "mode": "100644",
+      "adaptedBlob": "89a10c531769e1c1772f98d7c10babff8531be84",
+      "adaptation": "Wire API 4 service to instance-owned metadata and injected engine; remove proxy/bootstrap dependencies; prepare packages deterministically; retain command, mount, app-hook and scoped-storage behavior."
     },
     {
       "source": "components/docker-engine.js",
@@ -62,8 +64,8 @@
       "path": "components/l337-v4.js",
       "blob": "cf0c2b695a51ff95779c1775b830d88ea2f16c39",
       "mode": "100644",
-      "adaptedBlob": "e10869eba3cabe4853b059888c1fcc7f48615268",
-      "adaptation": "Reconciled bounded PR330 groups/imports/built-image reconstruction; injected per-instance engine; deferred persistence and Compose assembly to app; removed global listener changes, executable discovery and failure containers; corrected Compose args/context, imported image context and repeated source collection."
+      "adaptedBlob": "eb07d6da88ba943a6fe97138ca1bf4a1c45c59df",
+      "adaptation": "Retain API 4 source builder, injected engines, group/import changes and failure propagation; remove obsolete API 3 commentary."
     },
     {
       "source": "components/yaml.js",
@@ -74,24 +76,12 @@
       "adaptation": "Export isolated app YAML load/dump wrappers instead of mutating shared js-yaml; preserve recursive relative import parsing."
     },
     {
-      "source": "lib/logger.js",
-      "path": "lib/logger.js",
-      "blob": "110ea3565ad88f374131dc8abc4bf105a14a9cd6",
-      "mode": "100644"
-    },
-    {
-      "source": "lib/yaml.js",
-      "path": "lib/yaml.js",
-      "blob": "0755385634bbf123dffe974f3aad2ff2fc500800",
-      "mode": "100644",
-      "adaptedBlob": "3776c16de62fa588a798eaa2b40ce9c7b573a189",
-      "adaptation": "Resolve relative imported inputs against the loaded file while retaining missing-file error handling."
-    },
-    {
       "source": "packages/certs/certs.js",
       "path": "packages/certs/certs.js",
       "blob": "a7fd15718aa69c430fe0926bc8f0402e1153bd13",
-      "mode": "100644"
+      "mode": "100644",
+      "adaptedBlob": "97189e6aafec8ec191f927707154cf352209849b",
+      "adaptation": "Generate project-owned certificates without proxy domains or host trust."
     },
     {
       "source": "packages/git/git.js",
@@ -106,18 +96,6 @@
       "mode": "100755"
     },
     {
-      "source": "packages/proxy/get-proxy-hostnames.js",
-      "path": "packages/proxy/get-proxy-hostnames.js",
-      "blob": "b94a0e76846eb8211859228a0a1b32d9634bb039",
-      "mode": "100644"
-    },
-    {
-      "source": "packages/proxy/proxy.js",
-      "path": "packages/proxy/proxy.js",
-      "blob": "d1f7c79531e0f08f8af144b1a0fbdff1f0b32e88",
-      "mode": "100644"
-    },
-    {
       "source": "packages/security/install-ca-certs.sh",
       "path": "packages/security/install-ca-certs.sh",
       "blob": "b3759adae493f2d8a69f4c00c16a6b79f7720d83",
@@ -127,7 +105,9 @@
       "source": "packages/security/security.js",
       "path": "packages/security/security.js",
       "blob": "31cabf2a0bb8910d8655e2110430553fc7b698ac",
-      "mode": "100644"
+      "mode": "100644",
+      "adaptedBlob": "c94b913e026bd2deaf304257fcf34ee23edd8adf",
+      "adaptation": "Use stable filenames for inline certificate inputs so equivalent source builds reuse cache."
     },
     {
       "source": "packages/ssh-agent/check-ssh-agent.sh",
@@ -211,7 +191,9 @@
       "source": "scripts/exec.sh",
       "path": "scripts/exec.sh",
       "blob": "c41b2629bdf2d1a7f62a1ef50e6174b103da755e",
-      "mode": "100755"
+      "mode": "100755",
+      "adaptedBlob": "d386d9e3be34bccdcadcb5ea37616cdd8c035d5e",
+      "adaptation": "Load the API 4 container environment and preserve literal argv without shell eval."
     },
     {
       "source": "scripts/install-bash.sh",
@@ -250,45 +232,9 @@
       "mode": "100755"
     },
     {
-      "source": "utils/dump-compose-data.js",
-      "path": "utils/dump-compose-data.js",
-      "blob": "9dbbfeba1bdf486455695b6d2dd24f390a88f887",
-      "mode": "100644"
-    },
-    {
       "source": "utils/exists-sync.js",
       "path": "utils/exists-sync.js",
       "blob": "cac4e496075322f6f63315ccbe9f5eda9bba3d07",
-      "mode": "100644"
-    },
-    {
-      "source": "utils/get-compose-bin-path.js",
-      "path": "utils/get-compose-bin-path.js",
-      "blob": "9cbf030924cfeb8797f9b76d27bbfc586dd03b0c",
-      "mode": "100644"
-    },
-    {
-      "source": "utils/get-compose-x.js",
-      "path": "utils/get-compose-x.js",
-      "blob": "79f7eee78f87e6b0344e1a47622fc5f2a4a042d0",
-      "mode": "100644"
-    },
-    {
-      "source": "utils/get-docker-bin-path.js",
-      "path": "utils/get-docker-bin-path.js",
-      "blob": "ec4a00f4226e98bd289812e1ca8408308beda273",
-      "mode": "100644"
-    },
-    {
-      "source": "utils/get-docker-x.js",
-      "path": "utils/get-docker-x.js",
-      "blob": "81c6ce5f896ec0b2f77d33a6547b49e44f4b20c9",
-      "mode": "100644"
-    },
-    {
-      "source": "utils/get-gid.js",
-      "path": "utils/get-gid.js",
-      "blob": "6743baa34948dacc304b9ebe0fcca42cf2fcc818",
       "mode": "100644"
     },
     {
@@ -303,18 +249,6 @@
       "source": "utils/get-passphraseless-keys.js",
       "path": "utils/get-passphraseless-keys.js",
       "blob": "038118b691bc9fe0c2a6f67fb66688afe5e68287",
-      "mode": "100644"
-    },
-    {
-      "source": "utils/get-uid.js",
-      "path": "utils/get-uid.js",
-      "blob": "bc2499c6cda5cbeff441d29e15bac72df7a8c8c7",
-      "mode": "100644"
-    },
-    {
-      "source": "utils/get-username.js",
-      "path": "utils/get-username.js",
-      "blob": "4c11bf6d954e7ad4207de77122115228b48828b8",
       "mode": "100644"
     },
     {
@@ -363,13 +297,17 @@
       "source": "utils/normalize-mounts.js",
       "path": "utils/normalize-mounts.js",
       "blob": "8e82d778cb33434e66ead8f554e73dcbd5867356",
-      "mode": "100644"
+      "mode": "100644",
+      "adaptedBlob": "f239325f5cecea5e8a2d304953c458c297fcebef",
+      "adaptation": "Validate mount objects before normalization."
     },
     {
       "source": "utils/normalize-storage.js",
       "path": "utils/normalize-storage.js",
       "blob": "04a6f92edd60e8a56ab58811b48e99cb4417e72b",
-      "mode": "100644"
+      "mode": "100644",
+      "adaptedBlob": "126ea64da8f92962265ecb0de26e6eb0766bf9c6",
+      "adaptation": "Namespace global storage per product/data root and record explicit volume identity and ownership labels."
     },
     {
       "source": "utils/parse-v4-pkginstall-opts.js",
@@ -432,16 +370,16 @@
       "path": "utils/get-buildx-error.js",
       "blob": "d860b1211ab895b537f0d56d83d500db70837aa0",
       "mode": "100644",
-      "adaptedBlob": "610ed86c6c9bb0272bb2db85825947d787f2ad63",
-      "adaptation": "Handle a build failure with no detail lines without masking the original error."
+      "adaptedBlob": "204fdf959311db1882672b73212d5c5d6040b050",
+      "adaptation": "Preserve buildx diagnostics when the final step has no parsed message, including pre-build COPY failures."
     },
     {
       "source": "test/yaml.spec.js",
       "path": "test/yaml.spec.js",
       "blob": "1af9a397a689cf5fa231d853a7db318885a0b126",
       "mode": "100644",
-      "adaptedBlob": "62c9396c48316fa620ca0355032961bc9d7f0da6",
-      "adaptation": "Port upstream YAML regressions to native assertions and owned temporary fixtures."
+      "adaptedBlob": "a2433e8134e01a83e50783f2aadf2aad3270085f",
+      "adaptation": "Port YAML regressions to retained API 4 read/write helpers; remove legacy logger facade assertions."
     },
     {
       "source": "test/write-file.spec.js",
@@ -459,5 +397,19 @@
       "adaptedBlob": "276c366fca9c148271b431399bb0cbfea4938154",
       "adaptation": "Port upstream path-value and warning regressions to native assertions and owned temporary fixtures; omit Node24-specific control on the Node20 baseline."
     }
+  ],
+  "excludedFiles": [
+    "packages/proxy/proxy.js",
+    "packages/proxy/get-proxy-hostnames.js",
+    "utils/get-compose-x.js",
+    "utils/get-compose-bin-path.js",
+    "utils/get-docker-x.js",
+    "utils/get-docker-bin-path.js",
+    "utils/dump-compose-data.js",
+    "lib/yaml.js",
+    "lib/logger.js",
+    "utils/get-gid.js",
+    "utils/get-uid.js",
+    "utils/get-username.js"
   ]
 }

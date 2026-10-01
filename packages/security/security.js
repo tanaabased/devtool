@@ -4,7 +4,7 @@ const fs = require('fs');
 const path = require('path');
 const isStringy = require('../../utils/is-stringy');
 
-const {nanoid} = require('nanoid');
+const {createHash} = require('node:crypto');
 
 module.exports = async (service, security) => {
   // right now this is mostly just CA setup, lets munge it all together and normalize and whatever
@@ -34,7 +34,7 @@ module.exports = async (service, security) => {
 
   // inject them
   for (const ca of cas) {
-    const file = ca.split('\n').length > 1 ? `LandoCA-${nanoid()}.crt` : path.basename(ca);
+    const file = ca.split('\n').length > 1 ? `LandoCA-${createHash('sha256').update(ca).digest('hex').slice(0, 12)}.crt` : path.basename(ca);
     service.addLSF(ca, `ca-certificates/${file}`);
   }
 };
