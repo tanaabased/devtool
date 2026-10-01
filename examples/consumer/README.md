@@ -14,16 +14,16 @@ mkdir -p "$DEVTOOL_FIXTURE_ROOT/consumer"
 cp index.js .wrapper.yml "$DEVTOOL_FIXTURE_ROOT/consumer/"
 ```
 
-## Testing
+## Testing Library
 
 ```sh
 # should isolate two downstream products through the actual engine
-node "$DEVTOOL_FIXTURE_ROOT/consumer/index.js" "$PWD/../.." "$DEVTOOL_FIXTURE_ROOT/consumer"
+bun "$DEVTOOL_FIXTURE_ROOT/consumer/index.js" "$PWD/../.." "$DEVTOOL_FIXTURE_ROOT/consumer"
 ```
 
 ## Cleanup
 
 ```sh
 # should remove both downstream projects even after failure
-node ../cleanup.js consumer
+bun ../cleanup.js consumer
 ```

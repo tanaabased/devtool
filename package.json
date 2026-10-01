@@ -9,7 +9,7 @@
     "url": "git+https://github.com/tanaabased/devtool.git"
   },
   "type": "commonjs",
-  "packageManager": "npm@10.8.2",
+  "packageManager": "bun@1.4.2",
   "engines": {
     "node": ">=20.17.0"
   },
@@ -19,12 +19,16 @@
     "devtool": "./bin/devtool.js"
   },
   "scripts": {
-    "devtool": "node ./bin/devtool.js",
-    "test": "npm run test:unit && npm run test:cli",
-    "test:unit": "mocha 'test/*.spec.js'",
-    "test:cli": "leia examples/source/README.md --shell bash --retry 0 --timeout 10",
-    "test:integration": "leia examples/l337/README.md examples/lando/README.md examples/consumer/README.md --shell bash --retry 0 --timeout 300",
-    "leia": "leia"
+    "devtool": "bun ./bin/devtool.js",
+    "test": "bun run test:unit && bun run test:cli && bun run test:library",
+    "test:unit": "bun --bun ./node_modules/mocha/bin/mocha.js 'test/*.spec.js'",
+    "test:cli": "bun run prepare:source-cli && bun run leia examples/source/README.md --test-header 'Testing CLI' --shell bash --retry 0 --timeout 10",
+    "test:library": "bun run leia examples/source/README.md --test-header 'Testing Library' --shell bash --retry 0 --timeout 10",
+    "test:integration": "bun run test:integration:cli && bun run test:integration:library",
+    "test:integration:cli": "bun run prepare:source-cli && bun run leia examples/l337/README.md examples/lando/README.md --test-header 'Testing CLI' --shell bash --retry 0 --timeout 300",
+    "test:integration:library": "bun run leia examples/consumer/README.md --test-header 'Testing Library' --shell bash --retry 0 --timeout 300",
+    "leia": "bun ./node_modules/.bin/leia",
+    "prepare:source-cli": "bun ./scripts/prepare-source-cli.js"
   },
   "dependencies": {
     "ansis": "^4.0.0",
@@ -44,7 +48,7 @@
     "valid-path": "^2.1.0"
   },
   "devDependencies": {
-    "@lando/leia": "1.0.0-beta.4",
+    "@lando/leia": "2.0.0",
     "mocha": "^11.7.0"
   }
 }

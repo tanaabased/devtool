@@ -1,16 +1,27 @@
 # devtool
 
 Tanaab-based development environments. This extraction assembles the existing
-Node.js runtime and API 4 L337 and Lando services into one configurable library
-and source CLI. Bun, compilation and publication belong to later work.
+JavaScript runtime and API 4 L337 and Lando services into one configurable library
+and source CLI. Development and validation run on Bun; compilation and publication
+belong to later work.
 
-Use the Node.js version in `.node-version` and npm:
+## Source installation
+
+Install the Bun version in `.bun-version`. From a source checkout, install
+dependencies and link the source entrypoint into a directory on your `PATH`:
 
 ```sh
-npm ci
-npm test
-node bin/devtool.js --help
+bun install --frozen-lockfile --ignore-scripts
+mkdir -p "$HOME/.local/bin"
+ln -s "$PWD/bin/devtool.js" "$HOME/.local/bin/devtool"
+export PATH="$HOME/.local/bin:$PATH"
+devtool --help
 ```
+
+Keep the checkout in place: the symlink points to its Bun entrypoint. Add the
+`PATH` export to your shell startup file to keep the command available in later
+shells; Bun must also be on `PATH`. From the checkout, `bun run devtool --help`
+uses the package script directly.
 
 A project needs a `.devtool.yml` (or `.devtool.yaml`):
 
@@ -26,13 +37,13 @@ services:
 With an existing Docker Engine, Buildx and Compose installation:
 
 ```sh
-node /path/to/devtool/bin/devtool.js start
-node /path/to/devtool/bin/devtool.js exec web -- cat /etc/os-release
-node /path/to/devtool/bin/devtool.js info --json
-node /path/to/devtool/bin/devtool.js stop
-node /path/to/devtool/bin/devtool.js restart
-node /path/to/devtool/bin/devtool.js rebuild
-node /path/to/devtool/bin/devtool.js destroy
+devtool start
+devtool exec web -- cat /etc/os-release
+devtool info --json
+devtool stop
+devtool restart
+devtool rebuild
+devtool destroy
 ```
 
 The CLI searches upward for an app file; `--file` selects one explicitly. `exec`
@@ -92,10 +103,17 @@ host engine installation, global container names and host networking are exclude
 
 ## Testing
 
-`npm test` runs unit/provenance checks and Docker-free source CLI scenarios. The
+`bun run test` runs unit/provenance checks and Docker-free source CLI/library scenarios. The
 [L337](examples/l337/README.md), [Lando](examples/lando/README.md) and
 [downstream consumer](examples/consumer/README.md) scenarios run only in disposable
-CI with `npm run test:integration`; do not run them on the developer machine.
+CI with `bun run test:integration`; do not run them on the developer machine.
+`bun run test:cli` and `bun run test:library` select the interfaces independently.
+The CLI scripts prepare a source symlink in `node_modules/.bin`, which Bun puts on
+the test command’s `PATH`. CI runs source and container CLI/library scenarios in
+parallel jobs, with unit tests in their own job.
+The [example guidance](examples/AGENTS.md) defines CLI/library sections and target
+selection. The existing `engines.node` declaration is retained; this Bun suite
+does not verify Node consumer compatibility.
 The [assertion map](examples/ASSERTIONS.md) records retained and excluded behavior.
 
 [EXTRACTION.md](EXTRACTION.md) records source revisions, adaptations and exclusions.

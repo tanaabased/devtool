@@ -394,8 +394,8 @@
       "path": "test/exists-sync.spec.js",
       "blob": "9ff4142f08116b67b014cbf29d8088bed1496509",
       "mode": "100644",
-      "adaptedBlob": "276c366fca9c148271b431399bb0cbfea4938154",
-      "adaptation": "Port upstream path-value and warning regressions to native assertions and owned temporary fixtures; omit Node24-specific control on the Node20 baseline."
+      "adaptedBlob": "db030f809438296fefc74c649fbbf9b9dab2e8d8",
+      "adaptation": "Ported to native assertions and owned temporary fixtures; trap warnings explicitly under Bun instead of using the ignored Node --throw-deprecation flag."
     }
   ],
   "excludedFiles": [

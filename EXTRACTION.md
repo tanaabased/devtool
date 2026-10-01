@@ -17,8 +17,11 @@ Retained CommonJS code now lives directly in `components/`, `builders/`, `lib/`,
 `utils/`, `packages/` and `scripts/`. There is no duplicate vendor implementation.
 The upstream MIT notice remains in [LICENSE](LICENSE).
 
-The source runtime uses the pinned Core Node.js version and npm. The source CLI
-harness uses Core's Leia 1 release because Leia 2 requires Node 24. Bun is deferred.
+Development and source validation use Bun 1.4.2, a frozen Bun lockfile, Mocha
+running explicitly under Bun, and Leia 2.0.0. JavaScript/CommonJS and the original
+source revisions remain intact. The exists-sync regression traps warnings directly
+in its child process instead of relying on Node's `--throw-deprecation` flag,
+which Bun ignores. The source import probe also verifies its Bun runtime.
 
 The bounded PR #330 port includes pre/post group syntax, group stage/default
 behavior, imported image instructions, constructor-time reconstruction of built

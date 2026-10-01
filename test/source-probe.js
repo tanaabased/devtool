@@ -1,5 +1,6 @@
 'use strict';
 const assert = require('node:assert/strict');
+assert.ok(process.versions.bun, 'the source import probe must run under Bun');
 const childProcess = require('node:child_process');
 const {EventEmitter} = require('node:events');
 const fs = require('node:fs');
