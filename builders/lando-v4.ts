@@ -23,10 +23,10 @@ import type {
 } from '../lib/types.ts';
 import asError from '../utils/as-error.ts';
 import fs from 'node:fs';
-import isObject from 'lodash/isPlainObject.js';
-import merge from 'lodash/merge.js';
+import isObject from 'lodash-es/isPlainObject.js';
+import merge from 'lodash-es/merge.js';
 import path from 'node:path';
-import uniq from 'lodash/uniq.js';
+import uniq from 'lodash-es/uniq.js';
 import write from '../utils/write-file.ts';
 import toPosixPath from '../utils/to-posix-path.ts';
 import LandoError from '../components/error.ts';

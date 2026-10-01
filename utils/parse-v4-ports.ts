@@ -1,4 +1,4 @@
-import range from 'lodash/range.js';
+import range from 'lodash-es/range.js';
 import type { Port } from '../lib/types.ts';
 
 const getPorts = (port: string | Port): number[] => {

@@ -1,4 +1,4 @@
-import isObject from 'lodash/isPlainObject.js';
+import isObject from 'lodash-es/isPlainObject.js';
 
 export default (options: unknown) => {
   // if options are a string then make into an array

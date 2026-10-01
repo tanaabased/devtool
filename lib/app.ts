@@ -18,7 +18,7 @@ import asError from '../utils/as-error.ts';
 import { createHash } from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
-import mergeWith from 'lodash/mergeWith.js';
+import mergeWith from 'lodash-es/mergeWith.js';
 import yaml from 'js-yaml';
 import fingerprint from '../utils/build-fingerprint.ts';
 import L337 from '../components/l337-v4.ts';

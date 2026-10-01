@@ -1,6 +1,6 @@
-import dropRight from 'lodash/dropRight.js';
+import dropRight from 'lodash-es/dropRight.js';
 import path from 'node:path';
-import range from 'lodash/range.js';
+import range from 'lodash-es/range.js';
 
 /*
  * TBD

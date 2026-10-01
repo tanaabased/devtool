@@ -1,12 +1,12 @@
 import type { Mount, MountInput, ServiceUser } from '../lib/types.ts';
 import type L337ServiceV4 from '../components/l337-v4.ts';
 import fs from 'node:fs';
-import orderBy from 'lodash/orderBy.js';
+import orderBy from 'lodash-es/orderBy.js';
 import path from 'node:path';
 import toPosixPath from './to-posix-path.ts';
 import remove from './remove.ts';
 import write from './write-file.ts';
-import uniq from 'lodash/uniq.js';
+import uniq from 'lodash-es/uniq.js';
 
 export default (
   mounts: MountInput[],

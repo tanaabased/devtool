@@ -35,15 +35,15 @@ interface ServiceData {
 }
 import asError from '../utils/as-error.ts';
 import fs from 'node:fs';
-import groupBy from 'lodash/groupBy.js';
-import isObject from 'lodash/isPlainObject.js';
+import groupBy from 'lodash-es/groupBy.js';
+import isObject from 'lodash-es/isPlainObject.js';
 import isStringy from '../utils/is-stringy.ts';
 import os from 'node:os';
-import merge from 'lodash/merge.js';
+import merge from 'lodash-es/merge.js';
 import path from 'node:path';
 import remove from '../utils/remove.ts';
 import write from '../utils/write-file.ts';
-import uniq from 'lodash/uniq.js';
+import uniq from 'lodash-es/uniq.js';
 import { generateDockerFileFromArray } from 'dockerfile-generator/lib/dockerGenerator.js';
 import { nanoid } from 'nanoid';
 import { EventEmitter } from 'node:events';

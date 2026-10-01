@@ -38,16 +38,16 @@
       "path": "builders/lando-v4.ts",
       "blob": "e8108a56bb11b955bfb7a2b7c6b10441b8539598",
       "mode": "100644",
-      "adaptedBlob": "286ff9b484bf6a6ac91cc40fa5e653c9345c5866",
-      "adaptation": "Wire API 4 service to instance-owned metadata and injected engine; remove proxy/bootstrap dependencies; prepare packages deterministically; retain command, mount, app-hook and scoped-storage behavior. Renamed to TypeScript ESM; add strict contracts, module-relative paths and typed dependency boundaries."
+      "adaptedBlob": "dd5d3b749ad333d8e196ea5c0cb55d78b47a97ba",
+      "adaptation": "Wire API 4 service to instance-owned metadata and injected engine; remove proxy/bootstrap dependencies; prepare packages deterministically; retain command, mount, app-hook and scoped-storage behavior. Renamed to TypeScript ESM; add strict contracts, module-relative paths and typed dependency boundaries. Use per-function lodash-es imports."
     },
     {
       "source": "components/docker-engine.js",
       "path": "components/docker-engine.ts",
       "blob": "4a7227848792872848174dad4e022ababd39cd16",
       "mode": "100644",
-      "adaptedBlob": "85b70fcbd9dbb8bd52e8b8636eeca584b8856530",
-      "adaptation": "Removed import-time executable discovery; use the existing docker executable by default; exclude generated storage from build sources and contain source destinations. Renamed to TypeScript ESM; add strict contracts, module-relative paths and typed dependency boundaries."
+      "adaptedBlob": "51d2a5431522b87906884865627f42404e872e72",
+      "adaptation": "Removed import-time executable discovery; use the existing docker executable by default; exclude generated storage from build sources and contain source destinations. Renamed to TypeScript ESM; add strict contracts, module-relative paths and typed dependency boundaries. Use per-function lodash-es imports. Remove unused legacy pull/run and initialization helpers; preserve image-build paths."
     },
     {
       "source": "components/error.js",
@@ -62,8 +62,8 @@
       "path": "components/l337-v4.ts",
       "blob": "cf0c2b695a51ff95779c1775b830d88ea2f16c39",
       "mode": "100644",
-      "adaptedBlob": "f9382bca09de328cde8a450d5f06da3f6472cc60",
-      "adaptation": "Retain API 4 source builder, injected engines, group/import changes and failure propagation; remove obsolete API 3 commentary. Renamed to TypeScript ESM; add strict contracts, module-relative paths and typed dependency boundaries."
+      "adaptedBlob": "0ebad47ee24db02f209ebb999287ead375195cbb",
+      "adaptation": "Retain API 4 source builder, injected engines, group/import changes and failure propagation; remove obsolete API 3 commentary. Renamed to TypeScript ESM; add strict contracts, module-relative paths and typed dependency boundaries. Use per-function lodash-es imports."
     },
     {
       "source": "components/yaml.js",
@@ -78,8 +78,8 @@
       "path": "packages/certs/certs.ts",
       "blob": "a7fd15718aa69c430fe0926bc8f0402e1153bd13",
       "mode": "100644",
-      "adaptedBlob": "4bcb277d5ce0c5779f9fdaf57f8bba33a0d1f439",
-      "adaptation": "Generate project-owned certificates without proxy domains or host trust. Renamed to TypeScript ESM; add strict contracts, module-relative paths and typed dependency boundaries."
+      "adaptedBlob": "fb35340d77fe6b86e62d236785672dbcc6f31135",
+      "adaptation": "Generate project-owned certificates without proxy domains or host trust. Renamed to TypeScript ESM; add strict contracts, module-relative paths and typed dependency boundaries. Use per-function lodash-es imports."
     },
     {
       "source": "packages/git/git.js",
@@ -266,8 +266,8 @@
       "path": "utils/get-v4-image-build-error-command.ts",
       "blob": "d11fa6551166cfe980be7f8ccb7207a4ca189ee9",
       "mode": "100644",
-      "adaptedBlob": "b55eb0aee7ba5367c5d3d8593a779b7eff1e826c",
-      "adaptation": "Renamed to TypeScript ESM; add strict contracts, module-relative paths and typed dependency boundaries."
+      "adaptedBlob": "53adac6ef7aa65dcbfe7e71866770ad1fe88dbdf",
+      "adaptation": "Renamed to TypeScript ESM; add strict contracts, module-relative paths and typed dependency boundaries. Use existing ansis colors without the Listr task-runner dependency."
     },
     {
       "source": "utils/has-instructions.js",
@@ -322,40 +322,40 @@
       "path": "utils/normalize-mounts.ts",
       "blob": "8e82d778cb33434e66ead8f554e73dcbd5867356",
       "mode": "100644",
-      "adaptedBlob": "caffb0aaaa2e9b36ff647071194650b17716526b",
-      "adaptation": "Validate mount objects before normalization. Renamed to TypeScript ESM; add strict contracts, module-relative paths and typed dependency boundaries."
+      "adaptedBlob": "9a4eeca7ac288c0b6aad7cd0617c2351b636a16c",
+      "adaptation": "Validate mount objects before normalization. Renamed to TypeScript ESM; add strict contracts, module-relative paths and typed dependency boundaries. Use per-function lodash-es imports."
     },
     {
       "source": "utils/normalize-storage.js",
       "path": "utils/normalize-storage.ts",
       "blob": "04a6f92edd60e8a56ab58811b48e99cb4417e72b",
       "mode": "100644",
-      "adaptedBlob": "acc99aa84c668bb235deb1f8ec3d6bd73493d484",
-      "adaptation": "Namespace global storage per product/data root and record explicit volume identity and ownership labels. Renamed to TypeScript ESM; add strict contracts, module-relative paths and typed dependency boundaries."
+      "adaptedBlob": "9e40042ad9b288c81a101e021e10d46e08cbf003",
+      "adaptation": "Namespace global storage per product/data root and record explicit volume identity and ownership labels. Renamed to TypeScript ESM; add strict contracts, module-relative paths and typed dependency boundaries. Use per-function lodash-es imports."
     },
     {
       "source": "utils/parse-v4-pkginstall-opts.js",
       "path": "utils/parse-v4-pkginstall-opts.ts",
       "blob": "0555296e58d6cb3581c603776308d10d5d0c88aa",
       "mode": "100644",
-      "adaptedBlob": "669a4bb3882009b52e7a8cc7c833dc531060f3db",
-      "adaptation": "Renamed to TypeScript ESM; add strict contracts, module-relative paths and typed dependency boundaries."
+      "adaptedBlob": "db0908a048b95d0b1931c7896e9704d24196a995",
+      "adaptation": "Renamed to TypeScript ESM; add strict contracts, module-relative paths and typed dependency boundaries. Use per-function lodash-es imports."
     },
     {
       "source": "utils/parse-v4-ports.js",
       "path": "utils/parse-v4-ports.ts",
       "blob": "403161aedaca7bae6a1e16b0b5b0d078d4f3ef53",
       "mode": "100644",
-      "adaptedBlob": "83c5ad25084e518f0b5854b52538f6dd760a834c",
-      "adaptation": "Renamed to TypeScript ESM; add strict contracts, module-relative paths and typed dependency boundaries."
+      "adaptedBlob": "54b8fbdf59323f4ad68f0b6ef8e72b33af3ca9a5",
+      "adaptation": "Renamed to TypeScript ESM; add strict contracts, module-relative paths and typed dependency boundaries. Use per-function lodash-es imports."
     },
     {
       "source": "utils/parse-v4-user.js",
       "path": "utils/parse-v4-user.ts",
       "blob": "06141056fd10f535232fffecbeffdf6f33189fa1",
       "mode": "100644",
-      "adaptedBlob": "3a5fa429757436fdcdda2a768b1857d43c0cca9b",
-      "adaptation": "Renamed to TypeScript ESM; add strict contracts, module-relative paths and typed dependency boundaries."
+      "adaptedBlob": "bb04bd3568418fc867037bedb8d4cf8a2e6d8375",
+      "adaptation": "Renamed to TypeScript ESM; add strict contracts, module-relative paths and typed dependency boundaries. Use per-function lodash-es imports."
     },
     {
       "source": "utils/read-file.js",
@@ -386,24 +386,24 @@
       "path": "utils/traverse-up.ts",
       "blob": "18a427c79e1e71896b3f7832be9a39cf8d6f98ca",
       "mode": "100644",
-      "adaptedBlob": "9eeddf6dc15762c047a1e80cbe7cdd13243e2f99",
-      "adaptation": "Renamed to TypeScript ESM; add strict contracts, module-relative paths and typed dependency boundaries."
+      "adaptedBlob": "a925c4327261648a537eaf6ae2762c1db5745244",
+      "adaptation": "Renamed to TypeScript ESM; add strict contracts, module-relative paths and typed dependency boundaries. Use per-function lodash-es imports."
     },
     {
       "source": "utils/write-file.js",
       "path": "utils/write-file.ts",
       "blob": "10f90ede6c2199f7a3d0ed24e8f915e4eca87c84",
       "mode": "100644",
-      "adaptedBlob": "c22c554ab373e4758c7d2634493f7efe273b5c58",
-      "adaptation": "Renamed to TypeScript ESM; add strict contracts, module-relative paths and typed dependency boundaries."
+      "adaptedBlob": "b9e8df28ed5809d3bc66646a756d3656bda9c83c",
+      "adaptation": "Renamed to TypeScript ESM; add strict contracts, module-relative paths and typed dependency boundaries. Use per-function lodash-es imports."
     },
     {
       "source": "utils/run-command.js",
       "path": "utils/run-command.ts",
       "blob": "a50c73db4ceb401b708ee2c34664b6a1644f814c",
       "mode": "100644",
-      "adaptedBlob": "64d59a4b4c131f9bb2bd3d3f45620889f7391443",
-      "adaptation": "Renamed to TypeScript ESM; add strict contracts, module-relative paths and typed dependency boundaries."
+      "adaptedBlob": "937f8609a8fb2eaa80b581a671b8b8788c7647a7",
+      "adaptation": "Renamed to TypeScript ESM; add strict contracts, module-relative paths and typed dependency boundaries. Use per-function lodash-es imports. Use existing ansis colors without the Listr task-runner dependency."
     },
     {
       "source": "utils/get-buildx-error.js",
