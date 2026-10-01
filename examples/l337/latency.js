@@ -16,19 +16,20 @@ const command = ['sh', '-c', 'echo devtool-first-output; sleep 1; echo devtool-f
 const dockerArgs = ['compose', '--project-name', info.project, '--file', compose, 'exec', '-T', 'web', ...command];
 const cliArgs = ['--preload', path.join(__dirname, 'trace-dispatch.js'),
   path.join(__dirname, '../../bin/devtool.js'), '--file', file, 'exec', 'web', '--', ...command];
-const ms = time => Number(time) / 1e6;
+// Bun's hrtime origin is process-relative; epoch-based performance time crosses processes.
+const now = () => performance.timeOrigin + performance.now();
 
 function measure(target) {
   return new Promise((resolve, reject) => {
     fs.rmSync(trace, {force: true});
-    const start = process.hrtime.bigint();
+    const start = now();
     const child = spawn(target === 'source' ? process.execPath : 'docker', target === 'source' ? cliArgs : dockerArgs,
       {env: {...process.env, DEVTOOL_DISPATCH_TRACE: trace}, stdio: ['ignore', 'pipe', 'pipe']});
     let stdout = '', stderr = '', first, final;
     child.stdout.on('data', data => {
       stdout += data;
-      if (first === undefined && stdout.includes('devtool-first-output')) first = process.hrtime.bigint();
-      if (final === undefined && stdout.includes('devtool-finished')) final = process.hrtime.bigint();
+      if (first === undefined && stdout.includes('devtool-first-output')) first = now();
+      if (final === undefined && stdout.includes('devtool-finished')) final = now();
     });
     child.stderr.on('data', data => { stderr += data; });
     child.on('error', reject);
@@ -37,10 +38,10 @@ function measure(target) {
         assert.equal(code, 0, stderr);
         assert.ok(first !== undefined && final !== undefined, stdout);
         assert.ok(first < final, 'first output must arrive before the delayed final output');
-        const dispatch = target === 'source' ? BigInt(fs.readFileSync(trace, 'utf8')) : start;
+        const dispatch = target === 'source' ? Number(fs.readFileSync(trace, 'utf8')) : start;
         assert.ok(dispatch >= start && dispatch < first, 'dispatch must precede useful output');
-        resolve({dispatchMs: ms(dispatch - start), firstOutputMs: ms(first - start),
-          dispatchToOutputMs: ms(first - dispatch), commandMs: ms(final - first)});
+        resolve({dispatchMs: dispatch - start, firstOutputMs: first - start,
+          dispatchToOutputMs: first - dispatch, commandMs: final - first});
       } catch (error) { reject(error); }
     });
   });

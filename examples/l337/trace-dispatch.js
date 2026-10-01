@@ -5,7 +5,7 @@ const fs = require('node:fs');
 const spawn = childProcess.spawn;
 childProcess.spawn = (command, args, ...options) => {
   if (command === 'docker') {
-    fs.writeFileSync(process.env.DEVTOOL_DISPATCH_TRACE, process.hrtime.bigint().toString());
+    fs.writeFileSync(process.env.DEVTOOL_DISPATCH_TRACE, (performance.timeOrigin + performance.now()).toString());
     childProcess.spawn = spawn;
   }
   return spawn(command, args, ...options);
