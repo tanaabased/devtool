@@ -1,7 +1,8 @@
 # devtool agent guidance
 
 - Always stylize the product name as `devtool` in human-facing prose.
-- Use Bun for installation, development and validation; read the pin from `.bun-version` and keep `packageManager` aligned. Use frozen `bun.lock` installs. Node is reserved for npm deployment if that pipeline requires it; only then add its authoritative `.node-version`.
+- Use Bun for installation, development and validation; read the pin from `.bun-version` and keep `packageManager` aligned. Use frozen `bun.lock` installs. Project Node execution is reserved for npm deployment if that pipeline requires it; only then add its authoritative `.node-version`.
+- Shared GitHub Actions may use runner-provided Node internally; do not add project Node setup or a development pin for action infrastructure.
 - JavaScript/CommonJS source remains the baseline. Bun compatibility does not establish a Node consumer support range; `engines.node` is a separate declaration requiring evidence before publication.
 - Keep the extraction baseline in JavaScript. TypeScript conversion, compilation, and publication belong to later work.
 - Retained Core source lives in devtool-owned directories. Preserve source notices and record intentional adaptations in `extraction.json` and `EXTRACTION.md`.

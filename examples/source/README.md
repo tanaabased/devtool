@@ -13,7 +13,7 @@ source under Bun; neither requires mutable fixture state.
 set -eu
 unset FORCE_COLOR
 export NO_COLOR=1
-help=$(bun ../../bin/devtool.js --help)
+help=$(devtool --help)
 printf '%s\n' "$help" | grep -F 'Usage: devtool'
 printf '%s\n' "$help" | grep -F -- '--version'
 printf '%s\n' "$help" | grep -F 'start, stop, restart, rebuild, info, exec, destroy'
@@ -22,35 +22,37 @@ printf '%s\n' "$help" | grep -F 'start, stop, restart, rebuild, info, exec, dest
 set -eu
 unset FORCE_COLOR
 export NO_COLOR=1
-bun ../../bin/devtool.js | grep -F 'Usage: devtool'
+devtool | grep -F 'Usage: devtool'
 
 # should report the package version exactly
 set -eu
 unset FORCE_COLOR
 export NO_COLOR=1
 expected=$(bun -p "require('../../package.json').version")
-actual=$(bun ../../bin/devtool.js --version)
+actual=$(devtool --version)
 test "$actual" = "$expected"
 
 # should support help and version aliases
 set -eu
 unset FORCE_COLOR
 export NO_COLOR=1
-bun ../../bin/devtool.js -h | grep -F 'Usage: devtool'
-test "$(bun ../../bin/devtool.js -v)" = "$(bun -p "require('../../package.json').version")"
+devtool -h | grep -F 'Usage: devtool'
+test "$(devtool -v)" = "$(bun -p "require('../../package.json').version")"
 
-# should launch the executable source entrypoint through its Bun shebang
+# should resolve the prepared source command and launch through its bun shebang
 set -eu
 unset FORCE_COLOR
 export NO_COLOR=1
-test "$(../../bin/devtool.js --version)" = "$(bun -p "require('../../package.json').version")"
+expected=$(bun -p "require('node:path').resolve('../../node_modules/.bin/devtool')")
+test "$(command -v devtool)" = "$expected"
+test "$(devtool --version)" = "$(bun -p "require('../../package.json').version")"
 
 # should reject a missing app file with a nonzero exit
 set -eu
 unset FORCE_COLOR
 export NO_COLOR=1
 status=0
-output=$(bun ../../bin/devtool.js start 2>&1) || status=$?
+output=$(devtool start 2>&1) || status=$?
 test "$status" -eq 1
 printf '%s\n' "$output" | grep -F 'error:'
 printf '%s\n' "$output" | grep -F 'Run devtool --help'
@@ -60,7 +62,7 @@ set -eu
 unset FORCE_COLOR
 export NO_COLOR=1
 status=0
-output=$(bun ../../bin/devtool.js --unknown 2>&1) || status=$?
+output=$(devtool --unknown 2>&1) || status=$?
 test "$status" -eq 1
 printf '%s\n' "$output" | grep -F 'error:'
 ```

@@ -3,7 +3,8 @@
 Source revisions are recorded in [extraction.json](../extraction.json). This map
 covers Core `7a87f805` and the bounded PR #330 port at `3aaa8aaf`. A test listed here
 is executable coverage, not a claim that a particular CI revision has passed.
-Final acceptance requires the source and lifecycle jobs at the delivered revision.
+Final acceptance requires unit tests and every source/lifecycle CLI/library matrix
+entry at the delivered revision.
 
 | Upstream assertions | devtool proof | Disposition |
 | --- | --- | --- |

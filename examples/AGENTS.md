@@ -19,12 +19,18 @@
   case-sensitive header prefixes. Keep common `Setup` and `Cleanup` sections,
   with interface-specific preparation in helpers when needed. Separate CLI and
   library invocations must receive isolated run roots.
+- Keep lifecycle commands visible in Markdown and give each observable contract
+  a named test. Use helpers for structured JSON, certificates and snapshots.
 - Every Leia test runs in a fresh shell. Put required environment and shell
   options in each test or pass them from the caller; do not rely on a preceding
   test's shell state. Keep meaningful assertions and failure diagnostics.
 - `bun run test` is Docker-free. Run `bun run test:integration` only in disposable
   CI with fixture-owned paths and an existing Docker Engine, Buildx and Compose.
   Preserve cleanup after failure and keep resources scoped to the fixture.
-- Use Bun explicitly for source commands and helper scripts. Keep CommonJS
-  examples until the module migration in #12. Do not imply that Bun test results
+- Invoke CLI scenarios as `devtool`, through the prepared source symlink.
+  `bun run test:cli` and `bun run test:integration:cli` prepare that alias; CI
+  runs `bun run prepare:source-cli` and adds `node_modules/.bin` to `PATH`.
+  Keep `bin/devtool.js` as the compiler input. Use Bun explicitly for helper
+  scripts and library examples. Keep CommonJS examples until the module migration
+  in #12. Do not imply that Bun test results
   prove a Node support range or compiled/installed compatibility.

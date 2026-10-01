@@ -22,12 +22,13 @@
     "devtool": "bun ./bin/devtool.js",
     "test": "bun run test:unit && bun run test:cli && bun run test:library",
     "test:unit": "bun --bun ./node_modules/mocha/bin/mocha.js 'test/*.spec.js'",
-    "test:cli": "bun run leia examples/source/README.md --test-header 'Testing CLI' --shell bash --retry 0 --timeout 10",
+    "test:cli": "bun run prepare:source-cli && bun run leia examples/source/README.md --test-header 'Testing CLI' --shell bash --retry 0 --timeout 10",
     "test:library": "bun run leia examples/source/README.md --test-header 'Testing Library' --shell bash --retry 0 --timeout 10",
     "test:integration": "bun run test:integration:cli && bun run test:integration:library",
-    "test:integration:cli": "bun run leia examples/l337/README.md examples/lando/README.md --test-header 'Testing CLI' --shell bash --retry 0 --timeout 300",
+    "test:integration:cli": "bun run prepare:source-cli && bun run leia examples/l337/README.md examples/lando/README.md --test-header 'Testing CLI' --shell bash --retry 0 --timeout 300",
     "test:integration:library": "bun run leia examples/consumer/README.md --test-header 'Testing Library' --shell bash --retry 0 --timeout 300",
-    "leia": "bun ./node_modules/.bin/leia"
+    "leia": "bun ./node_modules/.bin/leia",
+    "prepare:source-cli": "bun ./scripts/prepare-source-cli.js"
   },
   "dependencies": {
     "ansis": "^4.0.0",
