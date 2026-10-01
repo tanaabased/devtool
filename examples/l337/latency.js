@@ -27,9 +27,10 @@ function measure(target) {
       {env: {...process.env, DEVTOOL_DISPATCH_TRACE: trace}, stdio: ['ignore', 'pipe', 'pipe']});
     let stdout = '', stderr = '', first, final;
     child.stdout.on('data', data => {
+      const received = now();
       stdout += data;
-      if (first === undefined && stdout.includes('devtool-first-output')) first = now();
-      if (final === undefined && stdout.includes('devtool-finished')) final = now();
+      if (first === undefined && stdout.includes('devtool-first-output')) first = received;
+      if (final === undefined && stdout.includes('devtool-finished')) final = received;
     });
     child.stderr.on('data', data => { stderr += data; });
     child.on('error', reject);
