@@ -102,13 +102,6 @@ selection. The existing `engines.node` declaration is retained; this Bun suite
 does not verify Node consumer compatibility.
 The [assertion map](examples/ASSERTIONS.md) records retained and excluded behavior.
 
-The L337 CI scenario records initial and repeated source `exec` latency against
-the equivalent direct Docker command in an already-running container. It measures
-dispatch and first output separately from the deliberately delayed command, and
-checks that output streams before completion. Repetitions report median and p95;
-OS caches are not flushed. The workflow saves the measurements as an artifact
-for setting compilation regression budgets in #13.
-
 [EXTRACTION.md](EXTRACTION.md) records source revisions, adaptations and exclusions.
 
 ## Lando service

@@ -50,3 +50,5 @@ services:
     storage:
       - target: /shared
         scope: app
+        owner: fixture:fixture
+        permissions: '0770'

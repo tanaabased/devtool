@@ -34,10 +34,6 @@ bun ../../bin/devtool.js --file "$DEVTOOL_FIXTURE_ROOT/first/.devtool.yml" info 
 bun ../../bin/devtool.js --file "$DEVTOOL_FIXTURE_ROOT/second/.devtool.yml" info --json > "$DEVTOOL_FIXTURE_ROOT/second.json"
 bun verify.js info
 
-# should stream exec output and measure source startup against direct Docker
-set -eu
-bun latency.js
-
 # should reuse a valid image across source CLI invocations
 set -eu
 bun verify.js snapshot

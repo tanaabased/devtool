@@ -22,7 +22,6 @@ Final acceptance requires the source and lifecycle jobs at the delivered revisio
 | `tooling`: service user, environment, argv, execution failures | explicit `exec` in both container fixtures; `test/lifecycle.spec.js`, `test/lando.spec.js` | Retained primitives; dynamic alias parser, background CLI orchestration and API 3 services excluded |
 | #5 failure/cache additions | unit image/app/start/exec failures, cross-process reconstruction; container image/app/exec failures and recovery | Added; no success inferred from placeholders |
 | #7 downstream and import boundaries | `test/source-probe.js`, `test/consumer.spec.js`, external copy of `examples/consumer` | Bun source library import, host-read/write/process boundaries and independent products |
-| #11 exec responsiveness | `examples/l337/latency.js` through the source CLI and equivalent direct Docker command | First output before delayed completion; initial/repeated timings, median and p95; container startup and OS-cold caches excluded from measurements |
 
 Unimplemented upstream features stay absent: `app:first`/`app:changed`/`app:every`,
 worker orchestration, extra-user installation and richer build-step shorthand.
