@@ -1,5 +1,5 @@
 import type { UserConfig } from '../lib/types.ts';
-import isObject from 'lodash/isPlainObject.js';
+import isObject from 'lodash-es/isPlainObject.js';
 
 export default (user: unknown): UserConfig => {
   // if user is nully then return empty object

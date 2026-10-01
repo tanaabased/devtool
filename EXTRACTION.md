@@ -87,8 +87,11 @@ state types; distribution declarations and compiled artifacts remain later work.
 standalone Prettier and strict `tsc --noEmit` run separately.
 
 Engine and certificate dependencies load through literal dynamic imports when explicitly needed.
-The retained Docker adapter uses composition to preserve its build/run wrappers without claiming
-to implement incompatible Dockerode overloads. Module-relative shell assets remain ordinary
+The retained Docker adapter uses composition for its image-build paths; unused legacy
+pull/run helpers are removed, and app execution belongs to Compose. Lodash calls use
+individual `lodash-es` modules so source loading stays narrow and bundlers can tree-shake them.
+Color formatting uses the existing `ansis` dependency instead of the unused Listr task runner.
+Module-relative shell assets remain ordinary
 files. Package metadata uses a static JSON import. The synchronous file reader retains one
 explicit `createRequire` boundary for caller-selected JavaScript data files; npmrc paths are
 parsed as JSON. Neither path is service discovery. The import audit parses TypeScript syntax,

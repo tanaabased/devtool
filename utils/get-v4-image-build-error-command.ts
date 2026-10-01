@@ -1,5 +1,5 @@
 import type { BuildContext } from '../lib/types.ts';
-import { color } from 'listr2';
+import color from 'ansis';
 import write from '../utils/write-file.ts';
 
 export default ({

@@ -115,8 +115,7 @@ The CLI scripts prepare a source symlink in `node_modules/.bin`, which Bun puts 
 the test command’s `PATH`. CI runs source and container CLI/library scenarios in
 parallel jobs, with unit tests in their own job.
 The [example guidance](examples/AGENTS.md) defines CLI/library sections and target
-selection. The existing `engines.node` declaration is retained; this Bun suite
-does not verify Node consumer compatibility.
+selection. This source package supports Bun; Node consumer compatibility is not declared.
 The [assertion map](examples/ASSERTIONS.md) records retained and excluded behavior.
 
 [EXTRACTION.md](EXTRACTION.md) records source revisions, adaptations and exclusions.

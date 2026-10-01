@@ -1,8 +1,8 @@
 import type { SpawnOptionsWithoutStdio } from 'node:child_process';
 import type { Debugger } from 'debug';
 import type { ExecutionError } from './as-error.ts';
-import merge from 'lodash/merge.js';
-import { color } from 'listr2';
+import merge from 'lodash-es/merge.js';
+import color from 'ansis';
 import { spawn } from 'node:child_process';
 import debug from 'debug';
 import mergePromise from './merge-promise.ts';

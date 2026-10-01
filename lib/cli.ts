@@ -73,6 +73,7 @@ export const runCli = async (
           '  -i, --interactive    Attach exec to the terminal',
           '',
           color.tp('Environment Variables:'),
+          `  ${runtime?.envPrefix ?? 'DEVTOOL'}_COMMAND_NAME Name shown in help and diagnostics`,
           `  ${runtime?.envPrefix ?? 'DEVTOOL'}_DATA_ROOT    same as --data-root`,
           `  ${runtime?.envPrefix ?? 'DEVTOOL'}_CACHE_ROOT   same as --cache-root`,
           `  ${runtime?.envPrefix ?? 'DEVTOOL'}_CACHE        false disables persistent caching`,

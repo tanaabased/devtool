@@ -1,6 +1,6 @@
 import type { PackageService, CertConfig } from '../../lib/types.ts';
 import path from 'node:path';
-import uniq from 'lodash/uniq.js';
+import uniq from 'lodash-es/uniq.js';
 
 export default async (service: PackageService, input: unknown) => {
   let certs = input as CertConfig;

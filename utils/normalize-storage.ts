@@ -1,8 +1,8 @@
 import type { Mount, MountInput, ServiceUser } from '../lib/types.ts';
 import type L337ServiceV4 from '../components/l337-v4.ts';
-import isObject from 'lodash/isPlainObject.js';
-import kebabCase from 'lodash/kebabCase.js';
-import merge from 'lodash/merge.js';
+import isObject from 'lodash-es/isPlainObject.js';
+import kebabCase from 'lodash-es/kebabCase.js';
+import merge from 'lodash-es/merge.js';
 import toPosixPath from './to-posix-path.ts';
 
 export default (

@@ -1,7 +1,7 @@
 import type { DumpOptions } from 'js-yaml';
 import asError from './as-error.ts';
 import fs from 'node:fs';
-import get from 'lodash/get.js';
+import get from 'lodash-es/get.js';
 import path from 'node:path';
 import remove from './remove.ts';
 import yaml from '../components/yaml.ts';
