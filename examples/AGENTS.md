@@ -1,36 +1,41 @@
 # Example and scenario guidance
 
-- Keep one folder and README per feature. Share fixture inputs; use separate
-  project, data and cache roots for each interface or target run. Do not create
-  parallel `feature-cli` and `feature-library` folders.
-- Use `## Testing CLI` for commands through the actual CLI and
-  `## Testing Library` for calls through the package's public exports. Each section must be
-  runnable on its own with its setup. Add both only when they prove
-  useful interface behavior; copying every assertion buys little.
-- CLI assertions own argv, stdout/stderr and exit status. Library assertions own
-  configuration, returned values, errors, isolated instances and inert imports.
-  Shared lifecycle expectations can reuse fixtures and assertion helpers, but a
-  library test must not route its calls through the CLI.
-- Interface and target are independent choices. CLI scenarios select source under Bun or the compiled executable explicitly;
-  library scenarios use source under Bun. Installed package targets belong to #16.
-  Missing targets must fail, without falling back to source.
-- Run Leia under Bun via `bun run leia`. Select sections with
-  `--test-header 'Testing CLI'` or `--test-header 'Testing Library'`; those are
-  case-sensitive header prefixes. Keep setup with its scenario,
-  with interface-specific preparation in helpers when needed. Separate CLI and
-  library invocations must receive isolated run roots.
-- Keep lifecycle commands visible in Markdown and give each observable contract
-  a named test. Use helpers for structured JSON, certificates and snapshots.
-- Every Leia test runs in a fresh shell. Put required environment and shell
-  options in each test or pass them from the caller; do not rely on a preceding
-  test's shell state. Keep meaningful assertions and failure diagnostics.
-- `bun run test` is Docker-free. Run `bun run test:integration` only in disposable
-  CI with fixture-owned paths and an existing Docker Engine, Buildx and Compose.
-  Keep resources scoped to the fixture; the disposable runner owns their final cleanup.
-  Retain explicit destruction assertions where they verify product behavior.
-- Invoke CLI scenarios as `devtool`, through the prepared source symlink.
-  `bun run test:cli` and `bun run test:integration:cli` prepare that alias; CI
-  runs `bun run prepare:source-cli` and adds `node_modules/.bin` to `PATH`.
-  Keep `bin/devtool.ts` as the compiler input. Use Bun explicitly for helper
-  scripts and library examples. Use TypeScript ESM examples. Do not imply that Bun test results
-  prove a Node support range or compiled/installed compatibility.
+- Write examples as instructions a person can follow from that directory. Keep
+  ordinary `devtool` commands visible, with short `# should ...` assertions in
+  Leia's Markdown blocks. Do not turn the README into a fixture-management script.
+- Organize folders by functionality. Use multiple services for image, build,
+  mount or command variants. When a behavior needs genuinely separate projects
+  or app files, check those fixtures into named directories; do not clone an
+  example into temporary roots during setup.
+- Model scenarios on the corresponding Lando Core examples. Carry forward each
+  applicable observable assertion, adapting command names and public API usage.
+  Record exclusions and runtime gaps in `ASSERTIONS.md`; generated-output unit
+  tests do not replace proof that the behavior works in a container.
+- Each feature README has independently runnable `## Testing CLI` and
+  `## Testing Library` sections for the Cartesian feature/interface matrix.
+  Shared `## Setup` installs the required dependencies. Keep library code beside the
+  README and import `@tanaab/devtool` by its public package export, never
+  through a relative path into implementation source. Until #14, examples use
+  the root package's self-reference and install its dependencies from Setup.
+- CLI examples invoke the compiled `devtool` already on `PATH`. Library examples
+  use the source package under Bun until #14 provides its distribution. Missing
+  artifacts must fail; never fall back to another target. Do not route library
+  tests through a CLI wrapper just to share assertions.
+- Use the example directory as the app root. Set fixed environment values in the
+  workflow or invocation, without `GITHUB_ENV` bookkeeping. Runtime data and
+  cache paths may point to disposable runner storage. Avoid fixture-root variables,
+  repeated `set -eu`, CI guards, executable-discovery assertions and unrelated
+  environment checks in the README. Harness restrictions belong in the harness.
+- Every Leia test runs in a fresh shell. Do not depend on shell variables or `cd`
+  from another test. Keep related commands in one test and let Leia report failures.
+- Prefer visible output assertions. Use small, named helpers only for checks
+  that would obscure the example, such as certificate validation or structured
+  snapshots. Do not hide an entire lifecycle behind `verify.ts`.
+- Container scenarios run only in disposable CI with Docker Engine, Buildx and
+  Compose. Do not use developer SSH keys, install host trust or manage unrelated
+  applications. The runner owns final cleanup; keep explicit destroy assertions
+  when they verify product behavior. Unit tests and typechecking stay separate.
+- Run Leia under Bun with `--test-header 'Testing CLI'` or
+  `--test-header 'Testing Library'`. These are case-sensitive header prefixes.
+  Use TypeScript ESM for library examples. Bun execution does not prove Node
+  compatibility or published-package behavior.

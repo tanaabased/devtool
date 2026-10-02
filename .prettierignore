@@ -11,3 +11,5 @@ bun.lock
 .temp/
 examples/.tmp/
 *.leia.*
+
+**/.results/

@@ -1,15 +1,14 @@
 import { createRequire } from 'node:module';
 import { pathToFileURL } from 'node:url';
-import type { Engine } from '../../lib/types.ts';
+import type { Engine } from '../lib/types.ts';
+import type * as Devtool from '../lib/devtool.ts';
 import assert from 'node:assert/strict';
 import path from 'node:path';
 
 /** A downstream wrapper consumes only the source package's public entrypoint. */
 export const createProducts = async (source: string, root: string, engine?: Engine) => {
   const entrypoint = createRequire(import.meta.url).resolve(source);
-  const { createDevtool } = (await import(
-    pathToFileURL(entrypoint).href
-  )) as typeof import('../../lib/devtool.ts');
+  const { createDevtool } = (await import(pathToFileURL(entrypoint).href)) as typeof Devtool;
   return ['wrapper-one', 'wrapper-two'].map((identity) =>
     createDevtool({
       identity,
@@ -41,11 +40,3 @@ export const verify = async (source: string, root: string, engine?: Engine) => {
   await apps[1].destroy();
   return apps;
 };
-
-if (import.meta.main)
-  verify(path.resolve(process.argv[2]!), path.resolve(process.argv[3]!))
-    .then(() => console.log('downstream products stayed isolated'))
-    .catch((error) => {
-      console.error(error);
-      process.exitCode = 1;
-    });

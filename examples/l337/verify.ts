@@ -2,14 +2,12 @@ const cacheRoot = process.env.DEVTOOL_CACHE_ROOT;
 assert.ok(cacheRoot, 'Missing DEVTOOL_CACHE_ROOT');
 const dataRoot = process.env.DEVTOOL_DATA_ROOT;
 assert.ok(dataRoot, 'Missing DEVTOOL_DATA_ROOT');
-const fixtureRoot = process.env.DEVTOOL_FIXTURE_ROOT;
-assert.ok(fixtureRoot, 'Missing DEVTOOL_FIXTURE_ROOT');
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
 
-const root = fixtureRoot;
+const root = path.resolve('.results');
 const first = JSON.parse(fs.readFileSync(path.join(root, 'first.json'), 'utf8'));
 const second = JSON.parse(fs.readFileSync(path.join(root, 'second.json'), 'utf8'));
 const stateFile = path.join(cacheRoot, 'projects', first.project, 'state.json');
@@ -71,7 +69,7 @@ switch (process.argv[2]) {
     assert.equal(containers(first.project, true).length, 0);
     assert.equal(fs.existsSync(stateFile), false);
     assert.equal(fs.existsSync(path.join(dataRoot, 'projects', first.project)), false);
-    assert.equal(fs.existsSync(path.join(root, 'first', '.devtool.yml')), true);
+    assert.equal(fs.existsSync(path.resolve('.devtool.yml')), true);
     assert.equal(containers(second.project).length, 1);
     break;
   default:

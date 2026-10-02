@@ -138,17 +138,22 @@ Runner-to-runner variance remains unmeasured. Timing stays outside routine PR jo
 
 ## Testing
 
-`bun run test` runs unit/provenance checks and Docker-free source CLI/library scenarios. The
-[L337](examples/l337/README.md), [Lando](examples/lando/README.md) and
-[downstream consumer](examples/consumer/README.md) scenarios run only in disposable
-CI with `bun run test:integration`; do not run them on the developer machine.
-`bun run test:cli` and `bun run test:library` select the interfaces independently.
-The CLI scripts prepare a source symlink in `node_modules/.bin`, which Bun puts on
-the test command’s `PATH`. CI runs source and container CLI/library scenarios in
-parallel jobs, with unit tests in their own job.
-The [example guidance](examples/AGENTS.md) defines CLI/library sections and target
-selection. This source package supports Bun; Node consumer compatibility is not declared.
-The [assertion map](examples/ASSERTIONS.md) records retained and excluded behavior.
+`bun run test` runs Docker-free unit and package-import checks. `bun run build`
+creates the CLI used by the [config](examples/config/README.md),
+[L337](examples/l337/README.md) and [exec](examples/exec/README.md) examples.
+Add `dist/` to `PATH` before running the CLI scenarios. Each example installs the root package's
+dependencies in Leia's Setup section; library scenarios resolve its public exports
+through the package self-reference under Bun until #14 provides the ESM distribution.
+
+`bun run test:cli` and `bun run test:library` select the Docker-free config example.
+`bun run test:integration` selects the container examples and runs only in disposable
+CI. The PR workflow builds the CLI in each feature/interface job, with unit tests
+and typechecking kept separate. The Lando example remains checked in but is disabled
+pending [#25](https://github.com/tanaabased/devtool/issues/25).
+
+The [example guidance](examples/AGENTS.md) defines the layout, and the
+[assertion map](examples/ASSERTIONS.md) distinguishes runtime coverage from unit
+characterization and remaining gaps. Bun tests do not establish Node compatibility.
 
 [EXTRACTION.md](EXTRACTION.md) records source revisions, adaptations and exclusions.
 

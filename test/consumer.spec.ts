@@ -1,4 +1,4 @@
-import type * as Consumer from '../examples/consumer/index.ts';
+import type * as Consumer from './consumer-example.ts';
 import { pathToFileURL } from 'node:url';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
@@ -10,11 +10,11 @@ describe('downstream source consumer (#7)', () => {
     const f = fixture();
     try {
       fs.copyFileSync(
-        path.join(import.meta.dirname, '../examples/consumer/index.ts'),
+        path.join(import.meta.dirname, './consumer-example.ts'),
         path.join(f.root, 'consumer.ts'),
       );
       fs.copyFileSync(
-        path.join(import.meta.dirname, '../examples/consumer/.wrapper.yml'),
+        path.join(import.meta.dirname, './consumer-app.yml'),
         path.join(f.root, '.wrapper.yml'),
       );
       const compose = f.engine.compose;

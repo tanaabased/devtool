@@ -5,7 +5,7 @@ permissions:
   contents: read
 jobs:
   examples:
-    name: ${{ matrix.example }} / ${{ matrix.interface }} / source
+    name: ${{ matrix.example }} / ${{ matrix.interface }}
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     defaults:
@@ -14,79 +14,30 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        include:
-          - example: source
-            interface: CLI
-            timeout: 10
-          - example: source
-            interface: Library
-            timeout: 10
-          - example: l337
-            interface: CLI
-            timeout: 300
-          - example: lando
-            interface: CLI
-            timeout: 300
-          - example: consumer
-            interface: Library
-            timeout: 300
+        example:
+          - config
+          - l337
+          # - lando # Re-enable after #25.
+          - exec
+        interface:
+          - cli
+          - lib
     env:
-      LEIA_TEST_HEADER: Testing ${{ matrix.interface }}
-      LEIA_TIMEOUT: ${{ matrix.timeout }}
+      LEIA_TEST_HEADER: Testing ${{ fromJSON('{"cli":"CLI","lib":"Library"}')[matrix.interface] }}
+      LEIA_TIMEOUT: '300'
     steps:
       - uses: actions/checkout@v7
       - uses: tanaabased/actions/setup-bun@v1
       - run: bun install --frozen-lockfile --ignore-scripts
-      - name: Prepare source fixtures
-        run: |
-          bun run prepare:source-cli
-          echo "$GITHUB_WORKSPACE/node_modules/.bin" >> "$GITHUB_PATH"
-          echo "DEVTOOL_FIXTURE_ROOT=$RUNNER_TEMP/devtool/fixture" >> "$GITHUB_ENV"
-          echo "DEVTOOL_DATA_ROOT=$RUNNER_TEMP/devtool/data" >> "$GITHUB_ENV"
-          echo "DEVTOOL_CACHE_ROOT=$RUNNER_TEMP/devtool/cache" >> "$GITHUB_ENV"
+      - run: bun run lint
+      - uses: ./.github/actions/build-dist
       - uses: tanaabased/actions/run-leia@v1
-        with:
-          scenarios: examples/${{ matrix.example }}/README.md
-          shell: bash
-          retry: 0
-          stdin: false
-
-  compiled:
-    name: ${{ matrix.example }} / CLI / compiled
-    runs-on: ubuntu-24.04
-    timeout-minutes: 30
-    defaults:
-      run:
-        shell: bash
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - example: standalone
-            timeout: 120
-          - example: l337
-            timeout: 300
-          - example: lando
-            timeout: 300
-    env:
-      LEIA_TEST_HEADER: Testing CLI
-      LEIA_TIMEOUT: ${{ matrix.timeout }}
-      DEVTOOL_ISOLATE: '1'
-    steps:
-      - uses: actions/checkout@v7
-      - uses: tanaabased/actions/setup-bun@v1
-      - run: bun install --frozen-lockfile --ignore-scripts
-      - run: bun run build
-      - name: Prepare compiled fixtures
-        run: |
-          mkdir -p "$RUNNER_TEMP/devtool/bin"
-          cp dist/devtool "$RUNNER_TEMP/devtool/bin/devtool"
-          echo "$RUNNER_TEMP/devtool/bin" >> "$GITHUB_PATH"
-          echo "DEVTOOL_COMPILED_CLI=$RUNNER_TEMP/devtool/bin/devtool" >> "$GITHUB_ENV"
-          echo "DEVTOOL_FIXTURE_ROOT=$RUNNER_TEMP/devtool/fixture" >> "$GITHUB_ENV"
-          echo "DEVTOOL_DATA_ROOT=$RUNNER_TEMP/devtool/data" >> "$GITHUB_ENV"
-          echo "DEVTOOL_CACHE_ROOT=$RUNNER_TEMP/devtool/cache" >> "$GITHUB_ENV"
-      - uses: tanaabased/actions/run-leia@v1
+        env:
+          NO_COLOR: '1'
+          DEVTOOL_DATA_ROOT: ${{ runner.temp }}/devtool/data
+          DEVTOOL_CACHE_ROOT: ${{ runner.temp }}/devtool/cache
+          DEVTOOL_COMPILED_CLI: ${{ github.workspace }}/dist/devtool
+          DEVTOOL_ISOLATE: '1'
         with:
           scenarios: examples/${{ matrix.example }}/README.md
           shell: bash
