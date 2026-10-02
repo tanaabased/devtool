@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import { spawn, spawnSync } from 'node:child_process';
+import type { ChildProcess } from 'node:child_process';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
@@ -11,6 +12,17 @@ const root = path.resolve(import.meta.dirname, '..');
 const temporary = fs.mkdtempSync(path.join(os.tmpdir(), 'devtool packed consumer '));
 const writeJson = (file: string, value: unknown) =>
   fs.writeFileSync(path.join(temporary, file), JSON.stringify(value, null, 2));
+const deadline = (child: ChildProcess) => {
+  const timer = setTimeout(() => {
+    process.stderr.write('Launcher fixture timed out\n');
+    try {
+      process.kill(-child.pid!, 'SIGKILL');
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code !== 'ESRCH') throw error;
+    }
+  }, 10000);
+  child.once('close', () => clearTimeout(timer));
+};
 const run = (args: string[], expected = 0) => {
   const result = spawnSync(
     process.execPath,
@@ -98,6 +110,7 @@ try {
     'services:\n  web:\n    type: lando\n    image: alpine:3.20\n    certs: false\n    packages: {git: false, sudo: false, ssh-agent: false}\n',
   );
   run(['packed-consumer.ts']);
+  process.stdout.write('Packed library, declarations, inert imports and assets passed\n');
   run([
     '-e',
     'import assert from "node:assert/strict"; import * as api from "@tanaab/devtool"; assert.deepEqual(Object.keys(api).sort(), ["createDevtool", "name", "version"]);',
@@ -123,6 +136,7 @@ try {
   fs.writeFileSync(binaryManifest, JSON.stringify({ ...binaryMetadata, version: '99.0.0' }));
   assert.match(run([launcher, '--version'], 1).stderr, /Expected .*; found/);
   fs.writeFileSync(binaryManifest, JSON.stringify(binaryMetadata));
+  process.stdout.write('Installed command, omitted binaries and version matching passed\n');
 
   // A controlled executable proves the launcher's process contract independently of Docker.
   const executable = path.join(binaryRoot, 'bin/devtool');
@@ -133,8 +147,10 @@ try {
   );
   const child = spawn(process.execPath, [launcher, 'a b', ';$HOME', '', '--flag'], {
     cwd: temporary,
+    detached: true,
     stdio: ['pipe', 'pipe', 'pipe'],
   });
+  deadline(child);
   child.stdin.end('input with spaces\n');
   let stdout = '',
     stderr = '',
@@ -150,12 +166,13 @@ try {
     child.on('error', reject);
     child.on('close', (code, signal) => resolve([code, signal]));
   });
-  assert.equal(code, 23, stderr);
+  assert.equal(code, 23, stdout + stderr);
   assert.equal(early, true);
   for (const argument of ['a b', ';$HOME', '', '--flag'])
     assert.ok(stdout.includes(`argv:<${argument}>`));
   assert.ok(stdout.includes('stdin:<input with spaces>'));
   assert.match(stderr, /stderr-marker/);
+  process.stdout.write('Launcher argv, streams and exit status passed\n');
   for (const signal of ['SIGINT', 'SIGTERM', 'SIGHUP'] as const) {
     fs.writeFileSync(
       executable,
@@ -163,10 +180,11 @@ try {
     );
     const processUnderTest = spawn(process.execPath, [launcher], {
       cwd: temporary,
+      detached: true,
       stdio: ['ignore', 'pipe', 'pipe'],
     });
     let output = '';
-    const timer = setTimeout(() => processUnderTest.kill('SIGKILL'), 5000);
+    deadline(processUnderTest);
     processUnderTest.stdout.on('data', (data) => {
       output += data;
       if (String(data).includes('ready')) processUnderTest.kill(signal);
@@ -175,8 +193,7 @@ try {
       processUnderTest.on('error', reject);
       processUnderTest.on('close', resolve);
     });
-    clearTimeout(timer);
-    assert.equal(status, 42, output);
+    assert.equal(status, 42, `${signal}: ${output}`);
     assert.match(output, new RegExp(`received-${signal}`));
   }
   fs.writeFileSync(executable, '#!/bin/sh\nkill -TERM $$\n');
