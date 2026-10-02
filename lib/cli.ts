@@ -101,6 +101,7 @@ export const runCli = async (
       await app.exec(service, commandArgs, {
         cwd,
         interactive: Boolean(values.interactive),
+        capture: 'tail',
         stdout,
         stderr,
       });

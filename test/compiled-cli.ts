@@ -77,6 +77,9 @@ printf '%s\\n' "$@"
 printf 'fixture-stderr\\n' >&2
 printf 'first-output\\n'
 /bin/sleep 1
+printf '%s\\n' '${'o'.repeat(32768)}'
+printf '%s\\n' '${'e'.repeat(32768)}' >&2
+printf 'last-diagnostic\\n' >&2
 printf 'last-output\\n'
 exit 17
 `,
@@ -175,6 +178,13 @@ exit 17
       assert.ok(stdout.includes('a b;$HOME\n'));
       assert.ok(stdout.includes('/etc/lando/exec.sh\n'));
       assert.match(stderr, /fixture-stderr/);
+      assert.ok(stdout.includes('o'.repeat(32768)));
+      assert.ok(stderr.includes('e'.repeat(32768)));
+      const summary = stderr.slice(stderr.lastIndexOf('error: '));
+      assert.ok(summary.startsWith('error: docker compose failed (17): '));
+      assert.ok(summary.length < 8400, 'failure summary must retain only a bounded tail');
+      assert.ok(!summary.includes('fixture-stderr'), 'old diagnostics must leave the tail');
+      assert.match(summary, /last-diagnostic/);
       assert.equal(
         files(data).some((file) => file.includes('/assets/')),
         false,

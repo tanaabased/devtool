@@ -12,6 +12,8 @@ export interface OutputWriter {
 export interface ExecOptions {
   cwd?: string;
   interactive?: boolean;
+  /** Default: all output. Tail mode retains only the last 8,192 characters per stream in results and errors. */
+  capture?: 'all' | 'tail';
   stdout?: OutputWriter;
   stderr?: OutputWriter;
   env?: NodeJS.ProcessEnv;

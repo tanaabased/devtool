@@ -6,7 +6,7 @@ import { spawn } from 'node:child_process';
 export default (
   command: string,
   args: string[],
-  { cwd, interactive = false, stdout, stderr, env }: ExecOptions = {},
+  { cwd, interactive = false, capture = 'all', stdout, stderr, env }: ExecOptions = {},
 ): Promise<ExecResult> =>
   new Promise((resolve, reject) => {
     const child = spawn(command, args, {
@@ -18,10 +18,12 @@ export default (
     let diagnostic = '';
     child.stdout?.on('data', (data) => {
       output += data;
+      if (capture === 'tail') output = output.slice(-8192);
       stdout?.write(data);
     });
     child.stderr?.on('data', (data) => {
       diagnostic += data;
+      if (capture === 'tail') diagnostic = diagnostic.slice(-8192);
       stderr?.write(data);
     });
     child.on('error', (error) =>
