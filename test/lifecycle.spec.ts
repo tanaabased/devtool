@@ -1,10 +1,11 @@
+import requireValue from '../utils/require-value.ts';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
-import * as yaml from './read-yaml.ts';
+import * as yaml from '../utils/read-fixture-yaml.ts';
 import { runCli } from '../lib/cli.ts';
 import { createDevtool } from '../lib/devtool.ts';
-import { fixture } from './project-fixture.ts';
+import { fixture } from '../utils/create-test-project.ts';
 
 describe('L337 lifecycle (#4)', () => {
   let f: ReturnType<typeof fixture>;
@@ -25,23 +26,23 @@ describe('L337 lifecycle (#4)', () => {
     );
     assert.equal(JSON.parse(fs.readFileSync(app.stateFile, 'utf8')).running, true);
     const compose = yaml.load(fs.readFileSync(app.composeFile, 'utf8'));
-    assert.equal(compose.services.one.image, `${app.project}-one:latest`);
-    assert.equal(compose.services.one.type, undefined);
-    assert.equal(compose.services.one.build, undefined);
+    assert.equal(requireValue(compose.services.one).image, `${app.project}-one:latest`);
+    assert.equal(requireValue(compose.services.one).type, undefined);
+    assert.equal(requireValue(compose.services.one).build, undefined);
   });
   it('reuses built images across processes and reconstructs compose without rebuilding', async () => {
     await f.load().start();
     f.calls.length = 0;
     const app = f.load();
-    assert.equal(app.getInfo().services[0].tag, `${app.project}-web:latest`);
-    assert.equal(Object.hasOwn(app.getInfo().services[0].state, 'APP'), false);
+    assert.equal(requireValue(app.getInfo().services[0]).tag, `${app.project}-web:latest`);
+    assert.equal(Object.hasOwn(requireValue(app.getInfo().services[0]).state, 'APP'), false);
     await app.start();
     assert.equal(
       f.calls.some((call) => call[0] === 'build'),
       false,
     );
     assert.equal(
-      yaml.load(fs.readFileSync(app.composeFile, 'utf8')).services.web.image,
+      requireValue(yaml.load(fs.readFileSync(app.composeFile, 'utf8')).services.web).image,
       `${app.project}-web:latest`,
     );
   });
@@ -57,10 +58,10 @@ describe('L337 lifecycle (#4)', () => {
     );
     fs.writeFileSync(path.join(f.root, 'Dockerfile'), 'FROM alpine\n');
     const check = (app: ReturnType<typeof f.load>) => {
-      assert.equal(app.state.services.web.tag, 'fixture:custom');
-      assert.equal(app.state.services.compose.tag, 'fixture:compose');
-      assert.equal(app.assemble().services!.web.image, 'fixture:custom');
-      assert.equal(app.assemble().services!.compose.image, 'fixture:compose');
+      assert.equal(requireValue(app.state.services.web).tag, 'fixture:custom');
+      assert.equal(requireValue(app.state.services.compose).tag, 'fixture:compose');
+      assert.equal(requireValue(app.assemble().services!.web).image, 'fixture:custom');
+      assert.equal(requireValue(app.assemble().services!.compose).image, 'fixture:compose');
     };
     let app = f.load();
     await app.start();
@@ -117,7 +118,7 @@ describe('L337 lifecycle (#4)', () => {
     await app.start();
     assert.equal(f.calls.filter((call) => call[0] === 'build').length, 1);
     const data = yaml.load(fs.readFileSync(f.file, 'utf8'));
-    data.services.web.environment = { CHANGED: 'yes' };
+    requireValue(data.services.web).environment = { CHANGED: 'yes' };
     fs.writeFileSync(f.file, yaml.dump(data));
     await f.load().start();
     f.images.clear();
@@ -178,7 +179,7 @@ describe('L337 lifecycle (#4)', () => {
     await app.start();
     f.calls.length = 0;
     await app.restart();
-    assert.deepEqual(f.calls[0][1], ['stop']);
+    assert.deepEqual(requireValue(f.calls[0])[1], ['stop']);
     await app.exec('web', ['printf', '%s', 'a b;$HOME']);
     assert.deepEqual(f.calls.at(-1)![1], ['exec', '-T', 'web', 'printf', '%s', 'a b;$HOME']);
   });
@@ -198,7 +199,7 @@ describe('L337 lifecycle (#4)', () => {
     const compose = f.engine.compose;
     f.engine.compose = async (project, file, ...args) => {
       assert.equal(
-        yaml.load(fs.readFileSync(file, 'utf8')).services.web.image,
+        requireValue(yaml.load(fs.readFileSync(file, 'utf8')).services.web).image,
         `${project}-web:latest`,
       );
       return compose.call(f.engine, project, file, ...args);

@@ -13,17 +13,19 @@
     "strict": true,
     "skipLibCheck": true,
     "noFallthroughCasesInSwitch": true,
-    "noImplicitOverride": true
+    "noImplicitOverride": true,
+    "noUncheckedIndexedAccess": true
   },
   "include": [
     "bin/**/*.ts",
     "lib/**/*.ts",
     "utils/**/*.ts",
     "components/**/*.ts",
-    "builders/**/*.ts",
-    "packages/**/*.ts",
     "scripts/**/*.ts",
     "test/**/*.ts",
-    "examples/**/*.ts"
+    "examples/**/*.ts",
+    "services/**/*.ts",
+    "engines/**/*.ts",
+    "fixtures/**/*.ts"
   ]
 }

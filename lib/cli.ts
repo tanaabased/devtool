@@ -1,5 +1,6 @@
 import type Runtime from './runtime.ts';
-import type { OutputWriter, ProductOptions } from './types.ts';
+import type { OutputWriter } from '../components/engine.ts';
+import type { ProductOptions } from './types.ts';
 import asError from '../utils/as-error.ts';
 import { parseArgs } from 'node:util';
 import ansis from 'ansis';
@@ -88,7 +89,8 @@ export const runCli = async (
       return 0;
     }
     const [command, service, ...extra] = positionals;
-    if (!commands.includes(command)) throw new Error(`Unknown command: ${command ?? '(missing)'}`);
+    if (!command || !commands.includes(command))
+      throw new Error(`Unknown command: ${command ?? '(missing)'}`);
     if ((command !== 'exec' && (service || commandArgs.length)) || extra.length)
       throw new Error(`Unexpected arguments for ${command}`);
     if (command === 'exec' && (!service || !commandArgs.length))
@@ -98,9 +100,11 @@ export const runCli = async (
       const info = app.getInfo();
       stdout.write(values.json ? `${JSON.stringify(info)}\n` : jsYaml.dump(info));
     } else if (command === 'exec') {
+      if (!service) throw new Error('Missing service');
       await app.exec(service, commandArgs, {
         cwd,
         interactive: Boolean(values.interactive),
+        capture: 'tail',
         stdout,
         stderr,
       });

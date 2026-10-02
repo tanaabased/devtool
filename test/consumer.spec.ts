@@ -1,21 +1,30 @@
-import type * as Consumer from './consumer-example.ts';
+import type * as Consumer from '../fixtures/source-consumer.ts';
 import { pathToFileURL } from 'node:url';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
-import { fixture } from './project-fixture.ts';
+import { fixture } from '../utils/create-test-project.ts';
 
 describe('downstream source consumer (#7)', () => {
   it('runs an external copy through the public package and isolated product instances', async () => {
     const f = fixture();
     try {
       fs.copyFileSync(
-        path.join(import.meta.dirname, './consumer-example.ts'),
+        path.join(import.meta.dirname, '../fixtures/source-consumer.ts'),
         path.join(f.root, 'consumer.ts'),
       );
-      fs.copyFileSync(
-        path.join(import.meta.dirname, './consumer-app.yml'),
+      fs.writeFileSync(
         path.join(f.root, '.wrapper.yml'),
+        `services:
+  web:
+    type: lando
+    api: 4
+    image: alpine:3.20
+    command: [sleep, infinity]
+    user: consumer
+    certs: false
+    packages: {git: false, sudo: false, ssh-agent: false}
+`,
       );
       const compose = f.engine.compose;
       f.engine.compose = async (...args) => {

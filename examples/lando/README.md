@@ -1,9 +1,18 @@
-# Lando API 4 source lifecycle
+# Service lifecycle
 
 Run only in disposable CI with existing Docker Engine, Compose and Buildx.
 Fixture roots and the selected `devtool` command on `PATH` are supplied by the
-workflow. No installed Lando, proxy, host trust changes or developer SSH keys
-are needed.
+workflow.
+
+This scenario is disabled in the CLI/library CI matrix pending
+[#25](https://github.com/tanaabased/devtool/issues/25), which owns the service audit,
+completion and rename. Unit tests remain active; they do not establish container
+coverage for users, hooks, packages, mounts, storage, certificates or healthchecks.
+The certificate/security fixture targets Alpine; other distribution installers
+remain unverified. Mount exclusions currently have unit coverage only.
+`app:first`/`app:changed`/`app:every`, worker orchestration, extra-user installation
+and richer build-step shorthand remain unimplemented. Proxy orchestration and
+host trust installation are outside this scenario.
 
 ## Setup
 

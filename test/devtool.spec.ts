@@ -10,7 +10,10 @@ describe('library import', () => {
     try {
       const result = spawnSync(
         process.execPath,
-        [path.join(import.meta.dirname, 'source-probe.ts')],
+        [
+          path.join(import.meta.dirname, '../fixtures/import-probe.ts'),
+          path.resolve(import.meta.dirname, '..'),
+        ],
         {
           cwd: temporary,
           encoding: 'utf8',

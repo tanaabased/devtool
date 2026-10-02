@@ -1,10 +1,10 @@
-import type L337ServiceV4 from '../components/l337-v4.ts';
+import type L337Service from '../services/l337/l337.ts';
 import { createHash } from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 
 /** Hash actual build inputs; generated project storage is never an input. */
-export default (service: L337ServiceV4, excluded: string[] = []) => {
+export default (service: L337Service, excluded: string[] = []) => {
   const hash = createHash('sha256');
   excluded = excluded.map((root) =>
     fs.existsSync(root) ? fs.realpathSync(root) : path.resolve(root),

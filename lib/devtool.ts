@@ -10,20 +10,21 @@ export const version = metadata.version;
 export type {
   ProductOptions,
   ProductConfig,
-  Engine,
-  ExecOptions,
-  ExecResult,
   AppConfig,
-  ServiceConfig,
-  ServiceInfo,
   AppInfo,
   PersistedState,
   ServiceRecord,
+} from './types.ts';
+export type {
+  Engine,
+  ExecOptions,
+  ExecResult,
   BuildOptions,
   ImageInfo,
   Volume,
   VolumeInput,
-} from './types.ts';
+} from '../components/engine.ts';
+export type { ServiceConfig, ServiceInfo } from '../components/service.ts';
 export type { ExecutionError } from '../utils/as-error.ts';
 export type { default as Runtime } from './runtime.ts';
 export type { default as App } from './app.ts';

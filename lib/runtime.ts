@@ -1,10 +1,11 @@
-import type { ProductOptions, ProductConfig, Engine } from './types.ts';
+import type { ProductOptions, ProductConfig } from './types.ts';
+import type { Engine } from '../components/engine.ts';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import yaml from 'js-yaml';
 import App from './app.ts';
-import yamlModule from '../components/yaml.ts';
+import yamlModule from './yaml.ts';
 
 const fields = {
   COMMAND_NAME: 'commandName',

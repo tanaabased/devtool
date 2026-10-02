@@ -1,8 +1,9 @@
+import requireValue from '../utils/require-value.ts';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
 import { createDevtool } from '../lib/devtool.ts';
-import { fixture } from './project-fixture.ts';
+import { fixture } from '../utils/create-test-project.ts';
 
 describe('configurable runtime (#2)', () => {
   let f: ReturnType<typeof fixture>;
@@ -36,7 +37,7 @@ describe('configurable runtime (#2)', () => {
     assert.notEqual(first.stateFile, second.stateFile);
     await first.start();
     assert.deepEqual(f.load({ identity: 'second' }).state, { services: {} });
-    assert.equal(second.services[0].info.state.IMAGE, 'UNBUILT');
+    assert.equal(requireValue(second.services[0]).info.state.IMAGE, 'UNBUILT');
   });
   it('does not read, overwrite or remove persisted cache when caching is disabled', async () => {
     const cached = f.load();

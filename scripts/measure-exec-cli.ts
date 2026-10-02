@@ -63,9 +63,11 @@ interface Sample {
 }
 const sample = (command: string[], cache: string): Promise<Sample> =>
   new Promise((resolve, reject) => {
+    const executable = command[0];
+    if (!executable) throw new Error('Missing measurement command');
     const start = performance.now();
     const epoch = performance.timeOrigin + start;
-    const child = spawn(command[0], command.slice(1), {
+    const child = spawn(executable, command.slice(1), {
       cwd: project,
       env: {
         ...process.env,
@@ -123,7 +125,7 @@ for (let batch = 0; batch < 3; batch++) {
   }
 }
 const percentile = (values: number[], fraction: number) =>
-  [...values].sort((a, b) => a - b)[Math.ceil(values.length * fraction) - 1].toFixed(1);
+  ([...values].sort((a, b) => a - b)[Math.ceil(values.length * fraction) - 1] ?? NaN).toFixed(1);
 const rows: string[] = [];
 for (let batch = 0; batch < 3; batch++)
   for (const mode of ['cold', 'warm'])

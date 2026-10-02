@@ -5,3 +5,10 @@ dist/
 exec-timing.json
 exec-timing.md
 examples/**/.results
+coverage/
+temp/
+cache/
+.temp/
+.tmp/
+examples/.tmp/
+*.leia.*

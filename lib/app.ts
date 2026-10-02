@@ -1,16 +1,8 @@
-import DefaultEngine from './engine.ts';
-import type {
-  AppConfig,
-  AppInfo,
-  ComposeData,
-  ComposeFragment,
-  Engine,
-  PersistedState,
-  ProductConfig,
-  ServiceInfo,
-  ExecOptions,
-} from './types.ts';
-import type LandoBuilder from '../builders/lando-v4.ts';
+import DefaultEngine from '../engines/docker/docker.ts';
+import type { AppConfig, AppInfo, PersistedState, ProductConfig } from './types.ts';
+import type { ComposeFragment, ServiceInfo } from '../components/service.ts';
+import type { Engine, ExecOptions } from '../components/engine.ts';
+import type LandoBuilder from '../services/lando/lando.ts';
 type LandoService = InstanceType<ReturnType<typeof LandoBuilder.builder>>;
 type Service = L337 | LandoService;
 const isLando = (service: Service): service is LandoService => service instanceof components.lando;
@@ -18,25 +10,21 @@ import asError from '../utils/as-error.ts';
 import { createHash } from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
-import mergeWith from 'lodash-es/mergeWith.js';
+import clone from '../utils/clone-config.ts';
+import mergeCompose from '../utils/merge-compose.ts';
+import createDebug from './debug.ts';
 import yaml from 'js-yaml';
 import fingerprint from '../utils/build-fingerprint.ts';
-import L337 from '../components/l337-v4.ts';
-import lando from '../builders/lando-v4.ts';
-import certificates from './certificates.ts';
+import L337 from '../services/l337/l337.ts';
+import lando from '../services/lando/lando.ts';
+import certificates from '../services/lando/lib/certificates.ts';
 import isDisabled from '../utils/is-disabled.ts';
 
 const components = Object.freeze({ l337: L337, lando: lando.builder(L337, lando.defaults) });
-const clone = <T>(value: T): T => {
-  if (value && typeof value === 'object' && 'getMetadata' in value) return value;
-  if (Array.isArray(value)) return value.map(clone) as T;
-  if (value && typeof value === 'object')
-    return Object.fromEntries(Object.entries(value).map(([key, item]) => [key, clone(item)])) as T;
-  return value;
-};
 const validName = (name: string) => /^[a-zA-Z0-9][a-zA-Z0-9_-]*$/.test(name);
 
 class App {
+  private debug: ReturnType<typeof createDebug>;
   config: ProductConfig;
   file: string;
   root: string;
@@ -112,6 +100,7 @@ class App {
           throw new Error(`${kind}.${id}: explicit names require external: true`);
       }
     }
+    this.debug = createDebug(`devtool:${config.identity}:app`);
     this.config = config;
     this.file = fs.realpathSync(file);
     this.root = path.dirname(this.file);
@@ -256,7 +245,9 @@ class App {
   }
 
   private imageTag(id: string) {
-    const { image, build } = this.data.services[id];
+    const config = this.data.services[id];
+    if (!config) throw new Error(`Unknown service: ${id}`);
+    const { image, build } = config;
     const custom =
       build && typeof image === 'string'
         ? image
@@ -267,17 +258,7 @@ class App {
   }
 
   assemble() {
-    const compose: ComposeData = {};
-    for (const fragment of this.composeData) {
-      for (const data of fragment.data)
-        mergeWith(compose, data, (left, right, key) => {
-          if (!Array.isArray(right)) return undefined;
-          // API 4 packages contribute mounts independently; a later mount replaces only the same target.
-          if (key === 'volumes' && Array.isArray(left))
-            return [...new Map([...left, ...right].map((mount) => [mount.target, mount])).values()];
-          return right;
-        });
-    }
+    const compose = mergeCompose(this.composeData);
     // L337 owns image builds; Compose must never rebuild the original Dockerfile.
     for (const [id, service] of Object.entries(compose.services ?? {})) {
       delete service.build;
@@ -286,6 +267,11 @@ class App {
     }
     fs.mkdirSync(this._dir, { recursive: true });
     fs.writeFileSync(this.composeFile, yaml.dump(compose, { noRefs: true }));
+    this.debug(
+      'assembled project %s with %d services',
+      this.project,
+      Object.keys(compose.services ?? {}).length,
+    );
     return compose;
   }
 
@@ -298,6 +284,7 @@ class App {
   }
 
   async start({ rebuild = false } = {}) {
+    this.debug('starting project %s; rebuild=%s', this.project, rebuild);
     const previous = this.state.services;
     this.state = { services: {}, running: false };
     this.persist();
@@ -305,14 +292,14 @@ class App {
       if (this.services.some((service) => isLando(service) && !isDisabled(service.certs)))
         await this.certificates.ensureCA();
       for (const service of this.services) {
-        service.tag = this.imageTag(service.id);
+        const tag = this.imageTag(service.id);
+        service.tag = tag;
         if (isLando(service)) await service.prepare();
         const hash = fingerprint(service, this.generatedRoots);
         const saved = previous[service.id];
         const reusable =
-          !rebuild &&
-          saved?.fingerprint === hash &&
-          (await this.getEngine().imageExists(service.tag));
+          !rebuild && saved?.fingerprint === hash && (await this.getEngine().imageExists(tag));
+        this.debug('service %s image cache %s', service.id, reusable ? 'hit' : 'miss');
         if (!reusable) {
           service.info = { state: { IMAGE: 'UNBUILT' } };
           await service.buildImage();
@@ -324,13 +311,14 @@ class App {
         delete service.info.error;
         this.state.services[service.id] = {
           fingerprint: hash,
-          tag: service.tag!,
+          tag,
           imageReused: reusable,
         };
       }
       for (const service of this.services) {
         const saved = previous[service.id];
         const record = this.state.services[service.id];
+        if (!record) throw new Error(`Missing build record: ${service.id}`);
         const appHash = this.appFingerprint(service);
         if (isLando(service)) {
           service.info = { state: { APP: 'UNBUILT' } };
@@ -412,11 +400,14 @@ class App {
             await new Promise((resolve) => setTimeout(resolve, options.delay ?? 1000));
         }
       }
-      this.state.services[service.id].healthy = service.info.healthy;
+      const record = this.state.services[service.id];
+      if (!record) throw new Error(`Missing build record: ${service.id}`);
+      record.healthy = service.info.healthy;
     }
   }
 
   async stop() {
+    this.debug('stopping project %s', this.project);
     this.assemble();
     await this.getEngine().compose(this.project, this.composeFile, ['stop']);
     this.state.running = false;

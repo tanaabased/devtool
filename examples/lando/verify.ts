@@ -10,7 +10,7 @@ import { spawnSync, execFileSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
 import { X509Certificate } from 'node:crypto';
-import * as yaml from '../../test/read-yaml.ts';
+import * as yaml from '../../utils/read-fixture-yaml.ts';
 
 assert.equal(process.env.GITHUB_ACTIONS, 'true', 'Container assertions run only in disposable CI');
 const root = path.join(fixtureRoot, 'lando');
@@ -88,6 +88,7 @@ switch (process.argv[2]) {
   case 'break-image': {
     fs.copyFileSync(file, original);
     const data = yaml.load(fs.readFileSync(file, 'utf8'));
+    assert.ok(data.services.web);
     data.services.web.build.image = 'exit 23';
     fs.writeFileSync(file, yaml.dump(data));
     break;

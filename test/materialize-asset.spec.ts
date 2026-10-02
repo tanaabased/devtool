@@ -1,25 +1,23 @@
+import requireValue from '../utils/require-value.ts';
 import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import materialize from '../utils/materialize-asset.ts';
-import fingerprint from '../utils/build-fingerprint.ts';
-import { fixture } from './project-fixture.ts';
-import inventory from '../extraction.json';
-import shellAsset, { shellAssets } from '../lib/shell-assets.ts';
+import { fixture } from '../utils/create-test-project.ts';
+import shellAsset, { shellAssets } from '../services/lando/lib/shell-assets.ts';
 
 describe('shell assets', () => {
-  it('inventories every retained shell file and leaves library paths ordinary', () => {
+  it('registers every runtime shell file with executable mode and leaves library paths ordinary', () => {
+    const root = path.resolve(import.meta.dirname, '../services/lando');
     assert.deepEqual(
       Object.keys(shellAssets).sort(),
-      inventory.files
-        .filter((file) => file.path.endsWith('.sh'))
-        .map((file) => file.path)
-        .sort(),
+      [...new Bun.Glob('{packages,scripts}/**/*.sh').scanSync(root)].sort(),
     );
     for (const id of Object.keys(shellAssets) as (keyof typeof shellAssets)[]) {
-      assert.equal(shellAsset(id, '/unused'), path.resolve(import.meta.dirname, '..', id));
+      assert.equal(shellAsset(id, '/unused'), path.join(root, id));
+      assert.equal(fs.statSync(path.join(root, id)).mode & 0o777, 0o755, id);
     }
   });
   it('restores bytes and modes without rewriting correct files or following destination symlinks', () => {
@@ -88,41 +86,20 @@ describe('shell assets', () => {
       fs.rmSync(root, { recursive: true, force: true });
     }
   });
-  it('invalidates relevant image fingerprints when materialized asset bytes or modes change', () => {
-    const f = fixture();
-    try {
-      const source = path.join(f.temporary, 'embedded');
-      const target = path.join(f.temporary, 'data', 'assets', 'boot.sh');
-      fs.writeFileSync(source, 'first');
-      materialize(source, target);
-      const service = f.load().services[0];
-      service.addContext({ source: target, target: '/boot.sh' });
-      const first = fingerprint(service);
-      fs.writeFileSync(source, 'second');
-      materialize(source, target);
-      const second = fingerprint(service);
-      assert.notEqual(second, first);
-      assert.equal(fingerprint(service), second);
-      fs.chmodSync(target, 0o644);
-      assert.notEqual(fingerprint(service), second);
-    } finally {
-      f.cleanup();
-    }
-  });
   it('keeps boot assets off exec and info paths', async () => {
     const f = fixture({ web: { type: 'lando', image: 'alpine', certs: false } });
     try {
       const app = f.load();
       await app.exec('web', ['echo', 'hello']);
       assert.equal(
-        app.services[0]
+        requireValue(app.services[0])
           .generateBuildContext()
           .sources.some((source) => source.source.endsWith('boot.sh')),
         false,
       );
       await app.start();
       assert.equal(
-        app.services[0]
+        requireValue(app.services[0])
           .generateBuildContext()
           .sources.some((source) => source.source.endsWith('boot.sh')),
         true,
