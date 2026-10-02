@@ -9,7 +9,7 @@ describe('clone config', () => {
     const copy = clone(source);
     copy.env.values.push('b');
     assert.deepEqual(source.env.values, ['a']);
-    assert.equal(copy.tagged, tagged);
+    assert.notEqual(copy.tagged, tagged);
     assert.deepEqual(copy.tagged.getMetadata(), { file: '/fixture/build.sh' });
     assert.equal(copy.disabled, false);
     assert.equal(clone(null), null);

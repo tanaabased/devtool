@@ -50,7 +50,13 @@ describe('ESM boundaries', () => {
     }
   });
   it('should expose only the supported runtime exports', () => {
-    assert.deepEqual(Object.keys(api).sort(), ['createDevtool', 'name', 'version']);
+    assert.deepEqual(Object.keys(api).sort(), [
+      'Config',
+      'configSchemas',
+      'createDevtool',
+      'name',
+      'version',
+    ]);
   });
   it('should resolve service assets independently of the caller working directory', async () => {
     const f = fixture({

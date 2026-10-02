@@ -50,7 +50,8 @@ const argv = [...process.argv];
 const exitCode = process.exitCode;
 const listeners = EventEmitter.defaultMaxListeners;
 
-const { createDevtool } = await import('@tanaab/devtool');
+const { Config, createDevtool } = await import('@tanaab/devtool');
+new Config({ sources: [{ id: 'not-loaded', kind: 'file', file: '/nonexistent/config.yml' }] });
 const runtime = createDevtool({ identity: 'consumer' });
 assert.equal(runtime.identity, 'consumer');
 assert.deepEqual(process.argv, argv);

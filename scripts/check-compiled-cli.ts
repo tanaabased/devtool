@@ -98,8 +98,15 @@ exit 17
       assert.equal(version.status, 0, version.stderr);
       assert.equal(version.stdout.trim(), metadata.version);
       assert.match(run(['--help']).stdout, /Usage: devtool/);
-      fs.writeFileSync(path.join(project, 'product.yml'), 'commandName: explicit\n');
+      fs.writeFileSync(path.join(project, 'product.yml'), 'command-name: explicit\n');
       assert.match(run(['--config', 'product.yml', '--help']).stdout, /Usage: explicit/);
+      fs.writeFileSync(
+        path.join(project, 'product.mjs'),
+        'export default { commandName: "native" };',
+      );
+      const native = run(['--config', 'product.mjs', '--help']);
+      assert.equal(native.status, 0, native.stderr);
+      assert.match(native.stdout, /Usage: native/);
       assert.match(
         run(['--config', 'product.yml', '--help'], {
           ...environment,

@@ -110,7 +110,7 @@ try {
   process.stdout.write('Packed library, declarations, inert imports and assets passed\n');
   run([
     '-e',
-    'import assert from "node:assert/strict"; import * as api from "@tanaab/devtool"; assert.deepEqual(Object.keys(api).sort(), ["createDevtool", "name", "version"]);',
+    'import assert from "node:assert/strict"; import * as api from "@tanaab/devtool"; assert.deepEqual(Object.keys(api).sort(), ["Config", "configSchemas", "createDevtool", "name", "version"]);',
   ]);
 } finally {
   fs.rmSync(temporary, { recursive: true, force: true });

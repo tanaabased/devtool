@@ -72,3 +72,31 @@ const app = createDevtool({ configFile: "product.yml" }).loadApp();
 assert.equal(app.getInfo().services[0].type, "l337");
 '
 ```
+
+## Config sources
+
+`Config` is also available independently of an App. It loads only the sources you
+supply, in ascending precedence. Schema keys may use kebab-case or camelCase;
+JavaScript reads use camelCase and YAML/JSON exports use kebab-case. Names inside
+literal dictionaries, including labels and environment variables, stay intact.
+
+`compile()` loads and validates a revision. `get()` reads that compiled snapshot
+without reloading files. Use `replaceSource()`, `removeSource()` or
+`reloadSource()` followed by `compile()` to change it. Previously returned
+snapshots stay unchanged. `fork()` preserves source context while isolating data.
+
+JavaScript files export a configuration object (`export default` or CommonJS),
+not a function or asynchronous factory. Explicit reload refreshes the entry
+module; its transitive JavaScript dependencies retain Bun's module caching.
+JavaScript sources are read-only. `export()` serializes effective data into a new
+document; it does not edit sources or carry comments from multiple files.
+`sourceDocument(id)` returns a detached YAML document retaining comments, anchors
+and import tags. Targeted persistence and config CLI commands follow this read
+foundation.
+
+## Testing Library Config
+
+```sh
+# should compose named sources and retain provenance through the installed SDK
+bun config.ts
+```

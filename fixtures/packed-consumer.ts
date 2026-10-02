@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
-import { createDevtool, version } from '@tanaab/devtool';
+import { Config, configSchemas, createDevtool, version } from '@tanaab/devtool';
 import type { Engine, ProductOptions } from '@tanaab/devtool';
 
 const sources: string[] = [];
@@ -65,3 +65,21 @@ for (const name of ['boot.sh', 'entrypoint.sh', 'exec.sh', 'add-user.sh']) {
   assert.ok(fs.statSync(source).isFile());
 }
 process.stdout.write(`packed library ${version} passed\n`);
+
+// Exercise the public Config export through the exact installed tarball.
+const settings = Config.from(
+  { 'command-name': 'packed', cache: false },
+  { schema: configSchemas.product },
+);
+const snapshot = settings.compile();
+assert.equal(settings.get('commandName'), 'packed');
+assert.equal(settings.get('cache'), false);
+assert.match(settings.export('yaml'), /command-name: packed/);
+assert.equal(settings.compile(), snapshot);
+fs.writeFileSync('native.mjs', 'export default { commandName: "native" };');
+const native = new Config({
+  schema: configSchemas.product,
+  sources: [{ id: 'native', kind: 'file', file: 'native.mjs' }],
+});
+native.compile();
+assert.equal(native.get('commandName'), 'native');

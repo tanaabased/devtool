@@ -1,3 +1,3 @@
-commandName: example
-dataRoot: .results/data
-cacheRoot: .results/cache
+command-name: example
+data-root: .results/data
+cache-root: .results/cache
