@@ -38,8 +38,8 @@
       "path": "builders/lando-v4.ts",
       "blob": "e8108a56bb11b955bfb7a2b7c6b10441b8539598",
       "mode": "100644",
-      "adaptedBlob": "dd5d3b749ad333d8e196ea5c0cb55d78b47a97ba",
-      "adaptation": "Wire API 4 service to instance-owned metadata and injected engine; remove proxy/bootstrap dependencies; prepare packages deterministically; retain command, mount, app-hook and scoped-storage behavior. Renamed to TypeScript ESM; add strict contracts, module-relative paths and typed dependency boundaries. Use per-function lodash-es imports."
+      "adaptedBlob": "4f5ad7a279361dc4eafd86208198c93ce8f86433",
+      "adaptation": "Wire API 4 service to instance-owned metadata and injected engine; remove proxy/bootstrap dependencies; prepare packages deterministically; retain command, mount, app-hook and scoped-storage behavior. Renamed to TypeScript ESM; add strict contracts, module-relative paths and typed dependency boundaries. Use per-function lodash-es imports. Resolve shell assets through the explicit source/embedded registry; defer boot build inputs until image preparation."
     },
     {
       "source": "components/docker-engine.js",
@@ -86,8 +86,8 @@
       "path": "packages/git/git.ts",
       "blob": "4310dfbbfae4198892d19288a16669e6050a1832",
       "mode": "100644",
-      "adaptedBlob": "09b63232ee089632076da681a868fd1969f0ba5a",
-      "adaptation": "Renamed to TypeScript ESM; add strict contracts, module-relative paths and typed dependency boundaries."
+      "adaptedBlob": "9a5e871f62aca305f1a55cc8b0c831c27a68e51e",
+      "adaptation": "Renamed to TypeScript ESM; add strict contracts, module-relative paths and typed dependency boundaries. Resolve shell assets through the explicit source/embedded registry."
     },
     {
       "source": "packages/git/install-git.sh",
@@ -106,8 +106,8 @@
       "path": "packages/security/security.ts",
       "blob": "31cabf2a0bb8910d8655e2110430553fc7b698ac",
       "mode": "100644",
-      "adaptedBlob": "833b01a8dbcfac039cd937e67718d203da69926a",
-      "adaptation": "Use stable filenames for inline certificate inputs so equivalent source builds reuse cache. Renamed to TypeScript ESM; add strict contracts, module-relative paths and typed dependency boundaries."
+      "adaptedBlob": "4a142f32207ee8c0588f69b96bae44dd270156eb",
+      "adaptation": "Use stable filenames for inline certificate inputs so equivalent source builds reuse cache. Renamed to TypeScript ESM; add strict contracts, module-relative paths and typed dependency boundaries. Resolve shell assets through the explicit source/embedded registry."
     },
     {
       "source": "packages/ssh-agent/check-ssh-agent.sh",
@@ -132,8 +132,8 @@
       "path": "packages/ssh-agent/ssh-agent.ts",
       "blob": "394fbcb2b5b49363c304604401a3a775ed9f8b40",
       "mode": "100644",
-      "adaptedBlob": "6c96f754a1d63ef90d5a5eadc561d64d568adb0f",
-      "adaptation": "Renamed to TypeScript ESM; add strict contracts, module-relative paths and typed dependency boundaries."
+      "adaptedBlob": "ad176f014c60a8e59beb2e49640128a2ee258e93",
+      "adaptation": "Renamed to TypeScript ESM; add strict contracts, module-relative paths and typed dependency boundaries. Resolve shell assets through the explicit source/embedded registry."
     },
     {
       "source": "packages/sudo/install-sudo.sh",
@@ -146,8 +146,8 @@
       "path": "packages/sudo/sudo.ts",
       "blob": "a0b1acde0c6bf3750b40ab9b9e8156d317557d11",
       "mode": "100644",
-      "adaptedBlob": "0ebbdf22afa328b9d14ac71c2d23ad48b5f93ef5",
-      "adaptation": "Renamed to TypeScript ESM; add strict contracts, module-relative paths and typed dependency boundaries."
+      "adaptedBlob": "5dfc518d932d220f985a49a6b85122eb1fe2ea59",
+      "adaptation": "Renamed to TypeScript ESM; add strict contracts, module-relative paths and typed dependency boundaries. Resolve shell assets through the explicit source/embedded registry."
     },
     {
       "source": "packages/user/add-user.sh",
@@ -166,8 +166,8 @@
       "path": "packages/user/user.ts",
       "blob": "f242663d179a0f038ffc8c289eaf616921b969de",
       "mode": "100644",
-      "adaptedBlob": "28aa206775842f3729f824f42913f8bc59a49871",
-      "adaptation": "Renamed to TypeScript ESM; add strict contracts, module-relative paths and typed dependency boundaries."
+      "adaptedBlob": "8352c7512c58ab37a283bc5413bbab978a403e27",
+      "adaptation": "Renamed to TypeScript ESM; add strict contracts, module-relative paths and typed dependency boundaries. Resolve shell assets through the explicit source/embedded registry."
     },
     {
       "source": "scripts/boot.sh",

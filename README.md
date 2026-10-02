@@ -104,19 +104,57 @@ external resources, source files, other projects and global storage remain.
 Built image tags are retained. Only API 4 `l337` and `lando` services are registered; API 3 is rejected. Plugin loading,
 host engine installation, global container names and host networking are excluded.
 
+## Standalone CLI
+
+With the pinned Bun installed, `bun run build` produces `dist/devtool` for the
+current platform with embedded Bun bytecode and all 19 retained shell assets.
+Copy the executable outside the checkout and invoke it directly; no separately
+installed JavaScript runtime or `node_modules` is required. Docker Engine,
+Compose and Buildx remain explicit host prerequisites for lifecycle commands.
+
+The compiled CLI ignores incidental `.env`, `bunfig.toml`, `tsconfig.json` and
+`package.json` files. Use product YAML, prefixed environment variables and CLI
+options through the existing configuration contract. Build inputs materialize
+only when preparing a Lando image, under the selected project's data directory;
+unchanged files are reused and damaged bytes or modes are restored atomically.
+Library operations continue to use ordinary module-relative asset files.
+
+`bun run test:compiled` checks the built executable without contacting Docker.
+Disposable CI additionally isolates it from the checkout, dependencies and
+installed runtimes, then runs the existing L337/Lando lifecycle scenarios.
+The verified lifecycle target is Linux x64 on the Ubuntu 24.04 hosted runner
+(kernel 6.17.0-1022-azure), with the same executable passing runtime-free isolation
+in an Ubuntu 24.04 container. macOS 27.0.1 arm64 has local executable smoke evidence
+only. Older OS/kernel/CPU baselines, other architectures and Windows have not been
+validated; cross-compilation alone does not establish support.
+
+The manual **Exec Timing** workflow compares source, compiled and direct Docker
+calls on one disposable runner. [Initial measurements](https://github.com/tanaabased/devtool/pull/24)
+set provisional investigation budgets for paired compiled overhead over direct
+Docker: 25 ms median for dispatch and first output, 26 ms dispatch p95 and 36 ms
+first-output p95. These round up the worst observed values across three batches;
+exceeding them calls for another paired investigation, not an automatic CI failure.
+Runner-to-runner variance remains unmeasured. Timing stays outside routine PR jobs.
+
 ## Testing
 
-`bun run test` runs unit/provenance checks and Docker-free source CLI/library scenarios. The
-[L337](examples/l337/README.md), [Lando](examples/lando/README.md) and
-[downstream consumer](examples/consumer/README.md) scenarios run only in disposable
-CI with `bun run test:integration`; do not run them on the developer machine.
-`bun run test:cli` and `bun run test:library` select the interfaces independently.
-The CLI scripts prepare a source symlink in `node_modules/.bin`, which Bun puts on
-the test command’s `PATH`. CI runs source and container CLI/library scenarios in
-parallel jobs, with unit tests in their own job.
-The [example guidance](examples/AGENTS.md) defines CLI/library sections and target
-selection. This source package supports Bun; Node consumer compatibility is not declared.
-The [assertion map](examples/ASSERTIONS.md) records retained and excluded behavior.
+`bun run test` runs Docker-free unit and package-import checks. `bun run build`
+creates the CLI used by the [config](examples/config/README.md),
+[L337](examples/l337/README.md), [exec](examples/exec/README.md) and
+[isolation](examples/isolation/README.md) examples.
+Add `dist/` to `PATH` before running the CLI scenarios. Each example installs the root package's
+dependencies in Leia's Setup section; library scenarios resolve its public exports
+through the package self-reference under Bun until #14 provides the ESM distribution.
+
+`bun run test:cli` and `bun run test:library` select the Docker-free config example.
+`bun run test:integration` selects the container examples and runs only in disposable
+CI. The PR workflow builds the CLI in each feature/interface job, with unit tests
+and typechecking kept separate. The Lando example remains checked in but is disabled
+pending [#25](https://github.com/tanaabased/devtool/issues/25).
+
+The [example guidance](examples/AGENTS.md) defines the layout, and the
+[assertion map](examples/ASSERTIONS.md) distinguishes runtime coverage from unit
+characterization and remaining gaps. Bun tests do not establish Node compatibility.
 
 [EXTRACTION.md](EXTRACTION.md) records source revisions, adaptations and exclusions.
 

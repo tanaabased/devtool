@@ -43,15 +43,15 @@ are ported to native assertions and owned temporary fixtures.
 ## Boundaries
 
 The retained `builders/lando-v4.ts` is registered explicitly as API 4 `lando`;
-its container helpers resolve from this checkout. There is no API 3 bootstrap.
+its source-library helpers resolve from this checkout; the CLI embeds them. There is no API 3 bootstrap.
 
 Excluded: the legacy CLI/product/app/plugin bootstrap, API 3 builders and recipes,
 external plugin discovery/installation, host engine installation, proxy orchestration,
-update/telemetry machinery, compiled artifacts and publication. Core Next's
+update/telemetry machinery and publication. Core Next's
 `bun-me` checkout and staged changes are not extraction input.
 
 Local validation uses temporary fixtures and injected engines/processes. Real
-container lifecycle scenarios run only in disposable CI. The selected API 4 scenarios and downstream consumer run on Ubuntu 24 CI;
+container lifecycle scenarios run only in disposable CI. The enabled L337 and exec scenarios run on Ubuntu 24 CI;
 other platforms are not claimed by this milestone.
 
 ## API 4 completion (#5–#7)
@@ -76,8 +76,8 @@ The API 4 exec wrapper loads container environment without evaluating caller arg
 use an explicit shell when shell expansion is intended.
 
 [The assertion map](examples/ASSERTIONS.md) separates executable coverage from
-excluded and absent behavior. The downstream example imports the source package
-from outside its checkout; it makes no compiled-distribution or publication claim.
+excluded and absent behavior. Library examples import the source package by its public name. CLI examples use
+the compiled executable. The retained Lando example is disabled pending #25.
 
 ## TypeScript ESM migration (#12)
 
@@ -96,3 +96,17 @@ files. Package metadata uses a static JSON import. The synchronous file reader r
 explicit `createRequire` boundary for caller-selected JavaScript data files; npmrc paths are
 parsed as JSON. Neither path is service discovery. The import audit parses TypeScript syntax,
 including literal dynamic imports, instead of searching for CommonJS calls.
+
+## Standalone compilation (#13)
+
+The explicit `lib/shell-assets.ts` registry imports the 19 retained shell files
+with Bun's built-in file loader. Their source bytes and executable modes remain
+unchanged. Library calls resolve ordinary module-relative paths; the compiled CLI
+materializes only requested files under service-owned temporary storage before
+image fingerprinting. Atomic replacement preserves exact bytes and mode `0755`,
+including repair after corruption. Changes feed the existing build fingerprint.
+
+Lando boot inputs and image hook registration now run in `prepare()` alongside
+package installation, keeping extraction off `exec` and `info`. Builder and
+package adaptations are recorded in `extraction.json`. No prototype or Core Next
+source was imported.

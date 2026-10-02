@@ -4,7 +4,7 @@ services:
     api: 4
     type: l337
     image:
-      imagefile: !import Dockerfile
+      imagefile: !import image/Dockerfile
       groups:
         - id: proof
           weight: 100
@@ -12,7 +12,7 @@ services:
         - group: post-proof
           instructions: RUN echo post >> /order
         - group: proof
-          instructions: !load instructions
+          instructions: !load image/instructions
         - group: pre-proof
           instructions: RUN echo pre > /order
     command: [sleep, infinity]

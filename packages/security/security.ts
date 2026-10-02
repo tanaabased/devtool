@@ -1,3 +1,4 @@
+import shellAsset from '../../lib/shell-assets.ts';
 import { ImportString } from '../../components/yaml.ts';
 import type { PackageService, SecurityConfig } from '../../lib/types.ts';
 import fs from 'node:fs';
@@ -34,7 +35,9 @@ export default async (service: PackageService, input: unknown) => {
 
   // add ca-cert install hook if we have some to add
   if (cas.length > 0) {
-    service.addHookFile(path.join(import.meta.dirname, 'install-ca-certs.sh'), { hook: 'boot' });
+    service.addHookFile(shellAsset('packages/security/install-ca-certs.sh', service.tmpdir), {
+      hook: 'boot',
+    });
   }
 
   // inject them

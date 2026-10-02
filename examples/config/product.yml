@@ -1,0 +1,3 @@
+commandName: example
+dataRoot: .results/data
+cacheRoot: .results/cache

@@ -1,0 +1,9 @@
+name: Build distribution
+description: Compile the devtool CLI and add it to PATH.
+runs:
+  using: composite
+  steps:
+    - run: bun run build
+      shell: bash
+    - run: echo "$GITHUB_WORKSPACE/dist" >> "$GITHUB_PATH"
+      shell: bash

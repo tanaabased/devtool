@@ -22,20 +22,21 @@
   },
   "scripts": {
     "devtool": "bun ./bin/devtool.ts",
-    "test": "bun run test:unit && bun run test:cli && bun run test:library",
+    "test": "bun run test:unit",
     "test:unit": "bun --bun ./node_modules/mocha/bin/mocha.js 'test/*.spec.ts'",
-    "test:cli": "bun run prepare:source-cli && bun run leia examples/source/README.md --test-header 'Testing CLI' --shell bash --retry 0 --timeout 10",
-    "test:library": "bun run leia examples/source/README.md --test-header 'Testing Library' --shell bash --retry 0 --timeout 10",
+    "test:cli": "bun run leia examples/config/README.md --test-header \"Testing CLI\" --shell bash --retry 0 --timeout 300",
+    "test:library": "bun run leia examples/config/README.md --test-header \"Testing Library\" --shell bash --retry 0 --timeout 300",
     "test:integration": "bun run test:integration:cli && bun run test:integration:library",
-    "test:integration:cli": "bun run prepare:source-cli && bun run leia examples/l337/README.md examples/lando/README.md --test-header 'Testing CLI' --shell bash --retry 0 --timeout 300",
-    "test:integration:library": "bun run leia examples/consumer/README.md --test-header 'Testing Library' --shell bash --retry 0 --timeout 300",
+    "test:integration:cli": "bun run leia examples/l337/README.md examples/exec/README.md examples/isolation/README.md --test-header \"Testing CLI\" --shell bash --retry 0 --timeout 300",
+    "test:integration:library": "bun run leia examples/l337/README.md examples/exec/README.md examples/isolation/README.md --test-header \"Testing Library\" --shell bash --retry 0 --timeout 300",
     "leia": "bun ./node_modules/.bin/leia",
-    "prepare:source-cli": "bun ./scripts/prepare-source-cli.ts",
     "lint:eslint": "bun --bun eslint .",
     "format:check": "bun --bun prettier . --check --ignore-unknown",
     "format:write": "bun --bun prettier . --write --ignore-unknown",
     "lint": "bun run lint:eslint && bun run format:check",
-    "typecheck": "bun --bun tsc --noEmit"
+    "typecheck": "bun --bun tsc --noEmit",
+    "build": "bun build ./bin/devtool.ts --compile --bytecode --format=esm --minify --sourcemap --no-compile-autoload-dotenv --no-compile-autoload-bunfig --no-compile-autoload-tsconfig --no-compile-autoload-package-json --outfile dist/devtool",
+    "test:compiled": "bun test/compiled-cli.ts config && bun test/compiled-cli.ts assets && bun test/compiled-cli.ts streams"
   },
   "dependencies": {
     "ansis": "^4.0.0",

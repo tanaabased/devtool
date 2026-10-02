@@ -1,5 +1,5 @@
+import shellAsset from '../../lib/shell-assets.ts';
 import type { PackageService } from '../../lib/types.ts';
-import path from 'node:path';
 
 // sets ssh agent and prepares for socating
 // DD ssh-agent is a bit strange and we wont use it in v4 plugin but its easiest for demoing purposes
@@ -20,9 +20,16 @@ export default async (service: PackageService) => {
 
   // if not root then we need to do some extra stuff
   if ((name !== 'root' && uid !== 0) || uid !== '0') {
-    service.addLSF(path.join(import.meta.dirname, 'check-ssh-agent.sh'), 'bin/check-ssh-agent');
-    service.addHookFile(path.join(import.meta.dirname, 'install-socat.sh'), { hook: 'boot' });
-    service.addHookFile(path.join(import.meta.dirname, 'install-ssh-add.sh'), { hook: 'boot' });
+    service.addLSF(
+      shellAsset('packages/ssh-agent/check-ssh-agent.sh', service.tmpdir),
+      'bin/check-ssh-agent',
+    );
+    service.addHookFile(shellAsset('packages/ssh-agent/install-socat.sh', service.tmpdir), {
+      hook: 'boot',
+    });
+    service.addHookFile(shellAsset('packages/ssh-agent/install-ssh-add.sh', service.tmpdir), {
+      hook: 'boot',
+    });
     service.addHookFile(
       `
       #!/bin/lash

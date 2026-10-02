@@ -382,6 +382,7 @@ export interface LandoConfig extends ServiceConfig {
   volumes: MountInput[];
 }
 export interface PackageService {
+  tmpdir: string;
   id: string;
   project: string;
   appRoot: string;
