@@ -286,13 +286,15 @@ class L337ServiceV4 extends EventEmitter {
     }
 
     const entries = args
+      .filter((arg) => typeof arg !== 'string' || arg.includes('='))
       .map((arg) =>
         typeof arg === 'string'
           ? [arg.slice(0, arg.indexOf('=')), arg.slice(arg.indexOf('=') + 1)]
           : arg,
       )
       .filter(
-        (arg): arg is [string, unknown] => Array.isArray(arg) && arg[0] != null && arg[1] != null,
+        (arg): arg is [string, unknown] =>
+          Array.isArray(arg) && arg[0] != null && String(arg[0]).trim() !== '' && arg[1] != null,
       )
       .map(([key, value]) => [key.trim(), String(value).trim()]);
 

@@ -217,6 +217,8 @@ describe('API 4 Lando lifecycle (#5)', () => {
     assert.deepEqual(f.calls.at(-1)![1], [
       'exec',
       '-T',
+      '--workdir',
+      '/app',
       'web',
       '/etc/lando/exec.sh',
       'printf',

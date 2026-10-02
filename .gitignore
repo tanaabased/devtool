@@ -4,4 +4,4 @@ dist/
 *.bun-build
 exec-timing.json
 exec-timing.md
-examples/**/.results/
+examples/**/.results
