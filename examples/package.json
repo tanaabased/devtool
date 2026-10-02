@@ -1,0 +1,8 @@
+{
+  "name": "devtool-examples",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@tanaab/devtool": "file:../dist/npm"
+  }
+}

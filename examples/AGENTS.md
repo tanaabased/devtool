@@ -17,10 +17,11 @@
   `## Testing Library` sections for the Cartesian feature/interface matrix.
   Shared `## Setup` installs the required dependencies. Keep library code beside the
   README and import `@tanaab/devtool` by its public package export, never
-  through a relative path into implementation source. Until #14, examples use
-  the root package's self-reference and install its dependencies from Setup.
+  through a relative path into implementation source. Setup installs the built
+  ESM package through `examples/package.json` and its frozen lockfile. Force the
+  local file dependency to refresh so repeated builds cannot use stale output.
 - CLI examples invoke the compiled `devtool` already on `PATH`. Library examples
-  use the source package under Bun until #14 provides its distribution. Missing
+  use the installed ESM SDK under Bun. Missing
   artifacts must fail; never fall back to another target. Do not route library
   tests through a CLI wrapper just to share assertions.
 - Use the example directory as the app root. Set fixed environment values in the

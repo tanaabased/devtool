@@ -43,7 +43,7 @@ are ported to native assertions and owned temporary fixtures.
 ## Boundaries
 
 The retained `builders/lando-v4.ts` is registered explicitly as API 4 `lando`;
-its source-library helpers resolve from this checkout; the CLI embeds them. There is no API 3 bootstrap.
+its library helpers resolve from the installed package; the CLI embeds them. There is no API 3 bootstrap.
 
 Excluded: the legacy CLI/product/app/plugin bootstrap, API 3 builders and recipes,
 external plugin discovery/installation, host engine installation, proxy orchestration,
@@ -76,7 +76,7 @@ The API 4 exec wrapper loads container environment without evaluating caller arg
 use an explicit shell when shell expansion is intended.
 
 [The assertion map](examples/ASSERTIONS.md) separates executable coverage from
-excluded and absent behavior. Library examples import the source package by its public name. CLI examples use
+excluded and absent behavior. Library examples import the installed ESM distribution by its public name. CLI examples use
 the compiled executable. The retained Lando example is disabled pending #25.
 
 ## TypeScript ESM migration (#12)
@@ -110,3 +110,23 @@ Lando boot inputs and image hook registration now run in `prepare()` alongside
 package installation, keeping extraction off `exec` and `info`. Builder and
 package adaptations are recorded in `extraction.json`. No prototype or Core Next
 source was imported.
+
+## npm distribution (#14)
+
+The library build emits JavaScript and declarations without flattening the source
+layout. Declaration-only fixes expose `ServiceData`, distinguish the private
+service engine from its parent's build engine, and retain the inherited
+EventEmitter symbol in the emitted type graph. Their adaptations are recorded in
+`extraction.json`.
+
+The build replaces only the emitted shell-asset adapter with ordinary file URLs,
+using the existing registry as its inventory. The source and compiled paths retain
+the same static file imports, lazy engine imports and asset preparation behavior.
+The ESM package includes the retained shell bytes, executable modes, this inventory
+and the upstream MIT notice. Runtime dependencies remain external library dependencies.
+
+The npm package contains the SDK; the CLI remains a standalone executable.
+The SDK tarball and `dist/THIRD_PARTY_NOTICES.txt` carry bundled dependency notices
+collected from the compiler's module graph and installed packages.
+The binary embeds Bun; its runtime and linked-library licensing is described in
+[Bun's license documentation](https://bun.com/docs/project/license).

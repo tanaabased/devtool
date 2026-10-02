@@ -10,4 +10,4 @@ jobs:
       - uses: actions/checkout@v7
       - uses: tanaabased/actions/setup-bun@v1
       - run: bun install --frozen-lockfile --ignore-scripts
-      - run: bun run test:unit
+      - run: bun run test

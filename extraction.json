@@ -38,8 +38,8 @@
       "path": "builders/lando-v4.ts",
       "blob": "e8108a56bb11b955bfb7a2b7c6b10441b8539598",
       "mode": "100644",
-      "adaptedBlob": "4f5ad7a279361dc4eafd86208198c93ce8f86433",
-      "adaptation": "Wire API 4 service to instance-owned metadata and injected engine; remove proxy/bootstrap dependencies; prepare packages deterministically; retain command, mount, app-hook and scoped-storage behavior. Renamed to TypeScript ESM; add strict contracts, module-relative paths and typed dependency boundaries. Use per-function lodash-es imports. Resolve shell assets through the explicit source/embedded registry; defer boot build inputs until image preparation."
+      "adaptedBlob": "8383e0848b4f0f8fcf9f853004e42133a86f6aa7",
+      "adaptation": "Wire API 4 service to instance-owned metadata and injected engine; remove proxy/bootstrap dependencies; prepare packages deterministically; retain command, mount, app-hook and scoped-storage behavior. Renamed to TypeScript ESM; add strict contracts, module-relative paths and typed dependency boundaries. Use per-function lodash-es imports. Resolve shell assets through the explicit source/embedded registry; defer boot build inputs until image preparation. Declaration emission: disambiguate inherited private engine state and retain the EventEmitter symbol type."
     },
     {
       "source": "components/docker-engine.js",
@@ -62,8 +62,8 @@
       "path": "components/l337-v4.ts",
       "blob": "cf0c2b695a51ff95779c1775b830d88ea2f16c39",
       "mode": "100644",
-      "adaptedBlob": "0ebad47ee24db02f209ebb999287ead375195cbb",
-      "adaptation": "Retain API 4 source builder, injected engines, group/import changes and failure propagation; remove obsolete API 3 commentary. Renamed to TypeScript ESM; add strict contracts, module-relative paths and typed dependency boundaries. Use per-function lodash-es imports."
+      "adaptedBlob": "21423c9b4bfee0e50fdabda4c23c70dabde2edec",
+      "adaptation": "Retain API 4 source builder, injected engines, group/import changes and failure propagation; remove obsolete API 3 commentary. Renamed to TypeScript ESM; add strict contracts, module-relative paths and typed dependency boundaries. Use per-function lodash-es imports. Export ServiceData so downstream declarations can name the inherited data type. Name the private build engine separately from the inherited service engine for declaration emission."
     },
     {
       "source": "components/yaml.js",

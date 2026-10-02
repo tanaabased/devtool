@@ -1,13 +1,13 @@
 # Configuration example
 
 Configure devtool with a product file, environment variables and explicit options.
-The library resolves this checkout’s public package export until the ESM distribution lands in #14.
+The library imports the built ESM package installed by Setup.
 
 ## Setup
 
 ```sh
 # should install the example dependency
-bun install --cwd ../.. --frozen-lockfile --ignore-scripts
+bun install --cwd .. --frozen-lockfile --ignore-scripts --force
 mkdir -p .results
 ```
 

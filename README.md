@@ -2,8 +2,8 @@
 
 Tanaab-based development environments. This extraction assembles the existing
 TypeScript ESM runtime and API 4 L337 and Lando services into one configurable library
-and source CLI. Development and validation run on Bun; compilation and publication
-belong to later work.
+and compiled CLI. Development and consumer validation run on Bun. A local npm SDK artifact
+is available; registry publication belongs to later work.
 
 ## Source installation
 
@@ -51,10 +51,29 @@ passes arguments after `--` unchanged and returns the container command's failur
 status. Add `--interactive` to attach a terminal. `info` reports recorded lifecycle and healthcheck results; it does not
 query live container health.
 
+## Package distribution
+
+`bun run build` stages the typed ESM SDK in `dist/npm`, packs it as
+`dist/devtool.tgz`, and compiles the standalone CLI as `dist/devtool`. Install the
+SDK tarball with Bun to use the library, or run the executable directly to use
+the CLI. These artifacts are local; npm publication and executable release
+downloads belong to later release work.
+
+The library's only public export is `@tanaab/devtool`. It includes declarations,
+ordinary package-relative shell assets and retained source notices. The SDK tarball
+and `dist/THIRD_PARTY_NOTICES.txt` carry notices collected from the compiled
+dependency graph. The source checkout stays
+private; the staged distribution has its own explicit exports and file allowlist.
+
+The npm package provides the SDK only. npm CLI installation is deferred to
+[#27](https://github.com/tanaabased/devtool/issues/27); the CLI
+uses standalone executables. No Node library support range or CommonJS build is
+claimed. Platform support follows the runtime evidence listed below.
+
 ## Library and configuration
 
 ```js
-import { createDevtool } from '/path/to/devtool/lib/devtool.ts';
+import { createDevtool } from '@tanaab/devtool';
 
 const runtime = createDevtool({
   identity: 'wrapper',
@@ -119,7 +138,8 @@ only when preparing a Lando image, under the selected project's data directory;
 unchanged files are reused and damaged bytes or modes are restored atomically.
 Library operations continue to use ordinary module-relative asset files.
 
-`bun run test:compiled` checks the built executable without contacting Docker.
+The config and exec CLI scenarios check executable isolation, embedded assets and
+streaming through `test/compiled-cli.ts` without contacting Docker.
 Disposable CI additionally isolates it from the checkout, dependencies and
 installed runtimes, then runs the existing L337/Lando lifecycle scenarios.
 The verified lifecycle target is Linux x64 on the Ubuntu 24.04 hosted runner
@@ -138,13 +158,15 @@ Runner-to-runner variance remains unmeasured. Timing stays outside routine PR jo
 
 ## Testing
 
-`bun run test` runs Docker-free unit and package-import checks. `bun run build`
+`bun run test` runs Docker-free source units, builds and packs the distribution,
+then installs it into an external temporary consumer for strict declaration, inert
+import and asset checks. `bun run build`
 creates the CLI used by the [config](examples/config/README.md),
 [L337](examples/l337/README.md), [exec](examples/exec/README.md) and
 [isolation](examples/isolation/README.md) examples.
-Add `dist/` to `PATH` before running the CLI scenarios. Each example installs the root package's
-dependencies in Leia's Setup section; library scenarios resolve its public exports
-through the package self-reference under Bun until #14 provides the ESM distribution.
+Add `dist/` to `PATH` before running the CLI scenarios. Each example installs its
+dependencies in Leia's Setup section from the built ESM package.
+An example-local package boundary prevents source self-reference.
 
 `bun run test:cli` and `bun run test:library` select the Docker-free config example.
 `bun run test:integration` selects the container examples and runs only in disposable
