@@ -2,8 +2,8 @@
 
 Tanaab-based development environments. This extraction assembles the existing
 TypeScript ESM runtime and API 4 L337 and Lando services into one configurable library
-and compiled CLI. Development and consumer validation run on Bun. Local npm artifacts
-are available; registry publication belongs to later work.
+and compiled CLI. Development and consumer validation run on Bun. A local npm SDK artifact
+is available; registry publication belongs to later work.
 
 ## Source installation
 
@@ -53,25 +53,22 @@ query live container health.
 
 ## Package distribution
 
-`bun run build` stages the typed ESM library and npm launcher in `dist/npm`,
-compiles `dist/devtool`, and packs `dist/devtool.tgz` plus the current platform's
-`dist/devtool-<platform>-<arch>.tgz`. Install the library tarball with Bun; for the
-npm command, install the matching binary tarball alongside it. These artifacts
-are local and have not been published to the registry.
+`bun run build` stages the typed ESM SDK in `dist/npm`, packs it as
+`dist/devtool.tgz`, and compiles the standalone CLI as `dist/devtool`. Install the
+SDK tarball with Bun to use the library, or run the executable directly to use
+the CLI. These artifacts are local; npm publication and executable release
+downloads belong to later release work.
 
 The library's only public export is `@tanaab/devtool`. It includes declarations,
-ordinary package-relative shell assets and retained source notices. Both tarballs
-also carry notices collected from the compiled dependency graph. Optional
-binary packages can be omitted for library-only use. The source checkout stays
+ordinary package-relative shell assets and retained source notices. The SDK tarball
+and `dist/THIRD_PARTY_NOTICES.txt` carry notices collected from the compiled
+dependency graph. The source checkout stays
 private; the staged distribution has its own explicit exports and file allowlist.
 
-The launcher selects an exact-version optional binary package for Linux x64
-(glibc) or macOS arm64. It inherits stdin/stdout/stderr, forwards signals and
-preserves exit status. Unsupported platforms, missing executables and version
-mismatches fail with an error; there is no source fallback or postinstall download.
-The conventional npm launcher has a Node shebang; validation runs it under Bun
-(`bun --bun run devtool`). No Node library support range or CommonJS build is claimed.
-Platform packaging does not expand the runtime evidence listed below.
+The npm package provides the SDK only. npm CLI installation is deferred to
+[#27](https://github.com/tanaabased/devtool/issues/27); the CLI
+uses standalone executables. No Node library support range or CommonJS build is
+claimed. Platform support follows the runtime evidence listed below.
 
 ## Library and configuration
 
@@ -163,13 +160,13 @@ Runner-to-runner variance remains unmeasured. Timing stays outside routine PR jo
 
 `bun run test` runs Docker-free source units, builds and packs the distribution,
 then installs it into an external temporary consumer for strict declaration, inert
-import, asset and launcher checks. `bun run build`
+import and asset checks. `bun run build`
 creates the CLI used by the [config](examples/config/README.md),
 [L337](examples/l337/README.md), [exec](examples/exec/README.md) and
 [isolation](examples/isolation/README.md) examples.
 Add `dist/` to `PATH` before running the CLI scenarios. Each example installs its
-dependencies in Leia's Setup section from the built ESM package, with optional
-binaries omitted. An example-local package boundary prevents source self-reference.
+dependencies in Leia's Setup section from the built ESM package.
+An example-local package boundary prevents source self-reference.
 
 `bun run test:cli` and `bun run test:library` select the Docker-free config example.
 `bun run test:integration` selects the container examples and runs only in disposable

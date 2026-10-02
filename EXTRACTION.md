@@ -125,9 +125,8 @@ the same static file imports, lazy engine imports and asset preparation behavior
 The ESM package includes the retained shell bytes, executable modes, this inventory
 and the upstream MIT notice. Runtime dependencies remain external library dependencies.
 
-A separate launcher selects the optional platform package at exactly the library
-version. The build generates both manifests from the root version and copies the
-native executable without a source fallback, postinstall script or download hook.
-Both tarballs carry bundled dependency notices collected from the compiler's module
-graph and installed packages. The binary embeds Bun; its runtime and linked-library licensing is described in
+The npm package contains the SDK; the CLI remains a standalone executable.
+The SDK tarball and `dist/THIRD_PARTY_NOTICES.txt` carry bundled dependency notices
+collected from the compiler's module graph and installed packages.
+The binary embeds Bun; its runtime and linked-library licensing is described in
 [Bun's license documentation](https://bun.com/docs/project/license).

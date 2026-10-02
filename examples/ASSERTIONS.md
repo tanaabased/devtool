@@ -6,8 +6,8 @@ is executable coverage, not a claim that a particular CI revision has passed.
 Final acceptance requires unit tests and every enabled feature/interface matrix entry
 at the delivered revision. CLI examples use the compiled executable; library examples
 consume the installed ESM distribution under Bun. The Docker-free packed-package
-checks separately install tarballs outside the checkout and verify declarations,
-inert imports, ordinary assets, optional binaries and the npm launcher.
+checks separately install the SDK tarball outside the checkout and verify
+declarations, inert imports, ordinary assets and the library-only package boundary.
 
 The `lando` matrix entry is commented out, and its files are retained unchanged.
 All Lando-example runtime assertions listed below are **disabled**, pending the

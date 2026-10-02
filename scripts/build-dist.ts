@@ -1,22 +1,18 @@
 import { execFileSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
-import { platforms, platformPackage } from '../lib/platform-package.ts';
 import { shellAssets } from '../lib/shell-assets.ts';
 import metadata from '../package.json';
 
 const root = path.resolve(import.meta.dirname, '..');
 const distribution = path.join(root, 'dist');
 const library = path.join(distribution, 'npm');
-const nameForPlatform = platformPackage();
-const target = `${process.platform}-${process.arch}` as keyof typeof platforms;
 const run = (args: string[], cwd = root) =>
   execFileSync(process.execPath, args, { cwd, stdio: 'inherit' });
 const writeJson = (file: string, value: unknown) =>
   fs.writeFileSync(file, JSON.stringify(value, null, 2) + '\n');
 fs.rmSync(library, { recursive: true, force: true });
-for (const filename of ['devtool.tgz', `devtool-${target}.tgz`])
-  fs.rmSync(path.join(distribution, filename), { force: true });
+fs.rmSync(path.join(distribution, 'devtool.tgz'), { force: true });
 run(['--bun', 'tsc', '-p', 'tsconfig.build.json']);
 
 // The library keeps ordinary files. The standalone build still uses Bun's static file imports.
@@ -41,18 +37,6 @@ for (const file of new Bun.Glob('**/*.d.ts').scanSync(library)) {
     fs.readFileSync(location, 'utf8').replace(/(["'])(\.{1,2}\/[^"']+)\.ts\1/g, '$1$2.js$1'),
   );
 }
-fs.mkdirSync(path.join(library, 'bin'), { recursive: true });
-const launcher = await Bun.build({
-  entrypoints: [path.join(root, 'bin/npm-launcher.ts')],
-  target: 'node',
-  format: 'esm',
-});
-if (!launcher.success) throw new AggregateError(launcher.logs, 'Launcher build failed');
-fs.writeFileSync(
-  path.join(library, 'bin/devtool.js'),
-  (await launcher.outputs[0].text()).replace(/^#![^\n]*/, '#!/usr/bin/env node'),
-  { mode: 0o755 },
-);
 const { name, version, description, license, repository, dependencies } = metadata;
 writeJson(path.join(library, 'package.json'), {
   name,
@@ -64,9 +48,7 @@ writeJson(path.join(library, 'package.json'), {
   main: './lib/devtool.js',
   types: './lib/devtool.d.ts',
   exports: { '.': { types: './lib/devtool.d.ts', import: './lib/devtool.js' } },
-  bin: { devtool: './bin/devtool.js' },
   files: [
-    'bin/',
     'lib/',
     'components/',
     'builders/',
@@ -86,9 +68,6 @@ writeJson(path.join(library, 'package.json'), {
     '@types/js-yaml': metadata.devDependencies['@types/js-yaml'],
     '@types/jsonfile': metadata.devDependencies['@types/jsonfile'],
   },
-  optionalDependencies: Object.fromEntries(
-    Object.keys(platforms).map((target) => [`@tanaab/devtool-${target}`, version]),
-  ),
 });
 for (const file of ['LICENSE', 'README.md', 'EXTRACTION.md', 'extraction.json'])
   fs.copyFileSync(path.join(root, file), path.join(library, file));
@@ -124,25 +103,9 @@ for (const directory of [...bundledPackages].sort()) {
     notices.push(fs.readFileSync(path.join(directory, file), 'utf8'));
 }
 fs.writeFileSync(path.join(library, 'THIRD_PARTY_NOTICES.txt'), notices.join('\n\n---\n\n'));
-const binary = path.join(distribution, target);
-fs.rmSync(binary, { recursive: true, force: true });
-fs.mkdirSync(path.join(binary, 'bin'), { recursive: true });
-fs.copyFileSync(path.join(distribution, 'devtool'), path.join(binary, 'bin/devtool'));
-fs.chmodSync(path.join(binary, 'bin/devtool'), 0o755);
-writeJson(path.join(binary, 'package.json'), {
-  name: nameForPlatform,
-  version,
-  description: `${description} (${target} executable)`,
-  license,
-  repository,
-  ...platforms[target],
-  files: ['bin/devtool', 'LICENSE', 'EXTRACTION.md', 'THIRD_PARTY_NOTICES.txt'],
-});
-for (const file of ['LICENSE', 'EXTRACTION.md'])
-  fs.copyFileSync(path.join(root, file), path.join(binary, file));
 fs.copyFileSync(
   path.join(library, 'THIRD_PARTY_NOTICES.txt'),
-  path.join(binary, 'THIRD_PARTY_NOTICES.txt'),
+  path.join(distribution, 'THIRD_PARTY_NOTICES.txt'),
 );
 run(
   [
@@ -154,15 +117,4 @@ run(
     path.join(distribution, 'devtool.tgz'),
   ],
   library,
-);
-run(
-  [
-    'pm',
-    'pack',
-    '--ignore-scripts',
-    '--quiet',
-    '--filename',
-    path.join(distribution, `devtool-${target}.tgz`),
-  ],
-  binary,
 );

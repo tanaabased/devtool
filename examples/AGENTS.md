@@ -21,7 +21,7 @@
   ESM package through `examples/package.json` and its frozen lockfile. Force the
   local file dependency to refresh so repeated builds cannot use stale output.
 - CLI examples invoke the compiled `devtool` already on `PATH`. Library examples
-  use the installed ESM distribution under Bun with optional binaries omitted. Missing
+  use the installed ESM SDK under Bun. Missing
   artifacts must fail; never fall back to another target. Do not route library
   tests through a CLI wrapper just to share assertions.
 - Use the example directory as the app root. Set fixed environment values in the

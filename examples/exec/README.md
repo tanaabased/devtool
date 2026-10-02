@@ -7,7 +7,7 @@ run in disposable CI. Timing measurements belong to the manual timing workflow.
 
 ```sh
 # should install the example dependency
-bun install --cwd .. --frozen-lockfile --ignore-scripts --no-optional --force
+bun install --cwd .. --frozen-lockfile --ignore-scripts --force
 mkdir -p .results
 ```
 
