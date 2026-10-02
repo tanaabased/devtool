@@ -68,7 +68,7 @@ writeJson(path.join(library, 'package.json'), {
 });
 for (const file of ['LICENSE', 'README.md'])
   fs.copyFileSync(path.join(root, file), path.join(library, file));
-run(['run', 'build:cli', '--metafile=dist/cli-meta.json']);
+run(['scripts/build-cli-task.ts', '--metafile=dist/cli-meta.json']);
 const inputs = Object.keys(
   (await Bun.file(path.join(distribution, 'cli-meta.json')).json()).inputs,
 );

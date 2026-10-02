@@ -28,3 +28,18 @@ export type { ServiceConfig, ServiceInfo } from '../components/service.ts';
 export type { ExecutionError } from '../utils/as-error.ts';
 export type { default as Runtime } from './runtime.ts';
 export type { default as App } from './app.ts';
+
+export { default as Config } from './config.ts';
+export { default as configSchemas } from './config-schemas.ts';
+export type {
+  ConfigSource,
+  ConfigSchema,
+  ConfigSnapshot,
+  ConfigReadonly,
+  ConfigOrigin,
+  ConfigPath,
+  SourceInfo,
+  ObjectSource,
+  FileSource,
+  EnvironmentSource,
+} from '../components/config.ts';

@@ -1,5 +1,12 @@
-import { createDevtool } from '@tanaab/devtool';
-import type { AppInfo, Engine, ExecResult, PersistedState, ProductOptions } from '@tanaab/devtool';
+import { Config, configSchemas, createDevtool } from '@tanaab/devtool';
+import type {
+  AppConfig,
+  AppInfo,
+  Engine,
+  ExecResult,
+  PersistedState,
+  ProductOptions,
+} from '@tanaab/devtool';
 
 /** Compile-only consumer: importing the package must expose useful contracts, not implicit any. */
 export async function consume(engine: Engine) {
@@ -21,3 +28,21 @@ export type PublicContractChecks = [
   Assert<{ engine: Record<string, never> } extends ProductOptions ? false : true>,
   Assert<{ services: { web: { fingerprint: number } } } extends PersistedState ? false : true>,
 ];
+
+/** Config is independently consumable; typed reads and snapshots do not expose mutable state. */
+export function consumeConfig() {
+  const config = new Config<{ commandName: string; appFiles: string[] }>({
+    schema: configSchemas.product,
+    sources: [
+      { id: 'caller', kind: 'object', data: { commandName: 'wrapper', appFiles: ['app.yml'] } },
+    ],
+  });
+  config.compile();
+  const definition: AppConfig = { services: { web: { type: 'l337', image: 'alpine' } } };
+  Config.from<AppConfig>(definition, { schema: configSchemas.appDefinition });
+  const name: string = config.get('commandName');
+  const files: readonly string[] = config.get('appFiles');
+  // @ts-expect-error compiled snapshots are immutable
+  config.get('appFiles').push('wrong');
+  return { name, files, serialized: config.export('yaml') };
+}

@@ -1,0 +1,5 @@
+# Imported values retain their native types.
+enabled: !import disabled.json
+count: !load zero.yml
+optional: !import empty.json
+cache-path: !import cache-path.json

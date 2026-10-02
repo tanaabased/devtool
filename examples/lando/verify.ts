@@ -115,4 +115,4 @@ switch (process.argv[2]) {
   default:
     throw new Error('Unknown Lando assertion');
 }
-console.log(`Lando assertion passed: ${process.argv[2]}`);
+process.stdout.write(`Lando assertion passed: ${process.argv[2]}\n`);

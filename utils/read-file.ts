@@ -1,6 +1,6 @@
 import jsonfile, { type JFReadOptions } from 'jsonfile';
 import { createRequire } from 'node:module';
-import type { LoadOptions } from 'js-yaml';
+import type { YamlOptions } from '../lib/yaml.ts';
 const loadDataModule = createRequire(import.meta.url);
 import fs from 'node:fs';
 import path from 'node:path';
@@ -8,7 +8,7 @@ import yaml from '../lib/yaml.ts';
 
 export default (
   file: string,
-  options: LoadOptions &
+  options: YamlOptions &
     Exclude<JFReadOptions, string | null | undefined> & { base?: string; extension?: string } = {},
 ): unknown => {
   // @TODO: file does nto exist?

@@ -15,6 +15,7 @@ jobs:
       fail-fast: false
       matrix:
         example:
+          - package
           - config
           - l337
           # - lando # Re-enable after #25.

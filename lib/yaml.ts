@@ -1,157 +1,218 @@
-import exists from '../utils/exists-sync.ts';
 import fs from 'node:fs';
 import path from 'node:path';
-import yaml from 'js-yaml';
-import validPath from 'valid-path';
 
-import parseFileTypeInput from '../utils/parse-file-type.ts';
+import { parseDocument, stringify, type Document, type ScalarTag } from 'yaml';
+
 import findFile from '../utils/find-file.ts';
+import parseFileTypeInput from '../utils/parse-file-type.ts';
 
-// file loader options
 export interface ImportMetadata {
   raw?: string;
   file?: string;
   type?: string;
 }
-const fileloader: yaml.TypeConstructorOptions = {
-  kind: 'scalar',
-  resolve: function (this: FileType, data: string) {
-    // Kill immediately if we have to
-    if (typeof data !== 'string') return false;
-
-    // try to sus out type/path info from data
-    const input = parseFileTypeInput(data);
-
-    // if data is not an absolute path then resolve with base
-    if (!path.isAbsolute(input.file)) input.file = findFile(input.file, this.base) ?? '';
-
-    // Otherwise check the path exists
-    return exists(input.file);
-  },
-  construct: function (this: FileType, data: string) {
-    // transform data
-    const input = { raw: data, ...parseFileTypeInput(data) };
-    // normalize if needed
-    input.file = !path.isAbsolute(input.file)
-      ? (findFile(input.file, this.base) ?? '')
-      : input.file;
-
-    // switch based on type
-    switch (input.type) {
-      case 'binary':
-        return new ImportString(fs.readFileSync(input.file, { encoding: 'base64' }), input);
-      case 'json':
-        return new ImportObject(
-          JSON.parse(fs.readFileSync(input.file, { encoding: 'utf8' })) as Record<string, unknown>,
-          input,
-        );
-      case 'string':
-        return new ImportString(fs.readFileSync(input.file, { encoding: 'utf8' }), input);
-      case 'yaml':
-      case 'yml':
-        return new ImportObject(load(input.file), input);
-      default:
-        return new ImportString(fs.readFileSync(input.file, { encoding: 'utf8' }), input);
-    }
-  },
-  predicate: (data) => data instanceof ImportString || data instanceof ImportObject,
-  represent: (data: object) =>
-    data instanceof ImportString || data instanceof ImportObject ? (data.getDumper() ?? '') : '',
-};
-
-// wrapper to accomodate a base url for files
-class FileType extends yaml.Type {
-  base: string;
-  constructor(tag: string, options: yaml.TypeConstructorOptions & { base?: string }) {
-    // extract the base from options to pass super validation
-    const base = options.base ?? process.cwd();
-    delete options.base;
-
-    // super
-    super(tag, options);
-
-    // readd base
-    this.base = base;
+/** Typed scalar retained in source documents; value readers unwrap it. */
+export class ImportScalar {
+  #metadata: ImportMetadata;
+  constructor(
+    readonly value: number | boolean | null,
+    metadata: ImportMetadata = {},
+  ) {
+    this.#metadata = { ...metadata };
+  }
+  getMetadata() {
+    return { ...this.#metadata };
+  }
+  getDumper() {
+    return this.#metadata.raw;
   }
 }
-
-const getLandoSchema = (base = process.cwd()) => {
-  return yaml.DEFAULT_SCHEMA.extend([
-    new FileType('!import', { ...fileloader, base }),
-    new FileType('!load', { ...fileloader, base }),
-  ]);
-};
-
 export class ImportString extends String {
   #metadata: ImportMetadata;
-
   constructor(value: string, metadata: ImportMetadata = {}) {
     super(value);
-    this.#metadata = metadata;
+    this.#metadata = { ...metadata };
   }
-
   getMetadata() {
-    return this.#metadata;
+    return { ...this.#metadata };
   }
-
   getDumper() {
     return this.#metadata.raw;
   }
-
-  [Symbol.toPrimitive](hint: string) {
-    if (hint === 'string') {
-      return this.toString();
-    }
-    return this.toString();
-  }
 }
-
-export class ImportObject extends Object {
+export class ImportObject {
   #metadata: ImportMetadata;
-
   constructor(value: unknown = {}, metadata: ImportMetadata = {}) {
-    super();
-    Object.assign(this, value);
-    this.#metadata = metadata;
+    for (const [key, item] of Object.entries(value as object))
+      Object.defineProperty(this, key, {
+        value: item,
+        enumerable: true,
+        writable: true,
+        configurable: true,
+      });
+    this.#metadata = { ...metadata };
   }
-
   getMetadata() {
-    return this.#metadata;
+    return { ...this.#metadata };
   }
-
   getDumper() {
     return this.#metadata.raw;
   }
 }
-
-// old ones
-const rawLoad = yaml.load;
-const rawDump = yaml.dump;
-
-const load = (
-  data: string | Buffer,
-  options: yaml.LoadOptions & { base?: string } = {},
-): unknown => {
-  // if data is buffer then just pass it through
-  if (Buffer.isBuffer(data))
-    return rawLoad(String(data), { schema: getLandoSchema(options.base), ...options });
-  // ditto for multiline strings
-  else if (data.split('\n').length > 1)
-    return rawLoad(String(data), { schema: getLandoSchema(options.base), ...options });
-
-  // if we get here its either the path to a file or not
-  // if data is actually a file then we do some extra stuff
-  if (validPath(data) && fs.existsSync(data)) {
-    options.base = options.base ?? path.dirname(path.resolve(data));
-    data = fs.readFileSync(data, { encoding: 'utf8' });
+export class ImportArray extends Array<unknown> {
+  #metadata: ImportMetadata;
+  static override get [Symbol.species]() {
+    return Array;
   }
-
-  // pass through
-  return rawLoad(String(data), { schema: getLandoSchema(options.base), ...options });
+  constructor(values: readonly unknown[], metadata: ImportMetadata = {}) {
+    super();
+    this.push(...values);
+    this.#metadata = { ...metadata };
+  }
+  getMetadata() {
+    return { ...this.#metadata };
+  }
+  getDumper() {
+    return this.#metadata.raw;
+  }
+}
+const imported = (value: unknown, metadata: ImportMetadata) => {
+  // A YAML file may itself contain a scalar import. Keep its value's origin while
+  // retaining this document's tag spelling for serialization.
+  if (value instanceof ImportScalar)
+    return new ImportScalar(value.value, { ...value.getMetadata(), raw: metadata.raw });
+  if (value instanceof ImportString)
+    return new ImportString(String(value), { ...value.getMetadata(), raw: metadata.raw });
+  if (value === null || typeof value === 'number' || typeof value === 'boolean')
+    return new ImportScalar(value, metadata);
+  return Array.isArray(value)
+    ? new ImportArray(value, metadata)
+    : value !== null && typeof value === 'object'
+      ? new ImportObject(value, metadata)
+      : new ImportString(String(value), metadata);
 };
 
-const dump = (data: unknown, options: yaml.DumpOptions = {}) => {
-  return rawDump(data, { schema: getLandoSchema(), quotingType: '"', ...options });
-};
+export interface YamlOptions {
+  base?: string;
+  filename?: string;
+  imports?: boolean;
+  /** Internal traversal context shared by nested imports. */
+  stack?: readonly string[];
+  dependencies?: Set<string>;
+}
 
-export default { ...yaml, load, dump };
+/** Parse a source document without flattening its comments, anchors or import nodes. */
+export function readDocument(
+  text: string,
+  options: YamlOptions = {},
+): { document: Document; value: unknown } {
+  const base = options.base ?? process.cwd();
+  const resolve = (raw: string) => {
+    const input = parseFileTypeInput(raw);
+    const file = path.isAbsolute(input.file) ? input.file : findFile(input.file, base);
+    if (!file) throw new Error(`cannot resolve import ${raw} from ${base}`);
+    const canonical = fs.realpathSync(file);
+    const stack = options.stack ?? [];
+    if (stack.includes(canonical))
+      throw new Error(`Import cycle: ${[...stack, canonical].join(' -> ')}`);
+    options.dependencies?.add(canonical);
+    const metadata = { ...input, raw, file: path.resolve(file) };
+    const source = fs.readFileSync(canonical);
+    if (input.type === 'json') return imported(JSON.parse(String(source)), metadata);
+    if (input.type === 'yaml' || input.type === 'yml') {
+      const nested = readDocument(String(source), {
+        ...options,
+        base: path.dirname(canonical),
+        filename: canonical,
+        stack: [...stack, canonical],
+      });
+      return imported(nested.value, metadata);
+    }
+    return new ImportString(source.toString(input.type === 'binary' ? 'base64' : 'utf8'), metadata);
+  };
+  const tags: ScalarTag[] =
+    options.imports === false
+      ? []
+      : ['!import', '!load'].map((tag) => ({
+          tag,
+          resolve,
+          stringify: (item) =>
+            stringify(
+              (
+                item.value as ImportScalar | ImportString | ImportObject | ImportArray
+              ).getDumper() ?? '',
+            ).trimEnd(),
+        }));
+  const document = parseDocument(text, { customTags: tags, keepSourceTokens: true, merge: true });
+  const failure = document.errors[0] ?? document.warnings[0];
+  if (failure) throw new Error(`${options.filename ?? base}: ${failure.message}`);
+  return { document, value: document.toJS({ maxAliasCount: 100 }) as unknown };
+}
+
+/** Explicit path loader: unlike load(), a missing file is never interpreted as YAML text. */
+export function loadFile(file: string, options: YamlOptions = {}) {
+  const canonical = fs.realpathSync(file);
+  const dependencies = options.dependencies ?? new Set<string>();
+  dependencies.add(canonical);
+  return {
+    ...readDocument(fs.readFileSync(canonical, 'utf8'), {
+      ...options,
+      dependencies,
+      base: path.dirname(canonical),
+      filename: canonical,
+      stack: [canonical],
+    }),
+    dependencies,
+  };
+}
+
+const load = (data: string | Buffer, options: YamlOptions = {}): unknown => {
+  const value =
+    typeof data === 'string' && !data.includes('\n') && fs.existsSync(data)
+      ? loadFile(data, options).value
+      : readDocument(String(data), options).value;
+  // This reader owns the freshly parsed data and discards the source document.
+  // Keep legacy string/file metadata, but never hand callers a truthy boxed false.
+  const seen = new Set<object>();
+  const unwrap = (item: unknown): unknown => {
+    if (item instanceof ImportScalar) return item.value;
+    if (!item || typeof item !== 'object' || item instanceof ImportString || seen.has(item))
+      return item;
+    seen.add(item);
+    for (const [key, child] of Object.entries(item))
+      Object.defineProperty(item, key, {
+        value: unwrap(child),
+        enumerable: true,
+        writable: true,
+        configurable: true,
+      });
+    return item;
+  };
+  return unwrap(value);
+};
+const dump = (
+  data: unknown,
+  options: { lineWidth?: number; indent?: number; noRefs?: boolean } = {},
+): string =>
+  stringify(data, {
+    ...(options.lineWidth === undefined ? {} : { lineWidth: options.lineWidth }),
+    ...(options.indent === undefined ? {} : { indent: options.indent }),
+    aliasDuplicateObjects: !options.noRefs,
+    customTags: [
+      {
+        tag: '!import',
+        resolve: (value: string) => value,
+        identify: (value) =>
+          value instanceof ImportScalar ||
+          value instanceof ImportString ||
+          value instanceof ImportObject ||
+          value instanceof ImportArray,
+        stringify: (item) =>
+          JSON.stringify(
+            (item.value as ImportScalar | ImportString | ImportObject | ImportArray).getDumper() ??
+              '',
+          ),
+      },
+    ],
+  });
+export default { load, dump };

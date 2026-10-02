@@ -68,6 +68,24 @@ describe('configurable runtime (#2)', () => {
   it('keeps generic product YAML separate from app import tags', () => {
     const configFile = path.join(f.temporary, 'product.yml');
     fs.writeFileSync(configFile, 'dataRoot: !import somewhere');
-    assert.throws(() => createDevtool({ configFile }).resolveConfig(), /unknown tag/);
+    assert.throws(() => createDevtool({ configFile }).resolveConfig(), /tag/);
+  });
+});
+
+describe('product Config snapshots (#31)', () => {
+  it('captures ambient settings once and refreshes explicitly without losing sources', () => {
+    const env = { DEVTOOL_COMMAND_NAME: 'first' };
+    const runtime = createDevtool({ env });
+    env.DEVTOOL_COMMAND_NAME = 'mutated';
+    assert.equal(runtime.resolveConfig().commandName, 'first');
+    runtime.captureEnvironment({ DEVTOOL_COMMAND_NAME: 'next' });
+    assert.equal(runtime.resolveConfig().commandName, 'next');
+    assert.deepEqual(
+      runtime.config.sources.map((source) => source.id),
+      ['defaults', 'environment', 'caller'],
+    );
+    const result = runtime.resolveConfig();
+    result.appFiles.push('unwanted.yml');
+    assert.equal(runtime.resolveConfig().appFiles.includes('unwanted.yml'), false);
   });
 });

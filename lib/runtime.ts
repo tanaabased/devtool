@@ -3,17 +3,11 @@ import type { Engine } from '../components/engine.ts';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import yaml from 'js-yaml';
+import Config from './config.ts';
+import configSchemas from './config-schemas.ts';
+import clone from '../utils/clone-config.ts';
 import App from './app.ts';
 import yamlModule from './yaml.ts';
-
-const fields = {
-  COMMAND_NAME: 'commandName',
-  DATA_ROOT: 'dataRoot',
-  CACHE_ROOT: 'cacheRoot',
-  APP_FILES: 'appFiles',
-  CACHE: 'cache',
-};
 
 /** Product defaults and explicit overrides are instance-owned; construction performs no host I/O. */
 class Runtime {
@@ -21,6 +15,8 @@ class Runtime {
   engine?: Engine;
   env?: NodeJS.ProcessEnv;
   configFile?: string;
+  config: Config<ProductConfig>;
+  private resolved?: { revision: number; values: ProductConfig };
   identity: string;
   commandName: string;
   envPrefix: string;
@@ -29,62 +25,81 @@ class Runtime {
     const { engine, env, configFile, ...overrides } = options;
     this.overrides = structuredClone(overrides);
     this.engine = engine;
-    this.env = env;
+    this.env = env ? { ...env } : undefined;
     this.configFile = configFile;
     this.identity = options.identity ?? 'devtool';
     this.commandName = options.commandName ?? this.identity;
     this.envPrefix = options.envPrefix ?? this.identity.toUpperCase().replace(/[^A-Z0-9]/g, '_');
+    this.config = new Config<ProductConfig>({
+      schema: configSchemas.product,
+      sources: [
+        {
+          id: 'defaults',
+          kind: 'object',
+          role: 'defaults',
+          data: {
+            identity: this.identity,
+            commandName: this.commandName,
+            envPrefix: this.envPrefix,
+            appFiles: ['.devtool.yml', '.devtool.yaml'],
+            cache: true,
+          },
+        },
+        ...(configFile
+          ? [
+              {
+                id: 'global',
+                kind: 'file' as const,
+                role: 'global' as const,
+                file: configFile,
+                imports: false,
+              },
+            ]
+          : []),
+        { id: 'environment', kind: 'object', role: 'environment', data: {} },
+        { id: 'caller', kind: 'object', role: 'caller', data: this.overrides },
+      ],
+    });
+  }
+
+  private environmentCaptured = false;
+
+  /** Explicit environment refresh. File changes require config.reloadSource(id). */
+  captureEnvironment(values = this.env ?? process.env): void {
+    this.config.replaceSource('environment', {
+      id: 'environment',
+      kind: 'environment',
+      role: 'environment',
+      prefix: this.envPrefix,
+      values,
+      fields: {
+        COMMAND_NAME: { path: 'commandName' },
+        DATA_ROOT: { path: 'dataRoot' },
+        CACHE_ROOT: { path: 'cacheRoot' },
+        APP_FILES: { path: 'appFiles', parse: (value) => value.split(',').filter(Boolean) },
+        CACHE: {
+          path: 'cache',
+          parse: (value) => {
+            if (!['true', 'false', '1', '0'].includes(value))
+              throw new Error(`${this.envPrefix}_CACHE must be true or false`);
+            return value === 'true' || value === '1';
+          },
+        },
+      },
+    });
+    this.environmentCaptured = true;
   }
 
   resolveConfig(): ProductConfig {
-    const file = this.configFile ? yaml.load(fs.readFileSync(this.configFile, 'utf8')) : {};
-    if (file && (typeof file !== 'object' || Array.isArray(file)))
-      throw new Error('Product configuration must be an object');
-    const environment: Partial<ProductConfig> = {};
-    const env = this.env ?? process.env;
-    for (const [suffix, key] of Object.entries(fields)) {
-      const value = env[`${this.envPrefix}_${suffix}`];
-      if (value === undefined) continue;
-      if (key === 'cache') {
-        if (!['true', 'false', '1', '0'].includes(value))
-          throw new Error(`${this.envPrefix}_CACHE must be true or false`);
-        environment[key] = value === 'true' || value === '1';
-      } else if (key === 'appFiles') environment.appFiles = value.split(',').filter(Boolean);
-      else if (key === 'commandName' || key === 'dataRoot' || key === 'cacheRoot')
-        environment[key] = value;
-    }
-    const config = {
-      identity: this.identity,
-      commandName: this.commandName,
-      envPrefix: this.envPrefix,
-      appFiles: ['.devtool.yml', '.devtool.yaml'],
-      cache: true,
-      ...(file as Partial<ProductConfig>),
-      ...environment,
-      ...this.overrides,
-    } as ProductConfig;
-    for (const key of ['identity', 'commandName', 'envPrefix'] as const) {
-      if (typeof config[key] !== 'string') throw new Error(`${key} must be a string`);
-    }
-    for (const key of ['dataRoot', 'cacheRoot', 'username'] as const) {
-      if (config[key] !== undefined && typeof config[key] !== 'string')
-        throw new Error(`${key} must be a string`);
-    }
-    if (!/^[a-zA-Z0-9][a-zA-Z0-9._-]*$/.test(config.identity))
-      throw new Error('Invalid product identity');
-    if (
-      !Array.isArray(config.appFiles) ||
-      !config.appFiles.length ||
-      config.appFiles.some((file) => typeof file !== 'string' || path.basename(file) !== file)
-    ) {
-      throw new Error('appFiles must be a nonempty list of filenames');
-    }
-    if (typeof config.cache !== 'boolean') throw new Error('cache must be a boolean');
+    if (!this.environmentCaptured) this.captureEnvironment();
+    if (this.resolved?.revision === this.config.revision) return clone(this.resolved.values);
+    const config = clone(this.config.compile().values) as ProductConfig;
     config.dataRoot = path.resolve(
       config.dataRoot ?? path.join(os.homedir(), `.${config.identity}`),
     );
     config.cacheRoot = path.resolve(config.cacheRoot ?? path.join(config.dataRoot, 'cache'));
-    return config;
+    this.resolved = { revision: this.config.revision, values: config };
+    return clone(config);
   }
 
   /** Load the selected project, rejecting unsupported services before constructing any of them. */
