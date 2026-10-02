@@ -1,12 +1,12 @@
 import yaml from 'js-yaml';
+import type { AppConfig } from '../lib/types.ts';
 import type {
-  AppConfig,
   BuildConfig,
   ComposeService,
   Environment,
   Labels,
   Mount,
-} from '../lib/types.ts';
+} from '../components/service.ts';
 
 /** Expected shape of the controlled app/Compose fixtures; assertions check their actual contents. */
 export type FixtureDocument = Omit<AppConfig, 'services' | 'networks'> & {

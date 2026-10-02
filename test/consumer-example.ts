@@ -1,6 +1,7 @@
+import requireValue from './require-value.ts';
 import { createRequire } from 'node:module';
 import { pathToFileURL } from 'node:url';
-import type { Engine } from '../lib/types.ts';
+import type { Engine } from '../components/engine.ts';
 import type * as Devtool from '../lib/devtool.ts';
 import assert from 'node:assert/strict';
 import path from 'node:path';
@@ -26,17 +27,17 @@ export const createProducts = async (source: string, root: string, engine?: Engi
 export const verify = async (source: string, root: string, engine?: Engine) => {
   const runtimes = await createProducts(source, root, engine);
   const apps = runtimes.map((runtime) => runtime.loadApp({ cwd: root }));
-  assert.notEqual(apps[0].project, apps[1].project);
-  assert.notEqual(apps[0].stateFile, apps[1].stateFile);
-  assert.equal(runtimes[0].resolveConfig().commandName, 'wrapper-one-cli');
-  await apps[0].start();
-  assert.deepEqual(apps[1].state, { services: {} });
-  await apps[1].start();
-  await apps[0].destroy();
-  const result = await apps[1].exec('web', ['printf', '%s', 'consumer-proof']);
+  assert.notEqual(requireValue(apps[0]).project, requireValue(apps[1]).project);
+  assert.notEqual(requireValue(apps[0]).stateFile, requireValue(apps[1]).stateFile);
+  assert.equal(requireValue(runtimes[0]).resolveConfig().commandName, 'wrapper-one-cli');
+  await requireValue(apps[0]).start();
+  assert.deepEqual(requireValue(apps[1]).state, { services: {} });
+  await requireValue(apps[1]).start();
+  await requireValue(apps[0]).destroy();
+  const result = await requireValue(apps[1]).exec('web', ['printf', '%s', 'consumer-proof']);
   assert.equal(result.stdout, 'consumer-proof');
-  await apps[1].stop();
-  await apps[1].restart();
-  await apps[1].destroy();
+  await requireValue(apps[1]).stop();
+  await requireValue(apps[1]).restart();
+  await requireValue(apps[1]).destroy();
   return apps;
 };

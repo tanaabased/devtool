@@ -1,3 +1,4 @@
+import requireValue from './require-value.ts';
 import assert from 'node:assert/strict';
 import { EventEmitter } from 'node:events';
 import fs from 'node:fs';
@@ -9,15 +10,15 @@ import metadata from '../package.json';
 import * as api from '@tanaab/devtool';
 import read from '../utils/read-file.ts';
 import mergePromise from '../utils/merge-promise.ts';
-import yaml from '../components/yaml.ts';
+import yaml from '../lib/yaml.ts';
 import { fixture } from './project-fixture.ts';
 
 describe('ESM boundaries', () => {
   it('resolves runtime imports from declared dependencies and keeps dynamic imports discoverable', () => {
     const root = path.resolve(import.meta.dirname, '..');
-    const files = new Bun.Glob('{bin,lib,components,builders,utils,packages}/**/*.ts');
+    const files = new Bun.Glob('{bin,lib,components,engines,utils,services}/**/*.ts');
     for (const file of files.scanSync(root)) {
-      if (file.endsWith('.d.ts')) continue;
+      if (file.endsWith('.d.ts') || file.includes('/test/')) continue;
       const location = path.join(root, file);
       const source = ts.createSourceFile(
         location,
@@ -35,7 +36,7 @@ describe('ESM boundaries', () => {
           specifiers.push(node.moduleSpecifier.text);
         if (ts.isCallExpression(node) && node.expression.kind === ts.SyntaxKind.ImportKeyword) {
           assert.ok(
-            node.arguments.length === 1 && ts.isStringLiteral(node.arguments[0]),
+            node.arguments.length === 1 && ts.isStringLiteral(requireValue(node.arguments[0])),
             `${file}: runtime import must be statically discoverable`,
           );
           specifiers.push((node.arguments[0] as ts.StringLiteral).text);
@@ -49,7 +50,7 @@ describe('ESM boundaries', () => {
         const name = specifier.startsWith('@')
           ? specifier.split('/').slice(0, 2).join('/')
           : specifier.split('/')[0];
-        assert.ok(Object.hasOwn(metadata.dependencies, name), `${file}: ${name}`);
+        assert.ok(Object.hasOwn(metadata.dependencies, requireValue(name)), `${file}: ${name}`);
       }
     }
   });
@@ -106,7 +107,7 @@ describe('ESM boundaries', () => {
     try {
       const app = f.load();
       await app.start();
-      const context = app.services[0].generateBuildContext();
+      const context = requireValue(app.services[0]).generateBuildContext();
       for (const name of ['boot.sh', 'entrypoint.sh', 'exec.sh', 'add-user.sh']) {
         const source = context.sources.find((source) => path.basename(source.source) === name);
         assert.ok(source, name);

@@ -37,8 +37,8 @@ devtool --unknown > .results/error 2>&1 && exit 1
 grep -F 'error:' .results/error
 
 # should work without the source checkout or a JavaScript runtime
-bun ../../test/compiled-cli.ts config
-bun ../../test/compiled-cli.ts assets
+bun ../../scripts/check-compiled-cli.ts config
+bun ../../scripts/check-compiled-cli.ts assets
 ```
 
 ## Testing Library

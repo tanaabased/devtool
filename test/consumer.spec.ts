@@ -17,6 +17,10 @@ describe('downstream source consumer (#7)', () => {
         path.join(import.meta.dirname, './consumer-app.yml'),
         path.join(f.root, '.wrapper.yml'),
       );
+      fs.copyFileSync(
+        path.join(import.meta.dirname, 'require-value.ts'),
+        path.join(f.root, 'require-value.ts'),
+      );
       const compose = f.engine.compose;
       f.engine.compose = async (...args) => {
         const result = await compose(...args);

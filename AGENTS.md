@@ -13,3 +13,7 @@
 - `exec` timing is an optimization requirement. Defer a timing CI gate until repeated, paired measurements on the same runner establish useful budgets and runner variability; favor detecting large regressions over brittle absolute cutoffs. Keep timing investigations out of routine pull-request scenario jobs.
 - Run `bun run test` for source/package smoke checks. Container and upstream host-mutating scenarios belong in disposable CI, not on the developer machine.
 - Follow `examples/AGENTS.md` for CLI/library scenarios and source/compiled/installed targets.
+
+- Until the first release, keep the README to status, prerequisites, one working example and validation commands. Defer expanded guides to prerelease issue #19; keep executable examples and public API comments accurate meanwhile.
+- Organize implementations and their tests by owner under services/ and engines/. Keep shared component contracts in components/ and shared runtime orchestration in lib/. Use named scope entrypoints (such as l337.ts), not index.ts; defer manifest registration to #30.
+- Keep container packages and shell inputs with their service. Root scripts/ contains maintainer commands; scoped test/ directories contain specs, fixtures and fakes. Give nontrivial utilities focused specs beside their owner.

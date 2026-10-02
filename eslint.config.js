@@ -40,6 +40,7 @@ export default defineConfig([
       },
     },
     rules: {
+      '@typescript-eslint/consistent-type-imports': 'error',
       '@typescript-eslint/no-unused-vars': ['error', { ignoreRestSiblings: true }],
       'no-console': 'warn',
       'no-debugger': 'error',

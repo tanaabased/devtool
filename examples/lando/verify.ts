@@ -88,6 +88,7 @@ switch (process.argv[2]) {
   case 'break-image': {
     fs.copyFileSync(file, original);
     const data = yaml.load(fs.readFileSync(file, 'utf8'));
+    assert.ok(data.services.web);
     data.services.web.build.image = 'exit 23';
     fs.writeFileSync(file, yaml.dump(data));
     break;

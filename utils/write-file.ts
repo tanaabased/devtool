@@ -4,7 +4,7 @@ import fs from 'node:fs';
 import get from 'lodash-es/get.js';
 import path from 'node:path';
 import remove from './remove.ts';
-import yaml from '../components/yaml.ts';
+import yaml from '../lib/yaml.ts';
 import jsonfile from 'jsonfile';
 
 /** Write data using the selected extension's serializer; optionally normalize line endings. */

@@ -1,4 +1,5 @@
-import type { AppConfig, Engine, ProductOptions, Volume } from '../lib/types.ts';
+import type { AppConfig, ProductOptions } from '../lib/types.ts';
+import type { Engine, Volume } from '../components/engine.ts';
 import type { ExecutionError } from '../utils/as-error.ts';
 type Call =
   | ['compose', string[], string]

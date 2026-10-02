@@ -4,7 +4,7 @@ import type { LoadOptions } from 'js-yaml';
 const loadDataModule = createRequire(import.meta.url);
 import fs from 'node:fs';
 import path from 'node:path';
-import yaml from '../components/yaml.ts';
+import yaml from '../lib/yaml.ts';
 
 export default (
   file: string,

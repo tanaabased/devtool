@@ -31,7 +31,7 @@ devtool exec web -- sh -c 'exit 17' || status=$?
 test "$status" -eq 17
 
 # should stream output before the command finishes
-bun ../../test/compiled-cli.ts streams
+bun ../../scripts/check-compiled-cli.ts streams
 
 # should destroy the service
 devtool destroy
