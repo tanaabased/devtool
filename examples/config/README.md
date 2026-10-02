@@ -71,16 +71,4 @@ import { createDevtool } from "@tanaab/devtool";
 const app = createDevtool({ configFile: "product.yml" }).loadApp();
 assert.equal(app.getInfo().services[0].type, "l337");
 '
-
-# should keep product configuration independent
-bun -e '
-import assert from "node:assert/strict";
-import { createDevtool } from "@tanaab/devtool";
-const first = createDevtool({ identity: "first", env: {}, dataRoot: ".results/first" });
-const second = createDevtool({ identity: "second", env: {}, dataRoot: ".results/second" });
-assert.notEqual(first.loadApp().project, second.loadApp().project);
-assert.notEqual(first.resolveConfig().dataRoot, second.resolveConfig().dataRoot);
-assert.equal(first.commandName, "first");
-assert.equal(second.commandName, "second");
-'
 ```

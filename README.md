@@ -140,7 +140,8 @@ Runner-to-runner variance remains unmeasured. Timing stays outside routine PR jo
 
 `bun run test` runs Docker-free unit and package-import checks. `bun run build`
 creates the CLI used by the [config](examples/config/README.md),
-[L337](examples/l337/README.md) and [exec](examples/exec/README.md) examples.
+[L337](examples/l337/README.md), [exec](examples/exec/README.md) and
+[isolation](examples/isolation/README.md) examples.
 Add `dist/` to `PATH` before running the CLI scenarios. Each example installs the root package's
 dependencies in Leia's Setup section; library scenarios resolve its public exports
 through the package self-reference under Bun until #14 provides the ESM distribution.

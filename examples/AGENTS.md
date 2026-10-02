@@ -7,6 +7,8 @@
   mount or command variants. When a behavior needs genuinely separate projects
   or app files, check those fixtures into named directories; do not clone an
   example into temporary roots during setup.
+- Keep multi-app and product-isolation assertions in `isolation/`. Other feature
+  examples use one app unless the feature itself requires more.
 - Model scenarios on the corresponding Lando Core examples. Carry forward each
   applicable observable assertion, adapting command names and public API usage.
   Record exclusions and runtime gaps in `ASSERTIONS.md`; generated-output unit

@@ -19,6 +19,7 @@ jobs:
           - l337
           # - lando # Re-enable after #25.
           - exec
+          - isolation
         interface:
           - cli
           - lib

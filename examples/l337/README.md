@@ -1,8 +1,8 @@
 # L337 example
 
-Start, rebuild and destroy an L337 application. The `second/` project checks that
-destroying one app leaves another running. Image inputs live in `image/` so test
-results do not change the build context. Container scenarios run in disposable CI.
+Start, rebuild and destroy one L337 application. Image inputs live in `image/` so
+test results do not change the build context. Container scenarios run in disposable CI.
+See [isolation](../isolation/README.md) for checks involving multiple apps or products.
 
 ## Setup
 
@@ -15,16 +15,14 @@ mkdir -p .results
 ## Testing CLI
 
 ```sh
-# should start independent projects and run ordered imported image instructions
+# should start and run ordered imported image instructions
 devtool start
-devtool --file second/.devtool.yml start
 actual=$(devtool exec web -- cat /order)
 test "$actual" = "$(printf 'pre\nmain\npost')"
 test "$(devtool exec web -- cat /marker)" = original
 
-# should expose distinct project identities and one container per project
-devtool info --json > ".results/first.json"
-devtool --file second/.devtool.yml info --json > ".results/second.json"
+# should report a built and running service
+devtool info --json > .results/info.json
 bun verify.ts info
 
 # should reuse a valid image across CLI invocations
@@ -62,10 +60,9 @@ bun verify.ts failed
 printf 'RUN echo main >> /order\n' > image/instructions
 devtool start
 
-# should destroy only the selected project
+# should destroy the app without removing its source files
 devtool destroy
 bun verify.ts destroyed
-test "$(devtool --file second/.devtool.yml exec web -- printf second)" = second
 ```
 
 ## Testing Library
@@ -129,24 +126,6 @@ assert.deepEqual(app.state.services, {});
 assert.equal(app.state.running, false);
 await Bun.write("image/instructions", "RUN echo main >> /order\n");
 await createDevtool().loadApp().start();
-'
-
-# should isolate two embedded products using the same app
-bun -e '
-import assert from "node:assert/strict";
-import { createDevtool } from "@tanaab/devtool";
-const first = createDevtool({ identity: "first", envPrefix: "DEVTOOL" }).loadApp();
-const second = createDevtool({ identity: "second", envPrefix: "DEVTOOL" }).loadApp();
-assert.notEqual(first.project, second.project);
-assert.notEqual(first.stateFile, second.stateFile);
-await first.start();
-assert.deepEqual(second.state, { services: {} });
-await second.start();
-await first.destroy();
-assert.equal((await second.exec("web", ["printf", "independent"])).stdout, "independent");
-await second.stop();
-await second.restart();
-await second.destroy();
 '
 
 # should destroy the app without removing its source files
