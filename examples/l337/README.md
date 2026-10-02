@@ -296,7 +296,6 @@ assert.equal((await app.exec("web", ["cat", "/file-ro"])).stdout, (await app.exe
 await assert.rejects(app.exec("web", ["sh", "-c", "echo forbidden >> /file-ro"]));
 await Bun.write(".results/info.json", JSON.stringify(app.getInfo()));
 '
-
 bun verify.ts resources
 
 # should reuse a valid image and its cached state

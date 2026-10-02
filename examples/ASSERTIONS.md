@@ -83,7 +83,8 @@ passing delivery evidence is recorded separately below.
   service exec retains their environment/user/workdir observations; primary metadata
   is still checked. Legacy `info --service/--path/--format` syntax is replaced by
   public JSON/SDK info, without expanding the CLI parser.
-- L337 has no healthcheck orchestration; the legacy dispatcher-provided `healthy:
+- L337 has no scanner or healthcheck orchestration; the legacy `scanner: false`
+  fixture key and dispatcher-provided `healthy:
 unknown` field is excluded. Lando healthcheck/app-stage/user installation remains
   disabled or absent as recorded above, pending #25. No such check counts as passed.
 - API 3, additional services/discovery, host trust, platform release verification,
