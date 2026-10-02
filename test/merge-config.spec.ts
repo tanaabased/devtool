@@ -1,9 +1,42 @@
 import assert from 'node:assert/strict';
 
-import { ImportArray, ImportObject } from '../lib/yaml.ts';
+import { ImportArray, ImportObject, ImportScalar, ImportString } from '../lib/yaml.ts';
 import merge, { type Provenance } from '../utils/merge-config.ts';
 
 describe('merge configuration sources', () => {
+  it('unboxes imported scalars after recording origins, including matched IDs', () => {
+    const provenance: Provenance = new Map();
+    const metadata = { file: '/source/value.json' };
+    const original = merge(
+      {},
+      { flag: { old: true }, rows: [{ id: 0, keep: true }] },
+      { source: 'defaults', revision: 0 },
+      provenance,
+    );
+    const result = merge(
+      original,
+      {
+        flag: new ImportScalar(false, metadata),
+        empty: new ImportScalar(null, metadata),
+        name: new ImportString('', metadata),
+        rows: [
+          { id: new ImportScalar(0, metadata), added: true },
+          { id: new ImportString('0', metadata) },
+        ],
+      },
+      { source: 'file', revision: 0 },
+      provenance,
+    );
+    assert.deepEqual(result, {
+      flag: false,
+      empty: null,
+      name: '',
+      rows: [{ id: 0, keep: true, added: true }, { id: '0' }],
+    });
+    assert.equal(provenance.has('["flag","old"]'), false);
+    for (const key of ['["flag"]', '["empty"]', '["name"]', '["rows","0","id"]'])
+      assert.equal(provenance.get(key)?.at(-1)?.importedFrom, metadata.file);
+  });
   it('replaces subtrees without stale descendant provenance or prototype mutation', () => {
     const provenance: Provenance = new Map();
     const first = { nested: { old: true }, list: [1, 2], zero: 0, disabled: false };

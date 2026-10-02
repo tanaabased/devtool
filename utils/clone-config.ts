@@ -1,9 +1,10 @@
-import { ImportArray, ImportObject, ImportString } from '../lib/yaml.ts';
+import { ImportArray, ImportObject, ImportScalar, ImportString } from '../lib/yaml.ts';
 
 /** Copy caller-owned data, including import contents and their source metadata. */
 const clone = <T>(value: T, seen = new Map<object, unknown>()): T => {
   if (!value || typeof value !== 'object') return value;
   if (seen.has(value)) return seen.get(value) as T;
+  if (value instanceof ImportScalar) return new ImportScalar(value.value, value.getMetadata()) as T;
   if (value instanceof ImportString)
     return new ImportString(String(value), value.getMetadata()) as T;
   const result =

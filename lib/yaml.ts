@@ -11,6 +11,22 @@ export interface ImportMetadata {
   file?: string;
   type?: string;
 }
+/** Typed scalar retained in source documents; value readers unwrap it. */
+export class ImportScalar {
+  #metadata: ImportMetadata;
+  constructor(
+    readonly value: number | boolean | null,
+    metadata: ImportMetadata = {},
+  ) {
+    this.#metadata = { ...metadata };
+  }
+  getMetadata() {
+    return { ...this.#metadata };
+  }
+  getDumper() {
+    return this.#metadata.raw;
+  }
+}
 export class ImportString extends String {
   #metadata: ImportMetadata;
   constructor(value: string, metadata: ImportMetadata = {}) {
@@ -60,12 +76,21 @@ export class ImportArray extends Array<unknown> {
     return this.#metadata.raw;
   }
 }
-const imported = (value: unknown, metadata: ImportMetadata) =>
-  Array.isArray(value)
+const imported = (value: unknown, metadata: ImportMetadata) => {
+  // A YAML file may itself contain a scalar import. Keep its value's origin while
+  // retaining this document's tag spelling for serialization.
+  if (value instanceof ImportScalar)
+    return new ImportScalar(value.value, { ...value.getMetadata(), raw: metadata.raw });
+  if (value instanceof ImportString)
+    return new ImportString(String(value), { ...value.getMetadata(), raw: metadata.raw });
+  if (value === null || typeof value === 'number' || typeof value === 'boolean')
+    return new ImportScalar(value, metadata);
+  return Array.isArray(value)
     ? new ImportArray(value, metadata)
     : value !== null && typeof value === 'object'
       ? new ImportObject(value, metadata)
-      : new ImportString(String(value ?? ''), metadata);
+      : new ImportString(String(value), metadata);
+};
 
 export interface YamlOptions {
   base?: string;
@@ -113,7 +138,9 @@ export function readDocument(
           resolve,
           stringify: (item) =>
             stringify(
-              (item.value as ImportString | ImportObject | ImportArray).getDumper() ?? '',
+              (
+                item.value as ImportScalar | ImportString | ImportObject | ImportArray
+              ).getDumper() ?? '',
             ).trimEnd(),
         }));
   const document = parseDocument(text, { customTags: tags, keepSourceTokens: true, merge: true });
@@ -140,9 +167,28 @@ export function loadFile(file: string, options: YamlOptions = {}) {
 }
 
 const load = (data: string | Buffer, options: YamlOptions = {}): unknown => {
-  if (typeof data === 'string' && !data.includes('\n') && fs.existsSync(data))
-    return loadFile(data, options).value;
-  return readDocument(String(data), options).value;
+  const value =
+    typeof data === 'string' && !data.includes('\n') && fs.existsSync(data)
+      ? loadFile(data, options).value
+      : readDocument(String(data), options).value;
+  // This reader owns the freshly parsed data and discards the source document.
+  // Keep legacy string/file metadata, but never hand callers a truthy boxed false.
+  const seen = new Set<object>();
+  const unwrap = (item: unknown): unknown => {
+    if (item instanceof ImportScalar) return item.value;
+    if (!item || typeof item !== 'object' || item instanceof ImportString || seen.has(item))
+      return item;
+    seen.add(item);
+    for (const [key, child] of Object.entries(item))
+      Object.defineProperty(item, key, {
+        value: unwrap(child),
+        enumerable: true,
+        writable: true,
+        configurable: true,
+      });
+    return item;
+  };
+  return unwrap(value);
 };
 const dump = (
   data: unknown,
@@ -157,12 +203,14 @@ const dump = (
         tag: '!import',
         resolve: (value: string) => value,
         identify: (value) =>
+          value instanceof ImportScalar ||
           value instanceof ImportString ||
           value instanceof ImportObject ||
           value instanceof ImportArray,
         stringify: (item) =>
           JSON.stringify(
-            (item.value as ImportString | ImportObject | ImportArray).getDumper() ?? '',
+            (item.value as ImportScalar | ImportString | ImportObject | ImportArray).getDumper() ??
+              '',
           ),
       },
     ],

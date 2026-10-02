@@ -4,7 +4,7 @@ import camelCase from 'lodash-es/camelCase.js';
 import kebabCase from 'lodash-es/kebabCase.js';
 
 import type { ConfigSchema } from '../components/config.ts';
-import { ImportArray, ImportObject, ImportString } from '../lib/yaml.ts';
+import { ImportArray, ImportObject, ImportScalar, ImportString } from '../lib/yaml.ts';
 
 /** Convert declared keys only, rejecting aliases and cyclic/non-data objects. */
 export default function normalizeConfig(
@@ -30,8 +30,17 @@ export default function normalizeConfig(
         ? path.resolve(directory, value)
         : value;
     }
-    if (value instanceof ImportString)
-      return external ? String(value) : new ImportString(String(value), { ...value.getMetadata() });
+    if (value instanceof ImportScalar)
+      return external ? value.value : new ImportScalar(value.value, value.getMetadata());
+    if (value instanceof ImportString) {
+      if (external) return String(value);
+      const metadata = value.getMetadata();
+      const sourceBase = metadata.file ? path.dirname(metadata.file) : directory;
+      return new ImportString(
+        node.path && sourceBase ? path.resolve(sourceBase, String(value)) : String(value),
+        metadata,
+      );
+    }
     if (ancestors.has(value)) throw new Error(`${location}: cyclic configuration data`);
     ancestors.add(value);
     try {

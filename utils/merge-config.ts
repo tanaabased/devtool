@@ -1,7 +1,7 @@
 import { mergeArrays } from '@tanaab/merge';
 
 import type { ConfigOrigin } from '../components/config.ts';
-import { ImportArray, ImportObject, ImportString } from '../lib/yaml.ts';
+import { ImportArray, ImportObject, ImportScalar, ImportString } from '../lib/yaml.ts';
 import clone from './clone-config.ts';
 
 export type Provenance = Map<string, ConfigOrigin[]>;
@@ -9,7 +9,14 @@ const object = (value: unknown): value is Record<string, unknown> =>
   value !== null &&
   typeof value === 'object' &&
   !Array.isArray(value) &&
-  !(value instanceof ImportString);
+  !(value instanceof ImportString) &&
+  !(value instanceof ImportScalar);
+const scalar = (value: unknown): unknown =>
+  value instanceof ImportScalar
+    ? value.value
+    : value instanceof ImportString
+      ? String(value)
+      : value;
 
 /** Deep composition with ID-matched object arrays, scalar-array replacement and source history. */
 export default function mergeConfig(
@@ -32,7 +39,10 @@ export default function mergeConfig(
     inherited: ConfigOrigin,
   ): unknown => {
     const metadata =
-      next instanceof ImportObject || next instanceof ImportString || next instanceof ImportArray
+      next instanceof ImportObject ||
+      next instanceof ImportString ||
+      next instanceof ImportArray ||
+      next instanceof ImportScalar
         ? next.getMetadata()
         : undefined;
     const current = metadata?.file ? { ...inherited, importedFrom: metadata.file } : inherited;
@@ -72,19 +82,16 @@ export default function mergeConfig(
         const entries = (items: unknown[], side: 'before' | 'after') => {
           const seen = new Set<string>();
           return items.map((item, index) => {
-            if (
-              !object(item) ||
-              !Object.hasOwn(item, 'id') ||
-              !(
-                typeof item.id === 'string' ||
-                (typeof item.id === 'number' && Number.isFinite(item.id))
-              )
-            )
+            const itemId = object(item) && Object.hasOwn(item, 'id') ? scalar(item.id) : undefined;
+            if (!(
+              typeof itemId === 'string' ||
+              (typeof itemId === 'number' && Number.isFinite(itemId))
+            ))
               throw new Error(
                 `${keys.join('.')}: ID-matched arrays require a string or number id on every object`,
               );
-            const id = `${typeof item.id}:${item.id}`;
-            if (seen.has(id)) throw new Error(`${keys.join('.')}: duplicate array id ${item.id}`);
+            const id = `${typeof itemId}:${itemId}`;
+            if (seen.has(id)) throw new Error(`${keys.join('.')}: duplicate array id ${itemId}`);
             seen.add(id);
             return { id, [side]: index } as { id: string; before?: number; after?: number };
           });
@@ -110,7 +117,7 @@ export default function mergeConfig(
       const items = next.map((value, i) => merge(undefined, value, [...keys, String(i)], current));
       return next instanceof ImportArray ? new ImportArray(items, next.getMetadata()) : items;
     }
-    return clone(next);
+    return scalar(next);
   };
   return merge(target, source, [], origin) as Record<string, unknown>;
 }

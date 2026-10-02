@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import path from 'node:path';
 
 import { Config, configSchemas } from '@tanaab/devtool';
 
@@ -44,3 +45,45 @@ assert.deepEqual(layered.get('tasks'), [
 ]);
 assert.equal(layered.explain('tasks.0.enabled').winner?.source, 'defaults');
 assert.equal(layered.explain('tasks.0.command').winner?.source, 'app');
+
+const scalars = new Config({
+  root: import.meta.dirname,
+  schema: {
+    properties: {
+      enabled: { type: 'boolean' },
+      count: { type: 'number' },
+      optional: { type: 'string', nullable: true },
+      cachePath: { type: 'string', path: true },
+    },
+  },
+  sources: [{ id: 'imports', kind: 'file', file: 'scalars.yml' }],
+});
+scalars.compile();
+const expected = {
+  enabled: false,
+  count: 0,
+  optional: null,
+  cachePath: path.join(import.meta.dirname, '.results/cache'),
+};
+assert.deepEqual(scalars.get(), expected);
+assert.deepEqual(JSON.parse(scalars.export('json')), {
+  enabled: false,
+  count: 0,
+  optional: null,
+  'cache-path': expected.cachePath,
+});
+assert.match(scalars.export('yaml'), /enabled: false\ncount: 0\noptional: null/);
+assert.equal(
+  scalars.explain('enabled').winner?.importedFrom,
+  path.join(import.meta.dirname, 'disabled.json'),
+);
+const source = scalars.sourceDocument('imports');
+assert.ok(source);
+assert.match(String(source), /# Imported values retain their native types./);
+assert.match(String(source), /count: !load zero.yml/);
+assert.match(String(source), /cache-path: !import cache-path.json/);
+source.delete('enabled');
+assert.match(String(scalars.sourceDocument('imports')), /enabled: !import disabled.json/);
+assert.equal(scalars.get('enabled'), false);
+assert.deepEqual(scalars.fork().compile().values, expected);
+process.stdout.write('Imported scalar types, paths and source documents passed\n');

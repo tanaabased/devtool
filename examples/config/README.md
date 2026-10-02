@@ -65,6 +65,10 @@ supply, in ascending precedence. Schema keys may use kebab-case or camelCase;
 JavaScript reads use camelCase and YAML/JSON exports use kebab-case. Names inside
 literal dictionaries, including labels and environment variables, stay intact.
 
+Imported JSON/YAML scalars retain their native types, including `false`, `0` and
+`null`. Schema-declared paths resolve relative to the file supplying the value,
+including an imported file; provenance records that origin.
+
 Objects merge recursively. Arrays of objects with `id` merge by that ID, retaining
 unaffected entries in order and appending new IDs. IDs must be unique strings or
 numbers within each source array; every member of an ID-matched array needs one.
@@ -88,6 +92,6 @@ foundation.
 ## Testing Library Config
 
 ```sh
-# should compose named sources and retain provenance through the installed SDK
+# should compose sources, preserve imported scalar types and resolve source-relative paths
 bun config.ts
 ```
