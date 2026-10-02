@@ -1,12 +1,6 @@
 name: Exec Timing
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - 13-compile-self-contained-cli
-    paths:
-      - scripts/measure-exec-cli.ts
-      - .github/workflows/exec-timing.yml
 permissions:
   contents: read
 jobs:

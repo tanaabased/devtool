@@ -122,8 +122,19 @@ Library operations continue to use ordinary module-relative asset files.
 `bun run test:compiled` checks the built executable without contacting Docker.
 Disposable CI additionally isolates it from the checkout, dependencies and
 installed runtimes, then runs the existing L337/Lando lifecycle scenarios.
-Platform support and measured startup results are recorded after executable and
-lifecycle verification; cross-compilation alone does not establish support.
+The verified lifecycle target is Linux x64 on the Ubuntu 24.04 hosted runner
+(kernel 6.17.0-1022-azure), with the same executable passing runtime-free isolation
+in an Ubuntu 24.04 container. macOS 27.0.1 arm64 has local executable smoke evidence
+only. Older OS/kernel/CPU baselines, other architectures and Windows have not been
+validated; cross-compilation alone does not establish support.
+
+The manual **Exec Timing** workflow compares source, compiled and direct Docker
+calls on one disposable runner. [Initial measurements](https://github.com/tanaabased/devtool/pull/24)
+set provisional investigation budgets for paired compiled overhead over direct
+Docker: 25 ms median for dispatch and first output, 26 ms dispatch p95 and 36 ms
+first-output p95. These round up the worst observed values across three batches;
+exceeding them calls for another paired investigation, not an automatic CI failure.
+Runner-to-runner variance remains unmeasured. Timing stays outside routine PR jobs.
 
 ## Testing
 
