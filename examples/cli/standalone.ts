@@ -3,10 +3,10 @@ import { spawn, spawnSync } from 'node:child_process';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { shellAssets } from '../services/lando/lib/shell-assets.ts';
-import metadata from '../package.json';
+import metadata from '../../package.json';
 
-const root = path.resolve(import.meta.dirname, '..');
+const root = path.resolve(import.meta.dirname, '../..');
+const assets = [...new Bun.Glob('**/*.sh').scanSync(path.join(root, 'services/lando'))];
 const temporary = fs.mkdtempSync(path.join(os.tmpdir(), 'devtool standalone '));
 const executable = path.join(temporary, 'devtool');
 const bin = path.join(temporary, 'bin');
@@ -139,7 +139,7 @@ exit 17
       assert.match(first.stderr, /fixture-build-failure/);
       const extracted = files(data).filter((file) => file.includes('/assets/'));
       // macOS also selects the SSH-agent package; Linux uses the explicit fixture socket.
-      for (const asset of Object.keys(shellAssets)) {
+      for (const asset of assets) {
         const file = extracted.find((file) => file.endsWith(`/assets/${asset}`));
         assert.ok(file, asset);
         assert.deepEqual(
@@ -149,7 +149,7 @@ exit 17
         );
         assert.equal(fs.statSync(file).mode & 0o777, 0o755, asset);
       }
-      assert.equal(extracted.length, Object.keys(shellAssets).length);
+      assert.equal(extracted.length, assets.length);
       const target = extracted[0];
       assert.ok(target);
       fs.writeFileSync(target, 'broken');

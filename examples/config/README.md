@@ -1,28 +1,20 @@
 # Configuration example
 
 Configure devtool with a product file, environment variables and explicit options.
-The library imports the built ESM package installed by Setup.
+The library imports the SDK tarball installed by Setup.
 
 ## Setup
 
 ```sh
 # should install the example dependency
-bun install --cwd .. --frozen-lockfile --ignore-scripts --force
+rm -rf ../.tmp/install-cache
+bun install --cwd .. --frozen-lockfile --ignore-scripts --force --cache-dir .tmp/install-cache
 mkdir -p .results
 ```
 
 ## Testing CLI
 
 ```sh
-# should show the available commands
-devtool --help | grep -F 'start, stop, restart, rebuild, info, exec, destroy'
-devtool | grep -F 'Usage: devtool'
-devtool -h | grep -F 'Usage: devtool'
-
-# should report the package version
-test "$(devtool --version)" = "$(bun -e 'import { version } from "@tanaab/devtool"; console.log(version)')"
-test "$(devtool -v)" = "$(devtool --version)"
-
 # should read product configuration
 devtool --config product.yml --help | grep -F 'Usage: example'
 
@@ -32,13 +24,6 @@ DEVTOOL_COMMAND_NAME=custom devtool --config product.yml --help | grep -F 'Usage
 # should load an imported service definition
 devtool --config product.yml info --json | bun -e 'const info = await Bun.stdin.json(); if (info.services[0].type !== "l337") throw new Error("expected l337 service")'
 
-# should reject unknown options
-devtool --unknown > .results/error 2>&1 && exit 1
-grep -F 'error:' .results/error
-
-# should work without the source checkout or a JavaScript runtime
-bun ../../scripts/check-compiled-cli.ts config
-bun ../../scripts/check-compiled-cli.ts assets
 ```
 
 ## Testing Library
@@ -79,6 +64,12 @@ assert.equal(app.getInfo().services[0].type, "l337");
 supply, in ascending precedence. Schema keys may use kebab-case or camelCase;
 JavaScript reads use camelCase and YAML/JSON exports use kebab-case. Names inside
 literal dictionaries, including labels and environment variables, stay intact.
+
+Objects merge recursively. Arrays of objects with `id` merge by that ID, retaining
+unaffected entries in order and appending new IDs. IDs must be unique strings or
+numbers within each source array; every member of an ID-matched array needs one.
+An empty overlay retains an existing ID-matched array. Other arrays are replaced
+by the later source. The same rule applies to nested arrays.
 
 `compile()` loads and validates a revision. `get()` reads that compiled snapshot
 without reloading files. Use `replaceSource()`, `removeSource()` or

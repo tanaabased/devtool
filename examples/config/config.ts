@@ -21,3 +21,26 @@ settings.removeSource('native').compile();
 assert.equal(settings.get('commandName'), 'example');
 assert.equal(snapshot.values.commandName, 'native-example');
 process.stdout.write('Config sources, provenance, casing and snapshots passed\n');
+
+const layered = new Config({
+  sources: [
+    {
+      id: 'defaults',
+      kind: 'object',
+      data: {
+        tasks: [
+          { id: 'build', enabled: true },
+          { id: 'test', command: 'bun test' },
+        ],
+      },
+    },
+    { id: 'app', kind: 'object', data: { tasks: [{ id: 'build', command: 'bun run build' }] } },
+  ],
+});
+layered.compile();
+assert.deepEqual(layered.get('tasks'), [
+  { id: 'build', enabled: true, command: 'bun run build' },
+  { id: 'test', command: 'bun test' },
+]);
+assert.equal(layered.explain('tasks.0.enabled').winner?.source, 'defaults');
+assert.equal(layered.explain('tasks.0.command').winner?.source, 'app');

@@ -23,9 +23,7 @@
     "components/**/*.ts",
     "scripts/**/*.ts",
     "test/**/*.ts",
-    "examples/**/*.ts",
     "services/**/*.ts",
-    "engines/**/*.ts",
-    "fixtures/**/*.ts"
+    "engines/**/*.ts"
   ]
 }

@@ -16,7 +16,8 @@ healthcheck orchestration; see the disabled [service lifecycle scenario](../land
 
 ```sh
 # should install the example dependency
-bun install --cwd .. --frozen-lockfile --ignore-scripts --force
+rm -rf ../.tmp/install-cache
+bun install --cwd .. --frozen-lockfile --ignore-scripts --force --cache-dir .tmp/install-cache
 mkdir -p "$DEVTOOL_CACHE_ROOT/projects/l337-results"
 ln -sfn "$DEVTOOL_CACHE_ROOT/projects/l337-results" .results
 ```

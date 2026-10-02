@@ -3,6 +3,10 @@
   "private": true,
   "type": "module",
   "dependencies": {
-    "@tanaab/devtool": "file:../dist/npm"
+    "@tanaab/devtool": "../dist/devtool.tgz"
+  },
+  "devDependencies": {
+    "typescript": "~5.9.3",
+    "@types/bun": "1.4.2"
   }
 }

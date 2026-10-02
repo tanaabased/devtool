@@ -9,7 +9,7 @@ import path from 'node:path';
 import os from 'node:os';
 import yaml from 'js-yaml';
 
-assert.ok(process.versions.bun, 'the source import probe must run under Bun');
+assert.ok(process.versions.bun, 'SDK scenarios run under Bun');
 
 const load = yaml.load;
 const forbid = () => {
@@ -33,9 +33,7 @@ for (const method of ['spawn', 'spawnSync', 'exec', 'execSync', 'execFile', 'exe
 net.connect = net.createConnection = http.request = https.request = forbid;
 Reflect.set(globalThis, 'fetch', forbid);
 const read = fs.readFileSync;
-const source = process.argv[2];
-assert.ok(source && path.isAbsolute(source), 'provide an absolute permitted read directory');
-const permitted = path.resolve(source) + path.sep;
+const permitted = path.resolve(import.meta.dirname, '../node_modules') + path.sep;
 fs.readFileSync = new Proxy(read, {
   apply(target, receiver, args: Parameters<typeof read>) {
     const [file] = args;

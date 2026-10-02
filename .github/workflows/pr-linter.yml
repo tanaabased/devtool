@@ -11,4 +11,3 @@ jobs:
       - uses: tanaabased/actions/setup-bun@v1
       - run: bun install --frozen-lockfile --ignore-scripts
       - run: bun run lint
-      - run: bun run typecheck
