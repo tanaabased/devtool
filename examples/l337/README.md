@@ -5,6 +5,13 @@ and destroy one L337 application. Results live in generated storage excluded fro
 build inputs. Container scenarios run in disposable CI.
 See [isolation](../isolation/README.md) for checks involving multiple apps or products.
 
+The `db` fixture uses Alpine to check build inputs, COPY and working directories;
+it does not test a database. Buildx/buildkit cases use local multistage COPY and
+known users instead of developer SSH keys or authenticated clones. Explicit `exec`
+checks environment, argv, users and working directories; tooling aliases and the
+legacy event dispatcher are outside this scenario. L337 has no scanner or
+healthcheck orchestration; see the disabled [Lando scenario](../lando/README.md).
+
 ## Setup
 
 ```sh

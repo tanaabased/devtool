@@ -3,6 +3,9 @@ import { EventEmitter } from 'node:events';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
+import { isBuiltin } from 'node:module';
+import ts from 'typescript';
+import metadata from '../package.json';
 import * as api from '@tanaab/devtool';
 import read from '../utils/read-file.ts';
 import mergePromise from '../utils/merge-promise.ts';
@@ -10,6 +13,46 @@ import yaml from '../components/yaml.ts';
 import { fixture } from './project-fixture.ts';
 
 describe('ESM boundaries', () => {
+  it('resolves runtime imports from declared dependencies and keeps dynamic imports discoverable', () => {
+    const root = path.resolve(import.meta.dirname, '..');
+    const files = new Bun.Glob('{bin,lib,components,builders,utils,packages}/**/*.ts');
+    for (const file of files.scanSync(root)) {
+      if (file.endsWith('.d.ts')) continue;
+      const location = path.join(root, file);
+      const source = ts.createSourceFile(
+        location,
+        fs.readFileSync(location, 'utf8'),
+        ts.ScriptTarget.Latest,
+        true,
+      );
+      const specifiers: string[] = [];
+      const visit = (node: ts.Node) => {
+        if (
+          ts.isImportDeclaration(node) &&
+          !node.importClause?.isTypeOnly &&
+          ts.isStringLiteral(node.moduleSpecifier)
+        )
+          specifiers.push(node.moduleSpecifier.text);
+        if (ts.isCallExpression(node) && node.expression.kind === ts.SyntaxKind.ImportKeyword) {
+          assert.ok(
+            node.arguments.length === 1 && ts.isStringLiteral(node.arguments[0]),
+            `${file}: runtime import must be statically discoverable`,
+          );
+          specifiers.push((node.arguments[0] as ts.StringLiteral).text);
+        }
+        ts.forEachChild(node, visit);
+      };
+      visit(source);
+      for (const specifier of specifiers) {
+        Bun.resolveSync(specifier, path.dirname(location));
+        if (specifier.startsWith('.') || isBuiltin(specifier)) continue;
+        const name = specifier.startsWith('@')
+          ? specifier.split('/').slice(0, 2).join('/')
+          : specifier.split('/')[0];
+        assert.ok(Object.hasOwn(metadata.dependencies, name), `${file}: ${name}`);
+      }
+    }
+  });
   it('should expose only the supported runtime exports', () => {
     assert.deepEqual(Object.keys(api).sort(), ['createDevtool', 'name', 'version']);
   });

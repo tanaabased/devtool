@@ -6,20 +6,18 @@ import path from 'node:path';
 import materialize from '../utils/materialize-asset.ts';
 import fingerprint from '../utils/build-fingerprint.ts';
 import { fixture } from './project-fixture.ts';
-import inventory from '../extraction.json';
 import shellAsset, { shellAssets } from '../lib/shell-assets.ts';
 
 describe('shell assets', () => {
-  it('inventories every retained shell file and leaves library paths ordinary', () => {
+  it('registers every runtime shell file with executable mode and leaves library paths ordinary', () => {
+    const root = path.resolve(import.meta.dirname, '..');
     assert.deepEqual(
       Object.keys(shellAssets).sort(),
-      inventory.files
-        .filter((file) => file.path.endsWith('.sh'))
-        .map((file) => file.path)
-        .sort(),
+      [...new Bun.Glob('{packages,scripts}/**/*.sh').scanSync(root)].sort(),
     );
     for (const id of Object.keys(shellAssets) as (keyof typeof shellAssets)[]) {
       assert.equal(shellAsset(id, '/unused'), path.resolve(import.meta.dirname, '..', id));
+      assert.equal(fs.statSync(path.join(root, id)).mode & 0o777, 0o755, id);
     }
   });
   it('restores bytes and modes without rewriting correct files or following destination symlinks', () => {

@@ -5,7 +5,7 @@
 - Shared GitHub Actions may use runner-provided Node internally; do not add project Node setup or a development pin for action infrastructure.
 - devtool-owned source is strict TypeScript ESM. Bun compatibility does not establish a Node consumer support range; `engines.node` is a separate declaration requiring evidence before publication.
 - Keep strict typechecking separate from Bun execution and bundling. Publication belongs to later work.
-- Retained Core source lives in devtool-owned directories. Preserve source notices and record intentional adaptations in `extraction.json` and `EXTRACTION.md`.
+- Core-derived source lives in devtool-owned directories. Preserve upstream source notices and the README attribution; record changes through normal commits and behavioral tests.
 - Core Next is a structural reference only. Do not use its `bun-me` checkout or staged changes as extraction input.
 - Keep library imports inert. Initialize services, inspect host configuration, or contact Docker only after an explicit caller action.
 - Treat startup latency and time to first useful command output as primary product requirements, especially for `exec`: container commands should feel native. Stream output promptly; a banner or spinner does not substitute for command responsiveness.

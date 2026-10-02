@@ -57,8 +57,6 @@ writeJson(path.join(library, 'package.json'), {
     'scripts/',
     'LICENSE',
     'README.md',
-    'EXTRACTION.md',
-    'extraction.json',
     'THIRD_PARTY_NOTICES.txt',
   ],
   dependencies: {
@@ -69,7 +67,7 @@ writeJson(path.join(library, 'package.json'), {
     '@types/jsonfile': metadata.devDependencies['@types/jsonfile'],
   },
 });
-for (const file of ['LICENSE', 'README.md', 'EXTRACTION.md', 'extraction.json'])
+for (const file of ['LICENSE', 'README.md'])
   fs.copyFileSync(path.join(root, file), path.join(library, file));
 run(['run', 'build:cli', '--metafile=dist/cli-meta.json']);
 const inputs = Object.keys(

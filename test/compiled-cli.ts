@@ -3,7 +3,7 @@ import { spawn, spawnSync } from 'node:child_process';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import inventory from '../extraction.json';
+import { shellAssets } from '../lib/shell-assets.ts';
 import metadata from '../package.json';
 
 const root = path.resolve(import.meta.dirname, '..');
@@ -132,17 +132,13 @@ exit 17
       assert.match(first.stderr, /fixture-build-failure/);
       const extracted = files(data).filter((file) => file.includes('/assets/'));
       // macOS also selects the SSH-agent package; Linux uses the explicit fixture socket.
-      for (const asset of inventory.files.filter((file) => file.path.endsWith('.sh'))) {
-        const file = extracted.find((file) => file.endsWith(`/assets/${asset.path}`));
-        assert.ok(file, asset.path);
-        assert.deepEqual(
-          fs.readFileSync(file),
-          fs.readFileSync(path.join(root, asset.path)),
-          asset.path,
-        );
-        assert.equal(fs.statSync(file).mode & 0o777, 0o755, asset.path);
+      for (const asset of Object.keys(shellAssets)) {
+        const file = extracted.find((file) => file.endsWith(`/assets/${asset}`));
+        assert.ok(file, asset);
+        assert.deepEqual(fs.readFileSync(file), fs.readFileSync(path.join(root, asset)), asset);
+        assert.equal(fs.statSync(file).mode & 0o777, 0o755, asset);
       }
-      assert.equal(extracted.length, 19);
+      assert.equal(extracted.length, Object.keys(shellAssets).length);
       const target = extracted[0];
       fs.writeFileSync(target, 'broken');
       fs.chmodSync(target, 0o644);

@@ -174,11 +174,17 @@ CI. The PR workflow builds the CLI in each feature/interface job, with unit test
 and typechecking kept separate. The Lando example remains checked in but is disabled
 pending [#25](https://github.com/tanaabased/devtool/issues/25).
 
-The [example guidance](examples/AGENTS.md) defines the layout, and the
-[assertion map](examples/ASSERTIONS.md) distinguishes runtime coverage from unit
-characterization and remaining gaps. Bun tests do not establish Node compatibility.
+The [example guidance](examples/AGENTS.md) defines the layout. Each scenario records
+its relevant exclusions and runtime gaps. Bun tests do not establish Node compatibility.
 
-[EXTRACTION.md](EXTRACTION.md) records source revisions, adaptations and exclusions.
+## Attribution
+
+devtool adapts API 4 service, engine, shell and utility code from
+[Lando Core](https://github.com/lando/core/tree/7a87f80576c5cdb5c7d616108bc9aff81150d463),
+with L337 group, image-import, built-state and fixture changes from
+[Core PR #330](https://github.com/lando/core/tree/3aaa8aaf3f4adae5683897644e8e848fe54aa2cb).
+The upstream MIT notice is preserved in [LICENSE](LICENSE). Core Next informed
+the structure; no Core Next source was copied. Commit history records subsequent adaptations.
 
 ## Lando service
 

@@ -4,7 +4,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import metadata from '../package.json';
-import inventory from '../extraction.json';
+import { shellAssets } from '../lib/shell-assets.ts';
 
 const root = path.resolve(import.meta.dirname, '..');
 const temporary = fs.mkdtempSync(path.join(os.tmpdir(), 'devtool packed consumer '));
@@ -58,12 +58,12 @@ try {
   const notices = fs.readFileSync(path.join(installed, 'THIRD_PARTY_NOTICES.txt'), 'utf8');
   assert.match(notices, /dockerode@/);
   assert.match(notices, /Apache License/);
-  for (const file of inventory.files.filter((file) => file.path.endsWith('.sh'))) {
+  for (const file of Object.keys(shellAssets)) {
     assert.deepEqual(
-      fs.readFileSync(path.join(installed, file.path)),
-      fs.readFileSync(path.join(root, file.path)),
+      fs.readFileSync(path.join(installed, file)),
+      fs.readFileSync(path.join(root, file)),
     );
-    assert.equal(fs.statSync(path.join(installed, file.path)).mode & 0o777, 0o755);
+    assert.equal(fs.statSync(path.join(installed, file)).mode & 0o777, 0o755);
   }
   for (const file of ['packed-consumer.ts', 'public-types.ts'])
     fs.copyFileSync(path.join(root, 'test', file), path.join(temporary, file));
