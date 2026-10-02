@@ -51,6 +51,7 @@ try {
   assert.equal(manifest.optionalDependencies, undefined);
   assert.ok(!fs.existsSync(path.join(installed, 'bin')));
   assert.ok(!fs.existsSync(path.join(installed, 'test')));
+  assert.ok(!fs.existsSync(path.join(installed, 'fixtures')));
   assert.ok(!fs.existsSync(path.join(installed, 'lib/devtool.ts')));
   assert.ok(!fs.existsSync(path.join(installed, 'lib/cli.js')));
   assert.ok(!fs.existsSync(path.join(installed, 'node_modules')));
@@ -68,8 +69,19 @@ try {
     );
     assert.equal(fs.statSync(path.join(installed, 'services/lando', file)).mode & 0o777, 0o755);
   }
-  for (const file of ['packed-consumer.ts', 'public-types.ts', 'require-value.ts'])
-    fs.copyFileSync(path.join(root, 'test', file), path.join(temporary, file));
+  fs.copyFileSync(
+    path.join(root, 'fixtures/packed-consumer.ts'),
+    path.join(temporary, 'packed-consumer.ts'),
+  );
+  fs.copyFileSync(
+    path.join(root, 'test/public-api.types.ts'),
+    path.join(temporary, 'public-api.types.ts'),
+  );
+  for (const file of ['create-test-project.js', 'read-fixture-yaml.js', 'require-value.js'])
+    assert.ok(
+      !fs.existsSync(path.join(installed, 'utils', file)),
+      `${file} must stay out of the package`,
+    );
   writeJson('tsconfig.json', {
     compilerOptions: {
       strict: true,
@@ -85,15 +97,11 @@ try {
     include: ['*.ts'],
   });
   run(['node_modules/typescript/bin/tsc', '--noEmit']);
-  // Reuse the import-side-effect tripwires with reads restricted to this installed package tree.
-  const probe = fs
-    .readFileSync(path.join(root, 'test/source-probe.ts'), 'utf8')
-    .replace(
-      "path.resolve(import.meta.dirname, '..') + path.sep",
-      "path.join(import.meta.dirname, 'node_modules') + path.sep",
-    );
-  fs.writeFileSync(path.join(temporary, 'inert.ts'), probe);
-  run(['inert.ts']);
+  fs.copyFileSync(
+    path.join(root, 'fixtures/import-probe.ts'),
+    path.join(temporary, 'import-probe.ts'),
+  );
+  run(['import-probe.ts', path.join(temporary, 'node_modules')]);
   fs.writeFileSync(
     path.join(temporary, '.devtool.yml'),
     'services:\n  web:\n    type: lando\n    image: alpine:3.20\n    certs: false\n    packages: {git: false, sudo: false, ssh-agent: false}\n',

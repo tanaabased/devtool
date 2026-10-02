@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import merge from '../utils/merge-compose.ts';
-import requireValue from './require-value.ts';
+import requireValue from '../utils/require-value.ts';
 
 describe('merge Compose contributions', () => {
   it('replaces ordinary arrays and same-target mounts while retaining unrelated mounts', () => {

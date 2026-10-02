@@ -1,12 +1,11 @@
-import requireValue from '../../../test/require-value.ts';
-import type { ServiceConfig, Port, Mount } from '../../../components/service.ts';
+import requireValue from '../../../utils/require-value.ts';
+import type { ServiceConfig, Mount } from '../../../components/service.ts';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
 import yaml from 'js-yaml';
 import appYaml from '../../../lib/yaml.ts';
-import { fixture } from '../../../test/project-fixture.ts';
-import ports from '../utils/parse-ports.ts';
+import { fixture } from '../../../utils/create-test-project.ts';
 import { createDevtool } from '../../../lib/devtool.ts';
 
 describe('L337 characterization (#3)', () => {
@@ -152,18 +151,6 @@ describe('L337 characterization (#3)', () => {
     const app = f.load();
     assert.equal(requireValue(app.assemble().services!.web).working_dir, '/site/subdirectory');
     assert.equal(requireValue(app.getInfo().services[0]).appMount, '/site');
-  });
-  it('normalizes HTTP ports and retains long syntax', () => {
-    const result = ports([
-      '8080:80/http',
-      '8443:443/https',
-      '9000-9002/tcp',
-      { target: 53, published: '5353', protocol: 'udp' },
-    ]);
-    assert.deepEqual(result.http, [80]);
-    assert.deepEqual(result.https, [443]);
-    assert.equal(result.ports[0], '8080:80/tcp');
-    assert.equal((result.ports[3] as Port).protocol, 'udp');
   });
   it('preserves existing files, no-create binds, named volumes and VM host-service paths', () => {
     const existing = path.join(f.root, 'existing');

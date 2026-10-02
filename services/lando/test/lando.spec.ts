@@ -1,4 +1,4 @@
-import requireValue from '../../../test/require-value.ts';
+import requireValue from '../../../utils/require-value.ts';
 import type lando from '../lib/service.ts';
 type LandoService = InstanceType<ReturnType<typeof lando.builder>>;
 import type { ServiceConfig } from '../../../components/service.ts';
@@ -6,8 +6,8 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
 import { X509Certificate } from 'node:crypto';
-import * as yaml from '../../../test/read-yaml.ts';
-import { fixture } from '../../../test/project-fixture.ts';
+import * as yaml from '../../../utils/read-fixture-yaml.ts';
+import { fixture } from '../../../utils/create-test-project.ts';
 import { runCli } from '../../../lib/cli.ts';
 import { createDevtool } from '../../../lib/devtool.ts';
 import L337 from '../../l337/l337.ts';

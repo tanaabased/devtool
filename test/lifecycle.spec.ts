@@ -1,11 +1,11 @@
-import requireValue from './require-value.ts';
+import requireValue from '../utils/require-value.ts';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
-import * as yaml from './read-yaml.ts';
+import * as yaml from '../utils/read-fixture-yaml.ts';
 import { runCli } from '../lib/cli.ts';
 import { createDevtool } from '../lib/devtool.ts';
-import { fixture } from './project-fixture.ts';
+import { fixture } from '../utils/create-test-project.ts';
 
 describe('L337 lifecycle (#4)', () => {
   let f: ReturnType<typeof fixture>;

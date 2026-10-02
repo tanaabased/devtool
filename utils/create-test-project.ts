@@ -1,6 +1,6 @@
 import type { AppConfig, ProductOptions } from '../lib/types.ts';
 import type { Engine, Volume } from '../components/engine.ts';
-import type { ExecutionError } from '../utils/as-error.ts';
+import type { ExecutionError } from './as-error.ts';
 type Call =
   | ['compose', string[], string]
   | ['build' | 'inspect' | 'exists' | 'volume' | 'remove-volume', string | undefined];

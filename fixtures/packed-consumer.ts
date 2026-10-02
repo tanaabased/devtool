@@ -1,4 +1,3 @@
-import requireValue from './require-value.ts';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -45,17 +44,16 @@ const first = createDevtool({ ...options, identity: 'first' });
 const second = createDevtool({ ...options, identity: 'second' });
 assert.equal(fs.existsSync(options.dataRoot), false);
 const apps = [first, second].map((runtime) => runtime.loadApp());
-assert.notEqual(requireValue(apps[0]).project, requireValue(apps[1]).project);
-assert.notEqual(requireValue(apps[0]).stateFile, requireValue(apps[1]).stateFile);
-await requireValue(apps[0]).start();
-assert.deepEqual(requireValue(apps[1]).state, { services: {} });
-await requireValue(apps[1]).start();
-await requireValue(apps[0]).destroy();
-assert.equal(
-  (await requireValue(apps[1]).exec('web', ['echo', 'proof'])).stdout,
-  'packed-consumer',
-);
-await requireValue(apps[1]).destroy();
+const [firstApp, secondApp] = apps;
+assert.ok(firstApp && secondApp);
+assert.notEqual(firstApp.project, secondApp.project);
+assert.notEqual(firstApp.stateFile, secondApp.stateFile);
+await firstApp.start();
+assert.deepEqual(secondApp.state, { services: {} });
+await secondApp.start();
+await firstApp.destroy();
+assert.equal((await secondApp.exec('web', ['echo', 'proof'])).stdout, 'packed-consumer');
+await secondApp.destroy();
 const installed = path.resolve('node_modules/@tanaab/devtool');
 for (const name of ['boot.sh', 'entrypoint.sh', 'exec.sh', 'add-user.sh']) {
   const source = sources.find((source) => path.basename(source) === name);

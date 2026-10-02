@@ -16,4 +16,6 @@
 
 - Until the first release, keep the README to status, prerequisites, one working example and validation commands. Defer expanded guides to prerelease issue #19; keep executable examples and public API comments accurate meanwhile.
 - Organize implementations and their tests by owner under services/ and engines/. Keep shared component contracts in components/ and shared runtime orchestration in lib/. Use named scope entrypoints (such as l337.ts), not index.ts; defer manifest registration to #30.
-- Keep container packages and shell inputs with their service. Root scripts/ contains maintainer commands; scoped test/ directories contain specs, fixtures and fakes. Give nontrivial utilities focused specs beside their owner.
+- Keep container packages and shell inputs with their service. Root scripts/ contains maintainer commands; scoped test/ directories contain specs and compile-only type tests. Shared test helpers live in root utils/ with descriptive names; external consumer and subprocess fixtures live in root fixtures/. Inline small single-spec data fixtures. Keep test helpers out of distribution artifacts. Give every utility a matching focused spec beside its owner.
+
+- `test:cli` and `test:library` select all active example READMEs by interface; both require prepared artifacts and a disposable runner. Keep the explicit Lando exclusion until #25 is complete.

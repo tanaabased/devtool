@@ -30,11 +30,8 @@
     "lint": "bun run lint:eslint && bun run format:check",
     "lint:eslint": "bun --bun eslint .",
     "test": "bun run test:unit && bun run build && bun run test:package",
-    "test:cli": "bun run leia examples/config/README.md --test-header \"Testing CLI\" --shell bash --retry 0 --timeout 300",
-    "test:integration": "bun run test:integration:cli && bun run test:integration:library",
-    "test:integration:cli": "bun run leia examples/l337/README.md examples/exec/README.md examples/isolation/README.md --test-header \"Testing CLI\" --shell bash --retry 0 --timeout 300",
-    "test:integration:library": "bun run leia examples/l337/README.md examples/exec/README.md examples/isolation/README.md --test-header \"Testing Library\" --shell bash --retry 0 --timeout 300",
-    "test:library": "bun run leia examples/config/README.md --test-header \"Testing Library\" --shell bash --retry 0 --timeout 300",
+    "test:cli": "bun run leia \"examples/*/README.md\" --ignore \"examples/lando/README.md\" --test-header \"Testing CLI\" --shell bash --retry 0 --timeout 300",
+    "test:library": "bun run leia \"examples/*/README.md\" --ignore \"examples/lando/README.md\" --test-header \"Testing Library\" --shell bash --retry 0 --timeout 300",
     "test:package": "bun scripts/check-package-task.ts",
     "test:unit": "bun --bun ./node_modules/mocha/bin/mocha.js 'test/*.spec.ts' 'services/*/test/*.spec.ts' 'engines/*/test/*.spec.ts'",
     "typecheck": "bun --bun tsc --noEmit"

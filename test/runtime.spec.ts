@@ -1,9 +1,9 @@
-import requireValue from './require-value.ts';
+import requireValue from '../utils/require-value.ts';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
 import { createDevtool } from '../lib/devtool.ts';
-import { fixture } from './project-fixture.ts';
+import { fixture } from '../utils/create-test-project.ts';
 
 describe('configurable runtime (#2)', () => {
   let f: ReturnType<typeof fixture>;
