@@ -84,12 +84,31 @@ passing delivery evidence is recorded separately below.
   is still checked. Legacy `info --service/--path/--format` syntax is replaced by
   public JSON/SDK info, without expanding the CLI parser.
 - L337 has no scanner or healthcheck orchestration; the legacy `scanner: false`
-  fixture key and dispatcher-provided `healthy:
-unknown` field is excluded. Lando healthcheck/app-stage/user installation remains
+  fixture key and dispatcher-provided `healthy` value `unknown` are excluded. Lando healthcheck/app-stage/user installation remains
   disabled or absent as recorded above, pending #25. No such check counts as passed.
 - API 3, additional services/discovery, host trust, platform release verification,
   signing and publication remain outside #16.
 
 ### Delivered evidence
 
-Pending the first PR CI run. No Docker scenario was executed on the developer host.
+At revision `01b4068f11c6c7de7f36c684f00c130b193fd60d`,
+[Example Tests run 36961660442](https://github.com/tanaabased/devtool/actions/runs/36961660442)
+passed all eight enabled feature/interface entries. L337 delivered 21 CLI assertions
+and 19 SDK assertions, plus one Setup test per interface: 22 and 20 passing,
+respectively. The disabled Lando entry contributes no runtime evidence.
+Hosted lint/typechecking and `bun run test` also passed at that revision. No Docker
+scenario was executed on the developer host.
+
+[Manual timing run 36961477748](https://github.com/tanaabased/devtool/actions/runs/36961477748)
+measured the unchanged runtime code at `9b75aa2` with the existing running Lando
+fixture. Three batches of 30 paired samples per mode/target separate startup and
+first output from the 20.9-second fixture setup. Across batches, compiled cold
+Docker dispatch median was 27.0–27.2 ms (p95 28.3–30.1 ms), and first output median
+130.5–133.1 ms (p95 134.8–138.0 ms). Warm compiled dispatch median was 27.0–27.1 ms
+(p95 28.2–28.4 ms), and first output median 131.0–132.9 ms (p95 135.0–136.2 ms).
+Paired direct Docker first-output medians were 105.1–108.1 ms cold and
+105.7–107.6 ms warm. Source dispatch medians were 69.4–70.1 ms cold and
+63.7–64.5 ms warm (p95 71.9–74.0 and 65.5–66.4 ms). These are current measured
+baselines; this run does not establish a before/after regression budget or a
+platform-wide latency guarantee. The full report retains every batch and tail
+measurement. No timing gate was added.

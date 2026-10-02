@@ -90,7 +90,8 @@ describe('L337 lifecycle (#4)', () => {
       }),
     );
     fs.mkdirSync(path.join(f.root, 'folder'));
-    for (const app of [f.load(), f.load()]) {
+    for (let iteration = 0; iteration < 2; iteration++) {
+      const app = f.load();
       await app.start();
       await app.exec('web', ['pwd'], { cwd: path.join(f.root, 'folder') });
       assert.deepEqual(f.calls.at(-1)![1], [
