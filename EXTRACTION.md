@@ -114,9 +114,10 @@ source was imported.
 ## npm distribution (#14)
 
 The library build emits JavaScript and declarations without flattening the source
-layout. Declaration-only fixes expose `ServiceData`, distinguish the Lando private
-engine slot from its parent's slot, and retain the inherited EventEmitter symbol
-in the emitted type graph. Their adaptations are recorded in `extraction.json`.
+layout. Declaration-only fixes expose `ServiceData`, distinguish the private
+service engine from its parent's build engine, and retain the inherited
+EventEmitter symbol in the emitted type graph. Their adaptations are recorded in
+`extraction.json`.
 
 The build replaces only the emitted shell-asset adapter with ordinary file URLs,
 using the existing registry as its inventory. The source and compiled paths retain

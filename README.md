@@ -141,7 +141,8 @@ only when preparing a Lando image, under the selected project's data directory;
 unchanged files are reused and damaged bytes or modes are restored atomically.
 Library operations continue to use ordinary module-relative asset files.
 
-`bun run test:compiled` checks the built executable without contacting Docker.
+The config and exec CLI scenarios check executable isolation, embedded assets and
+streaming through `test/compiled-cli.ts` without contacting Docker.
 Disposable CI additionally isolates it from the checkout, dependencies and
 installed runtimes, then runs the existing L337/Lando lifecycle scenarios.
 The verified lifecycle target is Linux x64 on the Ubuntu 24.04 hosted runner

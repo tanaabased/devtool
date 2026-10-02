@@ -63,7 +63,7 @@ class L337ServiceV4 extends EventEmitter {
   #app: ServiceApp;
   #data: ServiceData;
   #lando: ServiceHost;
-  #engine?: ServiceEngine;
+  #buildEngine?: ServiceEngine;
   id: string;
   api: string | number;
   appRoot: string;
@@ -185,7 +185,7 @@ class L337ServiceV4 extends EventEmitter {
       user = undefined,
     } = options;
     this.setMaxListeners(64);
-    this.#engine = engine;
+    this.#buildEngine = engine;
 
     // set top level required stuff
     this.id = id;
@@ -618,7 +618,7 @@ class L337ServiceV4 extends EventEmitter {
   async buildImage() {
     // get build func
     const bengine =
-      this.#engine ??
+      this.#buildEngine ??
       (await L337ServiceV4.getBengine(L337ServiceV4.bengineConfig, {
         builder: L337ServiceV4.builder,
         debug: this.debug,

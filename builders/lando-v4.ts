@@ -133,7 +133,7 @@ export default {
       static override debug = debug('@lando/l337-service-v4');
 
       #prepared = false;
-      #landoEngine: ServiceEngine;
+      #engine: ServiceEngine;
       storageNamespace: string;
       canHealthcheck: boolean;
       isInteractive?: boolean;
@@ -430,7 +430,7 @@ export default {
         );
 
         if (!options.engine) throw new Error('Lando service requires an engine');
-        this.#landoEngine = options.engine;
+        this.#engine = options.engine;
         this.sourceConfig = config;
         this.storageNamespace = lando.config.storageNamespace;
 
@@ -814,7 +814,7 @@ export default {
       }
 
       getBengine() {
-        return this.#landoEngine;
+        return this.#engine;
       }
 
       async getStorageVolumes() {
