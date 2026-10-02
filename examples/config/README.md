@@ -38,6 +38,7 @@ grep -F 'error:' .results/error
 
 # should work without the source checkout or a JavaScript runtime
 bun ../../test/compiled-cli.ts config
+bun ../../test/compiled-cli.ts assets
 ```
 
 ## Testing Library

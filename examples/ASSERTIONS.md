@@ -11,6 +11,8 @@ The `lando` matrix entry is commented out, and its files are retained unchanged.
 All Lando-example runtime assertions listed below are **disabled**, pending the
 service audit, specification, completion and rename in
 [#25](https://github.com/tanaabased/devtool/issues/25). Its unit tests remain active.
+The config CLI scenario retains the isolated executable probe for embedded assets;
+L337 itself does not exercise those Lando helpers.
 
 | Upstream assertions                                                                                                                                  | devtool proof                                                                                                                   | Disposition                                                                                          |
 | ---------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
