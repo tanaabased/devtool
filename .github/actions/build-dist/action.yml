@@ -1,5 +1,5 @@
 name: Build distribution
-description: Compile the devtool CLI and add it to PATH.
+description: Build the ESM package and compiled CLI, then add the executable to PATH.
 runs:
   using: composite
   steps:

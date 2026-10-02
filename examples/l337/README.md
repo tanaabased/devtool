@@ -8,7 +8,7 @@ See [isolation](../isolation/README.md) for checks involving multiple apps or pr
 
 ```sh
 # should install the example dependency
-bun install --cwd ../.. --frozen-lockfile --ignore-scripts
+bun install --cwd .. --frozen-lockfile --ignore-scripts --no-optional --force
 mkdir -p .results
 ```
 

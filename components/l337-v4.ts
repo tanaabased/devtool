@@ -21,7 +21,7 @@ import type {
   StringInput,
 } from '../lib/types.ts';
 import { ImportString } from './yaml.ts';
-interface ServiceData {
+export interface ServiceData {
   groups: Record<string, BuildGroup & { weight: number; user: string; stage: string }>;
   image?: string;
   imageInstructions?: string;

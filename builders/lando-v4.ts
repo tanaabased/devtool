@@ -24,6 +24,7 @@ import type {
 } from '../lib/types.ts';
 import asError from '../utils/as-error.ts';
 import fs from 'node:fs';
+import { EventEmitter } from 'node:events';
 import isObject from 'lodash-es/isPlainObject.js';
 import merge from 'lodash-es/merge.js';
 import path from 'node:path';
@@ -127,10 +128,12 @@ export default {
   router: () => ({}),
   builder: (parent: typeof L337ServiceV4, defaults: { config: ServiceOptions['config'] }) =>
     class LandoServiceV4 extends parent {
+      declare [EventEmitter.captureRejectionSymbol]: L337ServiceV4[typeof EventEmitter.captureRejectionSymbol];
+
       static override debug = debug('@lando/l337-service-v4');
 
       #prepared = false;
-      #engine: ServiceEngine;
+      #landoEngine: ServiceEngine;
       storageNamespace: string;
       canHealthcheck: boolean;
       isInteractive?: boolean;
@@ -427,7 +430,7 @@ export default {
         );
 
         if (!options.engine) throw new Error('Lando service requires an engine');
-        this.#engine = options.engine;
+        this.#landoEngine = options.engine;
         this.sourceConfig = config;
         this.storageNamespace = lando.config.storageNamespace;
 
@@ -811,7 +814,7 @@ export default {
       }
 
       getBengine() {
-        return this.#engine;
+        return this.#landoEngine;
       }
 
       async getStorageVolumes() {

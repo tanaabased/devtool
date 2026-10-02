@@ -9,7 +9,7 @@ other working. Container scenarios run only in disposable CI.
 
 ```sh
 # should install dependencies
-bun install --cwd ../.. --frozen-lockfile --ignore-scripts
+bun install --cwd .. --frozen-lockfile --ignore-scripts --no-optional --force
 mkdir -p .results
 ```
 

@@ -2,8 +2,8 @@
 
 Tanaab-based development environments. This extraction assembles the existing
 TypeScript ESM runtime and API 4 L337 and Lando services into one configurable library
-and source CLI. Development and validation run on Bun; compilation and publication
-belong to later work.
+and compiled CLI. Development and consumer validation run on Bun. Local npm artifacts
+are available; registry publication belongs to later work.
 
 ## Source installation
 
@@ -51,10 +51,32 @@ passes arguments after `--` unchanged and returns the container command's failur
 status. Add `--interactive` to attach a terminal. `info` reports recorded lifecycle and healthcheck results; it does not
 query live container health.
 
+## Package distribution
+
+`bun run build` stages the typed ESM library and npm launcher in `dist/npm`,
+compiles `dist/devtool`, and packs `dist/devtool.tgz` plus the current platform's
+`dist/devtool-<platform>-<arch>.tgz`. Install the library tarball with Bun; for the
+npm command, install the matching binary tarball alongside it. These artifacts
+are local and have not been published to the registry.
+
+The library's only public export is `@tanaab/devtool`. It includes declarations,
+ordinary package-relative shell assets and retained source notices. Both tarballs
+also carry notices collected from the compiled dependency graph. Optional
+binary packages can be omitted for library-only use. The source checkout stays
+private; the staged distribution has its own explicit exports and file allowlist.
+
+The launcher selects an exact-version optional binary package for Linux x64
+(glibc) or macOS arm64. It inherits stdin/stdout/stderr, forwards signals and
+preserves exit status. Unsupported platforms, missing executables and version
+mismatches fail with an error; there is no source fallback or postinstall download.
+The conventional npm launcher has a Node shebang; validation runs it under Bun
+(`bun --bun run devtool`). No Node library support range or CommonJS build is claimed.
+Platform packaging does not expand the runtime evidence listed below.
+
 ## Library and configuration
 
 ```js
-import { createDevtool } from '/path/to/devtool/lib/devtool.ts';
+import { createDevtool } from '@tanaab/devtool';
 
 const runtime = createDevtool({
   identity: 'wrapper',
@@ -138,13 +160,15 @@ Runner-to-runner variance remains unmeasured. Timing stays outside routine PR jo
 
 ## Testing
 
-`bun run test` runs Docker-free unit and package-import checks. `bun run build`
+`bun run test` runs Docker-free source units, builds and packs the distribution,
+then installs it into an external temporary consumer for strict declaration, inert
+import, asset and launcher checks. `bun run build`
 creates the CLI used by the [config](examples/config/README.md),
 [L337](examples/l337/README.md), [exec](examples/exec/README.md) and
 [isolation](examples/isolation/README.md) examples.
-Add `dist/` to `PATH` before running the CLI scenarios. Each example installs the root package's
-dependencies in Leia's Setup section; library scenarios resolve its public exports
-through the package self-reference under Bun until #14 provides the ESM distribution.
+Add `dist/` to `PATH` before running the CLI scenarios. Each example installs its
+dependencies in Leia's Setup section from the built ESM package, with optional
+binaries omitted. An example-local package boundary prevents source self-reference.
 
 `bun run test:cli` and `bun run test:library` select the Docker-free config example.
 `bun run test:integration` selects the container examples and runs only in disposable

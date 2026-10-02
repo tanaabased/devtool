@@ -1,0 +1,14 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": false,
+    "noEmitOnError": true,
+    "declaration": true,
+    "rewriteRelativeImportExtensions": true,
+    "rootDir": ".",
+    "outDir": "dist/npm",
+    "types": ["bun"]
+  },
+  "include": ["lib/devtool.ts", "lib/vendor.d.ts"],
+  "exclude": ["node_modules", "dist"]
+}

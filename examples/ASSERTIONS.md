@@ -5,7 +5,9 @@ covers Core `7a87f805` and the bounded PR #330 port at `3aaa8aaf`. A test listed
 is executable coverage, not a claim that a particular CI revision has passed.
 Final acceptance requires unit tests and every enabled feature/interface matrix entry
 at the delivered revision. CLI examples use the compiled executable; library examples
-consume the source package under Bun until #14.
+consume the installed ESM distribution under Bun. The Docker-free packed-package
+checks separately install tarballs outside the checkout and verify declarations,
+inert imports, ordinary assets, optional binaries and the npm launcher.
 
 The `lando` matrix entry is commented out, and its files are retained unchanged.
 All Lando-example runtime assertions listed below are **disabled**, pending the
