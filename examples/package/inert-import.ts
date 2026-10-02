@@ -56,4 +56,4 @@ assert.deepEqual(process.argv, argv);
 assert.equal(process.exitCode, exitCode);
 assert.equal(EventEmitter.defaultMaxListeners, listeners);
 assert.equal(yaml.load, load);
-console.log('import stayed inert; consumer continued');
+process.stdout.write('import stayed inert; consumer continued\n');

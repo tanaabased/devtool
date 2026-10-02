@@ -1,8 +1,9 @@
-# SDK distribution
+# Package example
 
-Install the built tarball and check the public SDK contract. Feature behavior lives
-in the config, service, exec and isolation examples; it is not repeated here.
-This scenario needs no containers and may run locally after `bun run build`.
+Check the shipped devtool executable and installed SDK tarball. Feature behavior
+lives in the config, service, exec and isolation examples.
+This scenario may run locally after `bun run build`; CI also checks executable
+isolation inside a disposable container.
 
 ## Setup
 
@@ -10,7 +11,35 @@ This scenario needs no containers and may run locally after `bun run build`.
 # should install the SDK tarball and declaration checker
 rm -rf ../.tmp/install-cache
 bun install --cwd .. --frozen-lockfile --ignore-scripts --force --cache-dir .tmp/install-cache
+mkdir -p .results
 ```
+
+## Testing CLI
+
+```sh
+# should show the available commands
+devtool --help | grep -F 'start, stop, restart, rebuild, info, exec, destroy'
+devtool | grep -F 'Usage: devtool'
+devtool -h | grep -F 'Usage: devtool'
+
+# should report the package version
+test "$(devtool --version)" = "$(bun -e 'import { version } from "@tanaab/devtool"; console.log(version)')"
+test "$(devtool -v)" = "$(devtool --version)"
+
+# should reject unknown options
+devtool --unknown > .results/error 2>&1 && exit 1
+grep -F 'error:' .results/error
+
+# should load explicit configuration without a source checkout or JavaScript runtime
+bun standalone.ts config
+
+# should materialize and repair embedded executable assets
+bun standalone.ts assets
+```
+
+`standalone.ts` checks executable isolation with an empty runtime path and a
+controlled Docker substitute. In disposable CI it also isolates the executable
+inside a container. It does not run the app lifecycle against a real backend.
 
 ## Testing Library
 

@@ -30,8 +30,8 @@
     "lint": "bun run lint:eslint && bun run format:check",
     "lint:eslint": "bun --bun eslint .",
     "test": "bun run test:unit",
-    "test:cli": "bun run leia \"examples/*/README.md\" --ignore \"examples/lando/README.md\" \"examples/sdk/README.md\" --test-header \"Testing CLI\" --shell bash --retry 0 --timeout 300",
-    "test:library": "bun run leia \"examples/*/README.md\" --ignore \"examples/lando/README.md\" \"examples/cli/README.md\" --test-header \"Testing Library\" --shell bash --retry 0 --timeout 300",
+    "test:cli": "bun run leia \"examples/*/README.md\" --ignore \"examples/lando/README.md\" --test-header \"Testing CLI\" --shell bash --retry 0 --timeout 300",
+    "test:library": "bun run leia \"examples/*/README.md\" --ignore \"examples/lando/README.md\" --test-header \"Testing Library\" --shell bash --retry 0 --timeout 300",
     "test:unit": "bun --bun ./node_modules/mocha/bin/mocha.js 'test/*.spec.ts' 'services/*/test/*.spec.ts' 'engines/*/test/*.spec.ts'",
     "typecheck": "bun --bun tsc --noEmit"
   },

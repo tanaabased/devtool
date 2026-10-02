@@ -14,7 +14,8 @@
   that the behavior works in a container.
 - Each feature README has independently runnable `## Testing CLI` and
   `## Testing Library` sections for the Cartesian feature/interface matrix.
-  The interface-specific `cli/` and `sdk/` scenarios use only their applicable section.
+  Keep every active scenario paired, including package checks; do not add interface
+  exceptions to the matrix or selectors.
   Shared `## Setup` installs the required dependencies. Keep library code beside the
   README and import `@tanaab/devtool` by its public package export, never
   through a relative path into implementation source. Setup installs the built
@@ -27,9 +28,10 @@
   not introduce separate import probes, packed-consumer runners or feature smoke
   suites elsewhere. Small helpers for assertions that would obscure the README
   live beside that scenario. If a check fits neither unit tests nor Leia, ask pirog.
-- SDK packaging/import/declaration assertions belong in `sdk/`; compiled executable
-  isolation belongs in `cli/`. Ordinary feature imports already exercise loading
-  and do not need a second import-only assertion per feature.
+- SDK packaging/import/declaration assertions and compiled executable isolation
+  belong in `package/`, under their respective interface sections. Ordinary feature
+  imports already exercise loading and do not need a second import-only assertion
+  per feature.
 - CLI examples invoke the compiled `devtool` already on `PATH`. Library examples
   use the installed ESM SDK under Bun. Missing
   artifacts must fail; never fall back to another target. Do not route library

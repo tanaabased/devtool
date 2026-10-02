@@ -15,8 +15,7 @@ jobs:
       fail-fast: false
       matrix:
         example:
-          - cli
-          - sdk
+          - package
           - config
           - l337
           # - lando # Re-enable after #25.
@@ -25,11 +24,6 @@ jobs:
         interface:
           - cli
           - lib
-        exclude:
-          - example: sdk
-            interface: cli
-          - example: cli
-            interface: lib
     env:
       LEIA_TEST_HEADER: Testing ${{ fromJSON('{"cli":"CLI","lib":"Library"}')[matrix.interface] }}
       LEIA_TIMEOUT: '300'
