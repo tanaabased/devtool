@@ -173,12 +173,14 @@ try {
   assert.ok(stdout.includes('stdin:<input with spaces>'));
   assert.match(stderr, /stderr-marker/);
   process.stdout.write('Launcher argv, streams and exit status passed\n');
+  fs.copyFileSync(
+    path.join(root, 'test/launcher-signal-fixture.ts'),
+    path.join(temporary, 'signal-fixture.ts'),
+  );
+  fs.rmSync(executable);
+  run(['build', '--compile', 'signal-fixture.ts', '--outfile', executable]);
   for (const signal of ['SIGINT', 'SIGTERM', 'SIGHUP'] as const) {
-    fs.writeFileSync(
-      executable,
-      `#!/bin/sh\ntrap 'echo received-${signal}; exit 42' ${signal.slice(3)}\necho ready\nwhile :; do sleep 0.05; done\n`,
-    );
-    const processUnderTest = spawn(process.execPath, [launcher], {
+    const processUnderTest = spawn(process.execPath, [launcher, signal], {
       cwd: temporary,
       detached: true,
       stdio: ['ignore', 'pipe', 'pipe'],
@@ -196,8 +198,7 @@ try {
     assert.equal(status, 42, `${signal}: ${output}`);
     assert.match(output, new RegExp(`received-${signal}`));
   }
-  fs.writeFileSync(executable, '#!/bin/sh\nkill -TERM $$\n');
-  const terminated = spawnSync(process.execPath, [launcher], {
+  const terminated = spawnSync(process.execPath, [launcher, 'terminate'], {
     cwd: temporary,
     encoding: 'utf8',
     timeout: 10000,
