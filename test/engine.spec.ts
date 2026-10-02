@@ -27,7 +27,7 @@ describe('process and build boundaries', () => {
     );
     await assert.rejects(execute(path.join(directory, 'missing'), []), /Unable to run/);
   });
-  it('runs the retained buildx path and stages local sources using an injected executable', async () => {
+  it('runs buildx and stages local sources using an injected executable', async () => {
     const builder = path.join(directory, 'builder');
     fs.writeFileSync(
       builder,

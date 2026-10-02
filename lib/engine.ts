@@ -3,7 +3,7 @@ import asError from '../utils/as-error.ts';
 import type DockerEngine from '../components/docker-engine.ts';
 import execute from '../utils/execute.ts';
 
-/** Existing Docker CLI/context plus the retained Core image builder. No installation or discovery. */
+/** Use the existing Docker CLI/context; load image-building support only when needed. */
 class Engine {
   private builder?: Promise<DockerEngine>;
 

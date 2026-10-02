@@ -37,7 +37,6 @@ export default ({ code = 1, stderr = '', stdout = '' } = {}) => {
     .map((line) => line.split(' ').slice(2).join(' '))
     .filter((line) => !line.startsWith('debug'));
 
-  // return a lando error
   return new LandoError(
     messages.join(' ').trim() || stderr.trim() || stdout.trim() || 'Image build failed',
     { code, stdout, stderr },

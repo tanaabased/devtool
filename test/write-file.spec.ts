@@ -3,9 +3,8 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import write from '../utils/write-file.ts';
-// Ported from Core test/write-file.spec.js at 7a87f805 using native assertions.
 
-describe('write-file upstream regressions', () => {
+describe('write-file', () => {
   let directory: string;
   beforeEach(() => {
     directory = fs.mkdtempSync(path.join(os.tmpdir(), 'devtool-write-'));

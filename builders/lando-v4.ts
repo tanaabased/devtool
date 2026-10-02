@@ -90,9 +90,6 @@ const groups: Record<string, BuildGroup> = {
   },
 };
 
-/*
- * The lowest level lando service, this is where a lot of the deep magic lives
- */
 export default {
   api: 4,
   name: 'lando',
@@ -390,7 +387,6 @@ export default {
       constructor(id: string, options: ServiceOptions, app: ServiceApp, lando: ServiceHost) {
         // @TODO: overrides for this.run()?
         // @TODO: allow additonal users to be installed in config.users?
-        // @TODO: change lando literal to "lando product"
         // @TODO: debug/lando_debug should be set with env?
         // @TODO: command as a full script?
 
@@ -441,7 +437,6 @@ export default {
         this.generateCert = lando.generateCert.bind(lando);
         this.network = lando.config.networkBridge;
 
-        // upstream requirements
         this.router = upstream.router;
         this.user = user;
 

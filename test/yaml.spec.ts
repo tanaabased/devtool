@@ -5,9 +5,7 @@ import path from 'node:path';
 import read from '../utils/read-file.ts';
 import write from '../utils/write-file.ts';
 
-// Ported from Core test/yaml.spec.ts at 7a87f805: native assertions and owned temporary fixtures.
-
-describe('retained YAML and file regressions', () => {
+describe('YAML and file helpers', () => {
   let directory: string;
   beforeEach(() => {
     directory = fs.mkdtempSync(path.join(os.tmpdir(), 'devtool-yaml-'));
@@ -21,7 +19,7 @@ describe('retained YAML and file regressions', () => {
   it('propagates missing YAML files to the caller', () => {
     assert.throws(() => read(path.join(directory, 'absent.yml')), /ENOENT/);
   });
-  it('round-trips YAML through the retained API 4 file helpers', () => {
+  it('round-trips YAML through the file helpers', () => {
     const file = path.join(directory, 'nested', 'file.yml');
     const data = { obiwan: 'kenobi', qui: ['gon', 'jinn'] };
     fs.mkdirSync(path.dirname(file), { recursive: true });

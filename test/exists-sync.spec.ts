@@ -5,9 +5,8 @@ import os from 'node:os';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 import exists from '../utils/exists-sync.ts';
-// Ported from Core test/exists-sync.spec.js at 7a87f805, with owned temporary paths.
 
-describe('exists-sync upstream regressions', () => {
+describe('exists-sync', () => {
   let directory: string;
   before(() => {
     directory = fs.mkdtempSync(path.join(os.tmpdir(), 'devtool-exists-'));

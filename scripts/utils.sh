@@ -1,7 +1,5 @@
 #!/bin/sh
 
-# This script contains utility functions for Lando
-
 # Enable debug mode if DEBUG environment variable is set to "1"
 if [ "$DEBUG" = "1" ]; then
   LANDO_DEBUG="--debug"

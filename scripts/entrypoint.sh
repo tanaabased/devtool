@@ -5,6 +5,5 @@ set -eo pipefail
 source /etc/lando/environment
 
 # exec
-# TODO: lando banner?
 debug "Executing start up command: $@"
 exec "$@"

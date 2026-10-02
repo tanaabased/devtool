@@ -54,7 +54,10 @@ try {
   assert.ok(!fs.existsSync(path.join(installed, 'lib/devtool.ts')));
   assert.ok(!fs.existsSync(path.join(installed, 'lib/cli.js')));
   assert.ok(!fs.existsSync(path.join(installed, 'node_modules')));
-  assert.ok(fs.readFileSync(path.join(installed, 'LICENSE'), 'utf8').includes('Lando Alliance'));
+  assert.equal(
+    fs.readFileSync(path.join(installed, 'LICENSE'), 'utf8'),
+    fs.readFileSync(path.join(root, 'LICENSE'), 'utf8'),
+  );
   const notices = fs.readFileSync(path.join(installed, 'THIRD_PARTY_NOTICES.txt'), 'utf8');
   assert.match(notices, /dockerode@/);
   assert.match(notices, /Apache License/);

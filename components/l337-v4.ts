@@ -492,7 +492,7 @@ class L337ServiceV4 extends EventEmitter {
     if (isDisabled(data.buildkit ?? data.buildx ?? this.buildkit)) this.buildkit = false;
   }
 
-  // lando runs a small superset of docker-compose that augments the image key so it can contain imagefile data
+  // Handle image instructions separately from the Compose service fields.
   addServiceData(data: ServiceConfig = {}) {
     // if both image and build are set then set the tag to the image
     if (data.build && typeof data.image === 'string') this.tag = data.image;
@@ -922,12 +922,7 @@ class L337ServiceV4 extends EventEmitter {
         volume.source = path.join(this.appRoot, volume.source ?? '');
       }
 
-      // if the bind mount source does not exist then attempt to create it as a directory so the
-      // invoking user owns it instead of whatever docker decides to do with it
-      // we make an "exception" for any /run/host-services things that are in the docker vm
-      // and we also allow the user to opt out with bind.create_host_path: false eg for sources
-      // that are meant to be files they manage themselves
-      // https://github.com/lando/core/issues/486
+      // Create missing bind directories as the caller, except VM paths and explicit opt-outs.
       if (
         volume.type === 'bind' &&
         !fs.existsSync(volume.source ?? '') &&

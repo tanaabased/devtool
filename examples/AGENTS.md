@@ -9,10 +9,9 @@
   example into temporary roots during setup.
 - Keep multi-app and product-isolation assertions in `isolation/`. Other feature
   examples use one app unless the feature itself requires more.
-- Model scenarios on the corresponding Lando Core examples. Carry forward each
-  applicable observable assertion, adapting command names and public API usage.
-  Record relevant exclusions and runtime gaps beside the affected scenario; generated-output unit
-  tests do not replace proof that the behavior works in a container.
+- Test observable product behavior. Record relevant exclusions and runtime gaps
+  beside the affected scenario; generated-output unit tests do not replace proof
+  that the behavior works in a container.
 - Each feature README has independently runnable `## Testing CLI` and
   `## Testing Library` sections for the Cartesian feature/interface matrix.
   Shared `## Setup` installs the required dependencies. Keep library code beside the
