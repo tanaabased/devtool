@@ -19,7 +19,11 @@ const run = (args: string[], expected = 0) => {
       cwd: temporary,
       encoding: 'utf8',
       timeout: 120000,
-      env: { ...process.env, BUN_INSTALL_CACHE_DIR: path.join(temporary, 'install-cache') },
+      env: {
+        ...process.env,
+        NO_COLOR: '1',
+        BUN_INSTALL_CACHE_DIR: path.join(temporary, 'install-cache'),
+      },
     },
   );
   assert.ifError(result.error);
