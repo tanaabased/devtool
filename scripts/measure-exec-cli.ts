@@ -48,6 +48,8 @@ const commands = {
     compose,
     'exec',
     '-T',
+    '--workdir',
+    '/app',
     'web',
     '/etc/lando/exec.sh',
     ...args.slice(args.indexOf('--') + 1),

@@ -255,6 +255,17 @@ class App {
     this.composeData.push(fragment);
   }
 
+  private imageTag(id: string) {
+    const { image, build } = this.data.services[id];
+    const custom =
+      build && typeof image === 'string'
+        ? image
+        : image && typeof image === 'object' && 'tag' in image
+          ? image.tag
+          : undefined;
+    return custom || `${this.project}-${id}:latest`;
+  }
+
   assemble() {
     const compose: ComposeData = {};
     for (const fragment of this.composeData) {
@@ -271,7 +282,7 @@ class App {
     for (const [id, service] of Object.entries(compose.services ?? {})) {
       delete service.build;
       // Lifecycle commands must also work before startup or after cache removal.
-      service.image = `${this.project}-${id}:latest`;
+      service.image = this.imageTag(id);
     }
     fs.mkdirSync(this._dir, { recursive: true });
     fs.writeFileSync(this.composeFile, yaml.dump(compose, { noRefs: true }));
@@ -294,7 +305,7 @@ class App {
       if (this.services.some((service) => isLando(service) && !isDisabled(service.certs)))
         await this.certificates.ensureCA();
       for (const service of this.services) {
-        service.tag = `${this.project}-${service.id}:latest`;
+        service.tag = this.imageTag(service.id);
         if (isLando(service)) await service.prepare();
         const hash = fingerprint(service, this.generatedRoots);
         const saved = previous[service.id];
@@ -430,16 +441,25 @@ class App {
   }
 
   async exec(service: string, args: string[], options: ExecOptions = {}) {
-    if (!this.services.some((item) => item.id === service))
-      throw new Error(`Unknown service: ${service}`);
+    const selected = this.services.find((item) => item.id === service);
+    if (!selected) throw new Error(`Unknown service: ${service}`);
     if (!args.length) throw new Error('exec requires a command after --');
     this.assemble();
-    if (this.services.find((item) => item.id === service)!.type === 'lando')
-      args = ['/etc/lando/exec.sh', ...args];
+    if (selected.type === 'lando') args = ['/etc/lando/exec.sh', ...args];
+    const workdir: string[] = [];
+    if (typeof selected.appMount === 'string' && !selected.config.working_dir) {
+      const relative = path.relative(this.root, fs.realpathSync(options.cwd ?? process.cwd()));
+      const inside =
+        relative !== '..' && !relative.startsWith(`..${path.sep}`) && !path.isAbsolute(relative);
+      workdir.push(
+        '--workdir',
+        path.posix.join(selected.appMount, inside ? relative.split(path.sep).join('/') : ''),
+      );
+    }
     return this.getEngine().compose(
       this.project,
       this.composeFile,
-      ['exec', ...(options.interactive ? [] : ['-T']), service, ...args],
+      ['exec', ...(options.interactive ? [] : ['-T']), ...workdir, service, ...args],
       options,
     );
   }

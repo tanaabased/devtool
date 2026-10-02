@@ -45,6 +45,71 @@ describe('L337 lifecycle (#4)', () => {
       `${app.project}-web:latest`,
     );
   });
+  it('preserves custom image tags through build, cached reload, rebuild and recovery', async () => {
+    fs.writeFileSync(
+      f.file,
+      yaml.dump({
+        services: {
+          web: { type: 'l337', image: { imagefile: 'alpine', tag: 'fixture:custom' } },
+          compose: { type: 'l337', image: 'fixture:compose', build: { dockerfile: 'Dockerfile' } },
+        },
+      }),
+    );
+    fs.writeFileSync(path.join(f.root, 'Dockerfile'), 'FROM alpine\n');
+    const check = (app: ReturnType<typeof f.load>) => {
+      assert.equal(app.state.services.web.tag, 'fixture:custom');
+      assert.equal(app.state.services.compose.tag, 'fixture:compose');
+      assert.equal(app.assemble().services!.web.image, 'fixture:custom');
+      assert.equal(app.assemble().services!.compose.image, 'fixture:compose');
+    };
+    let app = f.load();
+    await app.start();
+    check(app);
+    f.calls.length = 0;
+    app = f.load();
+    await app.start();
+    check(app);
+    assert.equal(f.calls.filter((call) => call[0] === 'build').length, 0);
+    await app.rebuild();
+    check(app);
+    f.engine.buildError = new Error('failed build');
+    await assert.rejects(app.rebuild(), /failed build/);
+    delete f.engine.buildError;
+    await app.start();
+    check(app);
+  });
+  it('maps exec cwd into the app bind without overriding explicit or image workdirs', async () => {
+    fs.writeFileSync(
+      f.file,
+      yaml.dump({
+        services: {
+          web: { type: 'l337', image: 'alpine', volumes: ['./:/site'] },
+          explicit: { type: 'l337', image: 'alpine', volumes: ['./:/site'], working_dir: '/tmp' },
+          fallback: { type: 'l337', image: 'alpine' },
+        },
+      }),
+    );
+    fs.mkdirSync(path.join(f.root, 'folder'));
+    for (let iteration = 0; iteration < 2; iteration++) {
+      const app = f.load();
+      await app.start();
+      await app.exec('web', ['pwd'], { cwd: path.join(f.root, 'folder') });
+      assert.deepEqual(f.calls.at(-1)![1], [
+        'exec',
+        '-T',
+        '--workdir',
+        '/site/folder',
+        'web',
+        'pwd',
+      ]);
+      await app.exec('web', ['pwd'], { cwd: f.temporary });
+      assert.deepEqual(f.calls.at(-1)![1], ['exec', '-T', '--workdir', '/site', 'web', 'pwd']);
+      for (const service of ['explicit', 'fallback']) {
+        await app.exec(service, ['pwd'], { cwd: path.join(f.root, 'folder') });
+        assert.deepEqual(f.calls.at(-1)![1], ['exec', '-T', service, 'pwd']);
+      }
+    }
+  });
   it('rebuilds for changed configuration, missing images and explicit rebuild', async () => {
     await f.load().start();
     fs.appendFileSync(f.file, '\n');

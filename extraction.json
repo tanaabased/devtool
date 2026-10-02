@@ -62,8 +62,8 @@
       "path": "components/l337-v4.ts",
       "blob": "cf0c2b695a51ff95779c1775b830d88ea2f16c39",
       "mode": "100644",
-      "adaptedBlob": "21423c9b4bfee0e50fdabda4c23c70dabde2edec",
-      "adaptation": "Retain API 4 source builder, injected engines, group/import changes and failure propagation; remove obsolete API 3 commentary. Renamed to TypeScript ESM; add strict contracts, module-relative paths and typed dependency boundaries. Use per-function lodash-es imports. Export ServiceData so downstream declarations can name the inherited data type. Name the private build engine separately from the inherited service engine for declaration emission."
+      "adaptedBlob": "0f669f6dc5b9bedde20b42e23320af6caedff1f2",
+      "adaptation": "Retain API 4 source builder, injected engines, group/import changes and failure propagation; remove obsolete API 3 commentary. Renamed to TypeScript ESM; add strict contracts, module-relative paths and typed dependency boundaries. Use per-function lodash-es imports. Export ServiceData so downstream declarations can name the inherited data type. Name the private build engine separately from the inherited service engine for declaration emission. Ignore blank and valueless build arguments inherited from the L337 fixture; retain zero values and embedded equals signs."
     },
     {
       "source": "components/yaml.js",
@@ -451,5 +451,15 @@
     "utils/get-gid.js",
     "utils/get-uid.js",
     "utils/get-username.js"
-  ]
+  ],
+  "exampleRestoration": {
+    "source": "coreHooks",
+    "revision": "3aaa8aaf3f4adae5683897644e8e848fe54aa2cb",
+    "path": "examples/l337",
+    "adaptations": [
+      "Restore recorded image, build-argument, context, group, instruction and import fixture services; keep compiled CLI and installed SDK scenarios.",
+      "Relocate local inputs without changing container destinations; adapt db to Alpine and SSH-dependent buildx/buildkit to local multistage COPY with known users.",
+      "Retain existing lifecycle proof and add upstream nginx config/content; pin inherited SeaShanties URL inputs; store results under generated cache storage."
+    ]
+  }
 }

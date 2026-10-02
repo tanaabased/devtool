@@ -99,6 +99,7 @@ export const runCli = async (
       stdout.write(values.json ? `${JSON.stringify(info)}\n` : jsYaml.dump(info));
     } else if (command === 'exec') {
       await app.exec(service, commandArgs, {
+        cwd,
         interactive: Boolean(values.interactive),
         stdout,
         stderr,

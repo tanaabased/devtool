@@ -1,4 +1,4 @@
-name: lifecycle
+name: l337
 services:
   web:
     api: 4
@@ -15,12 +15,340 @@ services:
           instructions: !load image/instructions
         - group: pre-proof
           instructions: RUN echo pre > /order
-    command: [sleep, infinity]
     volumes:
-      - data:/data
+      - my-data:/data
+      - inputs/file1:/file-ro:ro
+      - ./:/site
+      - type: bind
+        source: inputs/file1
+        target: /file-long
+        read_only: true
+        bind:
+          create_host_path: false
     networks:
       - app
-volumes:
-  data: {}
+      - my-network
+    primary: true
+    user: nginx
+    ports:
+      - 8888/http
+  db:
+    api: 4
+    type: l337
+    build:
+      context: inputs
+      dockerfile: Dockerfile
+    environment:
+      SERVICE: db
+    working_dir: /tmp
+    command:
+      - sleep
+      - infinity
+  image-1:
+    api: 4
+    type: l337
+    image: nginx:1.21.6
+    command:
+      - sleep
+      - infinity
+  image-2:
+    api: 4
+    type: l337
+    image: ./images/nginx/Dockerfile
+    command:
+      - sleep
+      - infinity
+  image-3:
+    api: 4
+    type: l337
+    image: |
+      # also test weird indentation and casing
+      FROM nginx:1.20
+        copy inputs/file1 /file1
+      ENV SERVICE image-3
+    command:
+      - sleep
+      - infinity
+  image-4:
+    api: 4
+    type: l337
+    image:
+      buildx: false
+      imagefile: nginx:1.21.5
+      tag: devtool-l337-image-4:coverage
+    command:
+      - sleep
+      - infinity
+  image-5:
+    api: 4
+    type: l337
+    image:
+      dockerfile: ./images/nginx/Dockerfile2
+    command:
+      - sleep
+      - infinity
+  image-6:
+    api: 4
+    type: l337
+    image:
+      imagefile: |
+        FROM nginx:1.21.6
+        ENV SERVICE image-6
+        WORKDIR /usr/share/nginx/html
+    command:
+      - sleep
+      - infinity
+  build-args-1:
+    api: 4
+    type: l337
+    image:
+      args:
+        - nginx= 1.19.2
+        - vibe=rising
+        - something
+        - null
+      buildx: true
+      dockerfile: ./images/nginx/Vibefile
+    command:
+      - sleep
+      - infinity
+  build-args-2:
+    api: 4
+    type: l337
+    image:
+      args:
+        nginx: 1.21.5
+        vibe: dialed
+        something: null
+      buildx: false
+      imagefile: |
+        ARG nginx=1.21.4
+        FROM nginx:${nginx}
+        ARG vibe
+        ENV VIBE=${vibe}
+    command:
+      - sleep
+      - infinity
+  context-1:
+    api: 4
+    type: l337
+    image:
+      imagefile: |
+        FROM nginx:1.21.6
+        RUN useradd eddie-teach
+      context:
+        - inputs/folder:/folder
+        - ./inputs/folder:thing
+        - inputs/file1:/file2
+        - src: inputs/file1
+          dest: file3
+        - source: inputs/file1
+          destination: /tmp/file4
+        - source: inputs/file1
+          destination: file4
+          instructions: COPY /file4 /tmp/stuff/file5
+        - source: inputs/file1
+          destination: file4
+          instructions: |
+            COPY /file4 /file6
+            ENV HALL OATES
+        - source: ./images/nginx/Dockerfile
+          dest: /images/nginx/Dockerfile
+        - source: inputs/file1
+          destination: /file7
+          owner: nginx:nginx
+          permissions: '775'
+        - source: inputs/file1
+          destination: file8
+          user: nginx
+          group: dialout
+        - source: inputs/file1
+          destination: file9
+          user: nginx
+        - source: >-
+            https://raw.githubusercontent.com/SeaShanties/lyrics/a7e6ae5e12f32f9afac3a89d78f0afb43e5e0c1e/shanties/HeresAHealthToTheCompany.json
+        - source: https://raw.githubusercontent.com/SeaShanties/lyrics/a7e6ae5e12f32f9afac3a89d78f0afb43e5e0c1e/available-shanties.json
+          dest: /etc/config/available-shanties.json
+          owner: eddie-teach
+    command:
+      - sleep
+      - infinity
+  groups-1:
+    api: 4
+    type: l337
+    image:
+      imagefile: nginx:1.21.5
+      context:
+        - inputs/folder:/folder
+        - ./inputs/folder:thing
+        - inputs/file1:/file2
+        - src: inputs/file1
+          dest: file3
+        - source: inputs/file1
+          destination: /tmp/file4
+        - source: inputs/file1
+          destination: file4
+          instructions: COPY /file4 /tmp/stuff/file5
+        - source: inputs/file1
+          destination: file4
+          instructions: |
+            COPY /file4 /file6
+            ENV HALL OATES
+      groups:
+        - name: system-4
+          description: Test group override syntax
+          weight: -100000
+          user: root
+        - name: system
+          description: Install system packages and stuff
+          weight: -10000
+          user: root
+        - name: user
+          description: Allows for user run commands after other groups
+          weight: 10000
+          user: nginx
+        - val-jean: 24601
+      steps:
+        - instructions: RUN echo "${LANDO_IMAGE_USER}-${LANDO_IMAGE_GROUP}-$(whoami)" >> /tmp/groups
+          group: val-jean
+        - instructions: RUN echo "${LANDO_IMAGE_USER}-${LANDO_IMAGE_GROUP}-$(whoami)" >> /tmp/groups
+          group: pre-val-jean
+        - instructions: RUN echo "${LANDO_IMAGE_USER}-${LANDO_IMAGE_GROUP}-$(whoami)" >> /tmp/groups
+          group: post-val-jean
+        - instructions: RUN echo "${LANDO_IMAGE_USER}-${LANDO_IMAGE_GROUP}-$(whoami)" >> /tmp/groups
+          group: pre-val-jean-4
+        - instructions: RUN echo "${LANDO_IMAGE_USER}-${LANDO_IMAGE_GROUP}-$(whoami)" >> /tmp/groups
+          group: post-val-jean-5
+        - instructions: RUN echo "${LANDO_IMAGE_USER}-${LANDO_IMAGE_GROUP}-$(whoami)" >> /tmp/groups
+          group: user
+        - instructions: RUN echo "${LANDO_IMAGE_USER}-${LANDO_IMAGE_GROUP}-$(whoami)" >> /tmp/groups
+          group: default
+        - instructions: RUN echo "${LANDO_IMAGE_USER}-${LANDO_IMAGE_GROUP}-$(whoami)" >> /tmp/groups
+          group: context
+        - instructions: RUN echo "${LANDO_IMAGE_USER}-${LANDO_IMAGE_GROUP}-$(whoami)" >> /tmp/groups
+          group: system
+        - instructions: |
+            RUN echo "${LANDO_IMAGE_USER}-${LANDO_IMAGE_GROUP}-$(whoami)" >> /tmp/groups
+            RUN chmod 777 /tmp/groups
+          group: system-4
+        - instructions: RUN echo "${LANDO_IMAGE_USER}-${LANDO_IMAGE_GROUP}-$(whoami)" >> /tmp/groups
+          group: system-2
+        - instructions: RUN echo "${LANDO_IMAGE_USER}-${LANDO_IMAGE_GROUP}-$(whoami)" >> /tmp/groups
+          group: system-3-after
+        - instructions: RUN echo "${LANDO_IMAGE_USER}-${LANDO_IMAGE_GROUP}-$(whoami)" >> /tmp/groups
+          group: system-nginx-after-4
+        - instructions: RUN echo "${LANDO_IMAGE_USER}-${LANDO_IMAGE_GROUP}-$(whoami)" >> /tmp/groups
+          group: system-5-after-nginx
+        - instructions: RUN echo "${LANDO_IMAGE_USER}-${LANDO_IMAGE_GROUP}-$(whoami)" >> /tmp/groups
+          group: system-10-before-nginx
+        - instructions: RUN echo "${LANDO_IMAGE_USER}-${LANDO_IMAGE_GROUP}-$(whoami)" >> /tmp/groups
+          group: val-jean-2
+        - instructions: RUN echo "${LANDO_IMAGE_USER}-${LANDO_IMAGE_GROUP}-$(whoami)" >> /tmp/groups
+          group: val-jean-3-after
+        - instructions: RUN echo "${LANDO_IMAGE_USER}-${LANDO_IMAGE_GROUP}-$(whoami)" >> /tmp/groups
+          group: val-jean-nginx-after-4
+        - instructions: RUN echo "${LANDO_IMAGE_USER}-${LANDO_IMAGE_GROUP}-$(whoami)" >> /tmp/groups
+          group: val-jean-5-after-nginx
+        - instructions: RUN echo "${LANDO_IMAGE_USER}-${LANDO_IMAGE_GROUP}-$(whoami)" >> /tmp/groups
+          group: val-jean-10-before-nginx
+        - instructions: |
+            RUN echo "${LANDO_IMAGE_USER}-${LANDO_IMAGE_GROUP}-$(whoami)" >> /tmp/groups
+            USER root
+          group: val-jean-100-after
+        - instructions: RUN echo "${LANDO_IMAGE_USER}-${LANDO_IMAGE_GROUP}-$(whoami)" >> /tmp/groups
+        - instructions: RUN echo "${LANDO_IMAGE_USER}-${LANDO_IMAGE_GROUP}-$(whoami)" >> /tmp/groups
+          weight: -99999999
+        - instructions: RUN echo "${LANDO_IMAGE_USER}-${LANDO_IMAGE_GROUP}-$(whoami)" >> /tmp/groups
+          group: user
+          weight: 10
+    command:
+      - sleep
+      - infinity
+  steps-1:
+    api: 4
+    type: l337
+    image:
+      imagefile: nginx:1.21.5
+      steps:
+        - instructions: RUN echo "$LANDO_IMAGE_GROUP" > /tmp/val-jean-group
+          group: val-jean-2
+        - instructions: |
+            ENV VIBES RISING
+            COPY inputs/my-script.sh /runme.sh
+            RUN chmod +x /runme.sh
+            RUN /runme.sh
+        - instructions:
+            - env:
+                KIRK: wesley
+                SPOCK: peck
+            - run: env
+            - run:
+                - stat
+                - /tmp
+        - instructions: RUN echo "last" >> /stuff
+          weight: 1001
+        - instructions: RUN echo "middle" >> /stuff
+          weight: 999
+        - instructions: RUN echo "first" >> /stuff
+          weight: 1
+    command:
+      - sleep
+      - infinity
+  import: !import inputs/import.yml
+  buildx:
+    api: 4
+    type: l337
+    image:
+      buildx: true
+      imagefile: |
+        # syntax=docker/dockerfile:1.7
+        FROM alpine:3.20 AS build-env
+        WORKDIR /app
+        RUN touch /app/me
+        FROM alpine:3.20
+        RUN addgroup -g 55 mygroup && adduser -D -u 55 -G mygroup myuser
+        COPY --from=build-env /app /app2
+        COPY --chown=55:mygroup inputs/file1 /files1/file1
+        COPY --chown=bin inputs/file1 /files2/file1
+        COPY --chown=1 inputs/file1 /files3/file1
+        COPY --chown=10:11 inputs/file1 /files4/file1
+        COPY --chown=myuser:mygroup --chmod=644 inputs/file1 /files5/file1
+      context:
+        - source: inputs/file1
+          destination: /file7
+          owner: nobody:nogroup
+          permissions: '775'
+    command:
+      - sleep
+      - infinity
+  buildkit:
+    api: 4
+    type: l337
+    image:
+      buildkit: true
+      imagefile: |
+        # syntax=docker/dockerfile:1.7
+        FROM alpine:3.20 AS build-env
+        WORKDIR /app
+        RUN touch /app/me
+        FROM alpine:3.20
+        RUN addgroup -g 55 mygroup && adduser -D -u 55 -G mygroup myuser
+        COPY --from=build-env /app /app2
+        COPY --chown=55:mygroup inputs/file1 /files1/file1
+        COPY --chown=bin inputs/file1 /files2/file1
+        COPY --chown=1 inputs/file1 /files3/file1
+        COPY --chown=10:11 inputs/file1 /files4/file1
+        COPY --chown=myuser:mygroup --chmod=644 inputs/file1 /files5/file1
+      context:
+        - source: inputs/file1
+          destination: /file7
+          owner: nobody:nogroup
+          permissions: '775'
+    command:
+      - sleep
+      - infinity
 networks:
   app: {}
+  my-network: {}
+volumes:
+  my-data: {}

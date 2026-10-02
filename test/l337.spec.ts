@@ -8,6 +8,7 @@ import { fixture } from './project-fixture.ts';
 import ports from '../utils/parse-v4-ports.ts';
 import normalizeMounts from '../utils/normalize-mounts.ts';
 import normalizeStorage from '../utils/normalize-storage.ts';
+import { createDevtool } from '../lib/devtool.ts';
 
 describe('L337 characterization (#3)', () => {
   let f: ReturnType<typeof fixture>;
@@ -20,6 +21,18 @@ describe('L337 characterization (#3)', () => {
       f.file,
       yaml.dump({ services: { web: { type: 'l337', ...service } }, ...extra }),
     );
+  it('resolves all restored fixture imports and local build sources without Docker', () => {
+    const app = createDevtool(f.options).loadApp({
+      file: path.resolve(import.meta.dirname, '../examples/l337/.devtool.yml'),
+    });
+    assert.equal(app.services.length, 16);
+    for (const service of app.services) {
+      const context = service.generateBuildContext();
+      assert.ok(fs.existsSync(context.imagefile), service.id);
+      for (const source of context.sources) assert.ok(fs.existsSync(source.source), source.source);
+    }
+    assert.deepEqual(f.calls, []);
+  });
   it('generates tagged, file and inline image inputs without Docker', () => {
     for (const input of ['alpine:3.20', 'FROM alpine:3.20\nRUN echo inline', 'Dockerfile']) {
       fs.writeFileSync(path.join(f.root, 'Dockerfile'), 'FROM alpine:3.20\nRUN echo file');
@@ -71,6 +84,12 @@ describe('L337 characterization (#3)', () => {
     const context = f.load().services[0].generateBuildContext();
     assert.deepEqual(context.buildArgs, { ZERO: '0', URL: 'a=b' });
     assert.equal(context.sources[0].source, path.join(fs.realpathSync(f.root), 'build'));
+  });
+  it('ignores empty and valueless build arguments while retaining zero and equals signs', () => {
+    write(f, {
+      image: { imagefile: 'alpine', args: ['ZERO=0', 'URL=a=b', ' missing ', '', '=bad', null] },
+    });
+    assert.deepEqual(f.load().services[0].buildArgs, { ZERO: '0', URL: 'a=b' });
   });
   it('retains explicit context sources, ownership, permissions and remote ADD inputs', () => {
     fs.writeFileSync(path.join(f.root, 'input'), 'hi');

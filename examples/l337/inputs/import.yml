@@ -1,0 +1,14 @@
+api: 4
+type: l337
+image:
+  imagefile: !import Dockerfile
+  steps:
+    - instructions: !import instructions/Instructions1
+      weight: 1
+    - instructions: !import instructions/Instructions2
+      weight: 2
+    - instructions: !import instructions/Instructions3
+      weight: 3
+command:
+  - sleep
+  - infinity

@@ -130,3 +130,23 @@ The SDK tarball and `dist/THIRD_PARTY_NOTICES.txt` carry bundled dependency noti
 collected from the compiler's module graph and installed packages.
 The binary embeds Bun; its runtime and linked-library licensing is described in
 [Bun's license documentation](https://bun.com/docs/project/license).
+
+## L337 runtime restoration (#16)
+
+The recorded PR #330 L337 services and assets are restored in `examples/l337`,
+with adaptations listed in `extraction.json` and assertion-by-assertion dispositions
+in `examples/ASSERTIONS.md`. The database fixture uses Alpine for its file/context
+checks; SSH-dependent buildx/buildkit fixtures use local multistage COPY and known
+users. Original nginx variant inputs, configuration/content, group ordering and
+instruction formats remain represented. Remote ADD sources are pinned, and results
+live in generated storage excluded from image inputs.
+
+Valueless build arguments are ignored instead of becoming malformed names. App
+startup and Compose reconstruction preserve configured image tags. Explicit exec
+maps the caller directory into an inferred app mount, containing paths outside the
+app and retaining explicit/image working-directory fallbacks. These changes add no
+service initialization or Docker inspection to imports or the exec dispatch path.
+
+The existing feature/interface matrix builds both artifacts in each job; Docker
+runtime evidence is recorded from disposable CI, separately from source units,
+strict typechecking and SDK package checks. Lando's example remains disabled.
