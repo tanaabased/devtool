@@ -52,7 +52,7 @@ import path from "node:path";
 import * as api from "@tanaab/devtool";
 const installed = path.resolve("../node_modules/@tanaab/devtool");
 const metadata = JSON.parse(fs.readFileSync(path.join(installed, "package.json"), "utf8"));
-assert.deepEqual(Object.keys(api).sort(), ["Config", "configSchemas", "createDevtool", "name", "version"]);
+assert.deepEqual(Object.keys(api).sort(), ["Config", "configSchemas", "createDevtool", "createProductConfig", "name", "seedConfigFile", "version"]);
 assert.deepEqual(Object.keys(metadata.exports), ["."]);
 assert.equal(metadata.version, api.version);
 for (const key of ["private", "scripts", "bin", "optionalDependencies"]) assert.equal(metadata[key], undefined);

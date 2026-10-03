@@ -112,7 +112,7 @@ exit 17
           ...environment,
           DEVTOOL_COMMAND_NAME: 'environment',
         } as typeof environment).stdout,
-        /Usage: environment/,
+        /Usage: explicit/,
       );
       assert.equal(fs.existsSync(data), false, 'information flags must not materialize assets');
       const info = run(['info', '--json']);

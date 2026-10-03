@@ -1,4 +1,10 @@
-import { Config, configSchemas, createDevtool } from '@tanaab/devtool';
+import {
+  Config,
+  configSchemas,
+  createDevtool,
+  createProductConfig,
+  seedConfigFile,
+} from '@tanaab/devtool';
 import type {
   AppConfig,
   AppInfo,
@@ -45,4 +51,19 @@ export function consumeConfig() {
   // @ts-expect-error compiled snapshots are immutable
   config.get('appFiles').push('wrong');
   return { name, files, serialized: config.export('yaml') };
+}
+
+export function consumeProductConfig(root: string) {
+  const settings = createProductConfig(
+    {
+      configDir: root,
+      configFiles: { system: false },
+      defaults: ({ identity }) => ({ commandName: identity }),
+      env: {},
+    },
+    { root },
+  );
+  settings.compile();
+  const created: boolean = seedConfigFile(`${root}/config.json`, { cache: false }, { context: {} });
+  return { settings, created };
 }

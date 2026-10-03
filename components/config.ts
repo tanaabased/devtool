@@ -19,6 +19,10 @@ export type ConfigRole =
   'defaults' | 'plugin-defaults' | 'global' | 'app' | 'environment' | 'caller';
 export type ConfigFormat = 'yaml' | 'json' | 'javascript';
 
+/** A file path, a configuration object, or a synchronous factory using explicit context. */
+export type ConfigTemplate<Context = Record<string, never>> =
+  object | string | ((context: Readonly<Context>) => object);
+
 interface SourceBase {
   id: string;
   role?: ConfigRole;

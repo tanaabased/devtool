@@ -1,6 +1,11 @@
 name: Exec Timing
 on:
   workflow_dispatch:
+    inputs:
+      baseline-ref:
+        description: Optional baseline revision to measure on the same runner
+        type: string
+        required: false
 permissions:
   contents: read
 jobs:
@@ -10,6 +15,25 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - uses: tanaabased/actions/setup-bun@v1
+      - uses: actions/checkout@v7
+        if: inputs.baseline-ref != ''
+        with:
+          ref: ${{ inputs.baseline-ref }}
+          path: baseline
+      - name: Measure baseline
+        if: inputs.baseline-ref != ''
+        working-directory: baseline
+        run: |
+          bun install --frozen-lockfile --ignore-scripts
+          bun run build
+          bun scripts/measure-exec-cli.ts
+      - uses: actions/upload-artifact@v4
+        if: inputs.baseline-ref != ''
+        with:
+          name: exec-timing-baseline
+          path: |
+            baseline/exec-timing.json
+            baseline/exec-timing.md
       - run: bun install --frozen-lockfile --ignore-scripts
       - run: bun run build
       - run: bun scripts/measure-exec-cli.ts

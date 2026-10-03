@@ -11,7 +11,7 @@ describe('configurable runtime (#2)', () => {
     f = fixture();
   });
   afterEach(() => f.cleanup());
-  it('applies defaults, file, environment and explicit overrides, preserving false and replacing arrays', () => {
+  it('applies defaults, environment, explicit file and caller overrides', () => {
     const configFile = path.join(f.temporary, 'product.yml');
     fs.writeFileSync(configFile, 'cache: true\ncommandName: file\nappFiles: [file.yml]\n');
     const config = createDevtool({
@@ -26,7 +26,7 @@ describe('configurable runtime (#2)', () => {
       appFiles: ['chosen.yml'],
     }).resolveConfig();
     assert.equal(config.commandName, 'explicit');
-    assert.equal(config.cache, false);
+    assert.equal(config.cache, true);
     assert.deepEqual(config.appFiles, ['chosen.yml']);
     assert.equal(createDevtool({ configFile, env: {} }).resolveConfig().commandName, 'file');
   });
@@ -82,7 +82,7 @@ describe('product Config snapshots (#31)', () => {
     assert.equal(runtime.resolveConfig().commandName, 'next');
     assert.deepEqual(
       runtime.config.sources.map((source) => source.id),
-      ['defaults', 'environment', 'caller'],
+      ['defaults', 'system', 'managed', 'user', 'environment', 'caller'],
     );
     const result = runtime.resolveConfig();
     result.appFiles.push('unwanted.yml');

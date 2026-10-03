@@ -10,6 +10,9 @@ export const version = metadata.version;
 export type {
   ProductOptions,
   ProductConfig,
+  ProductSettings,
+  ProductConfigContext,
+  ProductTemplateContext,
   AppConfig,
   AppInfo,
   PersistedState,
@@ -31,6 +34,8 @@ export type { default as App } from './app.ts';
 
 export { default as Config } from './config.ts';
 export { default as configSchemas } from './config-schemas.ts';
+export { default as createProductConfig } from './product-config.ts';
+export { default as seedConfigFile } from './seed-config-file.ts';
 export type {
   ConfigSource,
   ConfigSchema,
@@ -42,4 +47,5 @@ export type {
   ObjectSource,
   FileSource,
   EnvironmentSource,
+  ConfigTemplate,
 } from '../components/config.ts';
