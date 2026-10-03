@@ -7,7 +7,7 @@ describe('CLI information and errors', () => {
     let stdout = '';
     let stderr = '';
     const code = await runCli(args, {
-      runtime: createDevtool({ env: {} }),
+      product: createDevtool({ env: {} }),
       cwd: '/nonexistent-devtool-project',
       stdout: {
         write: (value) => {

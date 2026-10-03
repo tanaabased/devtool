@@ -69,7 +69,7 @@ const appDefinition: ConfigSchema = {
         properties: {
           type: string,
           api: { type: 'number' },
-          image: string,
+          image: {},
           primary: { type: 'boolean' },
         },
       },

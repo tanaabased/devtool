@@ -1,11 +1,16 @@
-import type Runtime from './runtime.ts';
+import type { Devtool } from './devtool.ts';
+import createProductConfig from './product-config.ts';
+import resolveProductConfig from '../utils/resolve-product-config.ts';
+import discoverApp from '../utils/discover-app.ts';
+import App from './app.ts';
 import type { OutputWriter } from '../components/engine.ts';
 import type { ProductOptions } from './types.ts';
 import asError from '../utils/as-error.ts';
 import { parseArgs } from 'node:util';
 import ansis from 'ansis';
-import { createDevtool, version } from './devtool.ts';
+import { version } from './devtool.ts';
 import jsYaml from 'js-yaml';
+import path from 'node:path';
 
 const color = ansis.extend({ tp: '#00c88a' });
 const commands = ['start', 'stop', 'restart', 'rebuild', 'info', 'exec', 'destroy'];
@@ -16,11 +21,11 @@ export const runCli = async (
   {
     stdout = process.stdout,
     stderr = process.stderr,
-    runtime,
+    product,
     cwd = process.cwd(),
-  }: { stdout?: OutputWriter; stderr?: OutputWriter; runtime?: Runtime; cwd?: string } = {},
+  }: { stdout?: OutputWriter; stderr?: OutputWriter; product?: Devtool; cwd?: string } = {},
 ) => {
-  let name = runtime?.commandName ?? 'devtool';
+  let name = product?.commandName ?? 'devtool';
   try {
     const separator = args.indexOf('--');
     const commandArgs = separator < 0 ? [] : args.slice(separator + 1);
@@ -36,6 +41,7 @@ export const runCli = async (
         'cache-root': { type: 'string' },
         'no-cache': { type: 'boolean' },
         json: { type: 'boolean' },
+        metadata: { type: 'boolean' },
         interactive: { type: 'boolean', short: 'i' },
       },
     });
@@ -43,17 +49,22 @@ export const runCli = async (
     if (values['data-root']) overrides.dataRoot = values['data-root'];
     if (values['cache-root']) overrides.cacheRoot = values['cache-root'];
     if (values['no-cache']) overrides.cache = false;
-    if (runtime && (Object.keys(overrides).length || values.config)) {
-      runtime = createDevtool({
-        ...runtime.overrides,
-        ...overrides,
-        engine: runtime.engine,
-        env: runtime.env,
-        configFile: values.config ?? runtime.configFile,
-      });
+    const config = product?.config.fork() ?? createProductConfig({}, { root: cwd });
+    if (values.config) {
+      const source = {
+        id: 'explicit',
+        kind: 'file' as const,
+        role: 'caller' as const,
+        file: path.resolve(cwd, values.config),
+        imports: false,
+      };
+      if (config.sources.some(({ id }) => id === source.id))
+        config.replaceSource(source.id, source);
+      else config.addSource(source, { before: 'caller' });
     }
-    runtime ??= createDevtool({ ...overrides, configFile: values.config });
-    name = runtime.resolveConfig().commandName;
+    config.addSource({ id: 'cli', kind: 'object', role: 'caller', data: overrides });
+    const settings = resolveProductConfig(config);
+    name = settings.commandName;
     if (values.help || !args.length) {
       stdout.write(
         [
@@ -71,14 +82,15 @@ export const runCli = async (
           '      --cache-root <path>  Set persistent cache storage',
           '      --no-cache       Disable persistent cache reads and writes',
           '      --json           Print info as JSON',
+          '      --metadata       Print declarative info without preparing services',
           '  -i, --interactive    Attach exec to the terminal',
           '',
           color.tp('Environment Variables:'),
-          `  ${runtime?.envPrefix ?? 'DEVTOOL'}_COMMAND_NAME Name shown in help and diagnostics`,
-          `  ${runtime?.envPrefix ?? 'DEVTOOL'}_DATA_ROOT    same as --data-root`,
-          `  ${runtime?.envPrefix ?? 'DEVTOOL'}_CACHE_ROOT   same as --cache-root`,
-          `  ${runtime?.envPrefix ?? 'DEVTOOL'}_CACHE        false disables persistent caching`,
-          `  ${runtime?.envPrefix ?? 'DEVTOOL'}_APP_FILES    Comma-separated app filenames`,
+          `  ${product?.envPrefix ?? 'DEVTOOL'}_COMMAND_NAME Name shown in help and diagnostics`,
+          `  ${product?.envPrefix ?? 'DEVTOOL'}_DATA_ROOT    same as --data-root`,
+          `  ${product?.envPrefix ?? 'DEVTOOL'}_CACHE_ROOT   same as --cache-root`,
+          `  ${product?.envPrefix ?? 'DEVTOOL'}_CACHE        false disables persistent caching`,
+          `  ${product?.envPrefix ?? 'DEVTOOL'}_APP_FILES    Comma-separated app filenames`,
           '',
         ].join('\n'),
       );
@@ -91,13 +103,15 @@ export const runCli = async (
     const [command, service, ...extra] = positionals;
     if (!command || !commands.includes(command))
       throw new Error(`Unknown command: ${command ?? '(missing)'}`);
+    if (values.metadata && command !== 'info') throw new Error('--metadata requires info');
     if ((command !== 'exec' && (service || commandArgs.length)) || extra.length)
       throw new Error(`Unexpected arguments for ${command}`);
     if (command === 'exec' && (!service || !commandArgs.length))
       throw new Error('Usage: exec <service> -- <command> [arguments...]');
-    const app = runtime.loadApp({ cwd, file: values.file });
+    const found = discoverApp({ cwd, file: values.file, filenames: settings.appFiles });
+    const app = new App({ ...found, data: [found.file], config, engine: product?.engine });
     if (command === 'info') {
-      const info = app.getInfo();
+      const info = values.metadata ? app.getMetadata() : app.getInfo();
       stdout.write(values.json ? `${JSON.stringify(info)}\n` : jsYaml.dump(info));
     } else if (command === 'exec') {
       if (!service) throw new Error('Missing service');

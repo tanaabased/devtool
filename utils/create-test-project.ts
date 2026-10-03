@@ -86,7 +86,9 @@ export const fixture = (
     engine,
     options,
     load: (overrides: ProductOptions = {}) =>
-      createDevtool({ ...options, ...overrides }).loadApp({ cwd: root }),
+      createDevtool({ ...options, ...overrides })
+        .loadApp({ cwd: root })
+        .prepare(),
     cleanup: () => fs.rmSync(temporary, { recursive: true, force: true }),
   };
 };

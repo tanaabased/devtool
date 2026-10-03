@@ -329,6 +329,7 @@ assert.equal((await app.exec("web", ["cat", "/data/value"])).stdout.trim(), "ret
 bun -e '
 import assert from "node:assert/strict";
 import { app } from "./app.ts";
+app.prepare();
 const previous = app.state.services.web.fingerprint;
 await Bun.write("image/marker", "changed\n");
 await app.start();

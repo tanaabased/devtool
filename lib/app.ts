@@ -1,5 +1,11 @@
 import DefaultEngine from '../engines/docker/docker.ts';
-import type { AppConfig, AppInfo, PersistedState, ProductConfig } from './types.ts';
+import type {
+  AppConfig,
+  AppInfo,
+  PersistedState,
+  ProductConfig,
+  ProductSettings,
+} from './types.ts';
 import type { ComposeFragment, ServiceInfo } from '../components/service.ts';
 import type { Engine, ExecOptions } from '../components/engine.ts';
 import type LandoBuilder from '../services/lando/lando.ts';
@@ -11,6 +17,12 @@ import { createHash } from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 import clone from '../utils/clone-config.ts';
+import Config from './config.ts';
+import configSchemas from './config-schemas.ts';
+import createProductConfig from './product-config.ts';
+import resolveProductConfig from '../utils/resolve-product-config.ts';
+import configInputData from '../utils/config-input-data.ts';
+import normalizeServicePaths from '../services/l337/utils/normalize-service-paths.ts';
 import mergeCompose from '../utils/merge-compose.ts';
 import createDebug from './debug.ts';
 import yaml from 'js-yaml';
@@ -25,10 +37,15 @@ const validName = (name: string) => /^[a-zA-Z0-9][a-zA-Z0-9_-]*$/.test(name);
 
 class App {
   private debug: ReturnType<typeof createDebug>;
-  config: ProductConfig;
-  file: string;
-  root: string;
-  data: AppConfig;
+  readonly config: ProductConfig;
+  readonly file?: string;
+  readonly root: string;
+  readonly data: AppConfig;
+  readonly definition: Config<AppConfig>;
+  readonly settings: Config<ProductSettings>;
+  private inputData: AppConfig;
+  private initializedDefinition: Config<AppConfig>;
+  private prepared = false;
   project: string;
   _dir: string;
   cacheDir: string;
@@ -44,17 +61,44 @@ class App {
   state: PersistedState;
 
   constructor({
-    config,
+    config: settings,
     data: input,
+    root,
     file,
     engine,
   }: {
-    config: ProductConfig;
-    data: unknown;
-    file: string;
+    config?: ProductSettings | Config<ProductSettings>;
+    data: AppConfig | Config<AppConfig> | readonly string[];
+    root: string;
+    file?: string;
     engine?: Engine;
   }) {
-    const data = input as AppConfig;
+    if (!root) throw new Error('App initialization requires an explicit root');
+    this.root = fs.realpathSync(root);
+    if (!fs.statSync(this.root).isDirectory()) throw new Error('App root must be a directory');
+    this.definition = Array.isArray(input)
+      ? new Config<AppConfig>({
+          root: this.root,
+          schema: configSchemas.appDefinition,
+          sources: input.map((file, i) => ({ id: `app-${i}`, kind: 'file', file })),
+        })
+      : Config.from<AppConfig>(input as AppConfig | Config<AppConfig>, {
+          schema: configSchemas.appDefinition,
+          ...(input instanceof Config ? {} : { root: this.root }),
+        });
+    const data = this.definition.compile().values as AppConfig;
+    this.inputData = configInputData(this.definition);
+    this.initializedDefinition = this.definition.fork();
+    this.initializedDefinition.compile();
+    this.settings =
+      settings instanceof Config
+        ? Config.from(settings, { schema: configSchemas.runtime })
+        : createProductConfig(settings ?? {}, { root: this.root });
+    const before = this.settings.sources.find(
+      ({ role }) => role === 'environment' || role === 'caller',
+    )?.id;
+    this.settings.overlay(this.definition, { select: ['config'], before });
+    const config = resolveProductConfig(this.settings);
     if (
       !data ||
       typeof data !== 'object' ||
@@ -101,9 +145,8 @@ class App {
       }
     }
     this.debug = createDebug(`devtool:${config.identity}:app`);
-    this.config = config;
-    this.file = fs.realpathSync(file);
-    this.root = path.dirname(this.file);
+    this.config = Config.from<ProductConfig>(config).compile().values as ProductConfig;
+    this.file = file === undefined ? undefined : path.resolve(this.root, file);
     this.data = data;
     const identity = createHash('sha256')
       .update(`${config.identity}\0${this.root}`)
@@ -130,7 +173,17 @@ class App {
     this.info = [];
     this.services = [];
     this.state = { services: {} };
-    if (config.cache && fs.existsSync(this.stateFile)) {
+  }
+
+  /** Declarative metadata only; no saved-state reads, service constructors or engine contact. */
+  getMetadata() {
+    return { project: this.project, root: this.root, file: this.file, definition: this.data };
+  }
+
+  /** Materialize the initialized snapshot once. Later Config edits require a new App. */
+  prepare(): this {
+    if (this.prepared) return this;
+    if (this.config.cache && fs.existsSync(this.stateFile)) {
       try {
         const state = JSON.parse(fs.readFileSync(this.stateFile, 'utf8'));
         if (state.project === this.project && state.services && typeof state.services === 'object')
@@ -140,7 +193,16 @@ class App {
         if (!(error instanceof SyntaxError)) throw error;
       }
     }
-    this.construct();
+    try {
+      this.construct();
+      this.prepared = true;
+      return this;
+    } catch (error) {
+      this.services = [];
+      this.info = [];
+      this.composeData = [];
+      throw error;
+    }
   }
 
   getEngine(): Engine {
@@ -148,7 +210,7 @@ class App {
     return this.engine;
   }
 
-  construct() {
+  private construct() {
     this.composeData = [];
     this.info = [];
     this.services = [];
@@ -157,8 +219,19 @@ class App {
         { networks: clone(this.data.networks ?? {}), volumes: clone(this.data.volumes ?? {}) },
       ],
     });
-    for (const [id, specification] of Object.entries(this.data.services)) {
-      const { api, type, primary, ...config } = clone(specification);
+    for (const [id, specification] of Object.entries(this.inputData.services)) {
+      const { api, type, primary, ...config } = normalizeServicePaths(
+        specification,
+        (keys) => {
+          const origin = this.initializedDefinition.explain(['services', id, ...keys]).winner;
+          const file = origin?.importedFrom ?? origin?.file;
+          return file
+            ? path.dirname(file)
+            : (this.initializedDefinition.sources.find((source) => source.id === origin?.source)
+                ?.base ?? this.root);
+        },
+        Object.keys(this.data.volumes ?? {}),
+      );
       const saved = this.state.services[id];
       const service = new components[type as keyof typeof components](
         id,
@@ -258,6 +331,7 @@ class App {
   }
 
   assemble() {
+    this.prepare();
     const compose = mergeCompose(this.composeData);
     // L337 owns image builds; Compose must never rebuild the original Dockerfile.
     for (const [id, service] of Object.entries(compose.services ?? {})) {
@@ -284,6 +358,7 @@ class App {
   }
 
   async start({ rebuild = false } = {}) {
+    this.prepare();
     this.debug('starting project %s; rebuild=%s', this.project, rebuild);
     const previous = this.state.services;
     this.state = { services: {}, running: false };
@@ -423,6 +498,7 @@ class App {
   }
 
   getInfo(): AppInfo {
+    this.prepare();
     return {
       project: this.project,
       root: this.root,
@@ -432,9 +508,10 @@ class App {
   }
 
   async exec(service: string, args: string[], options: ExecOptions = {}) {
-    const selected = this.services.find((item) => item.id === service);
-    if (!selected) throw new Error(`Unknown service: ${service}`);
+    if (!Object.hasOwn(this.data.services, service)) throw new Error(`Unknown service: ${service}`);
     if (!args.length) throw new Error('exec requires a command after --');
+    this.prepare();
+    const selected = this.services.find((item) => item.id === service)!;
     this.assemble();
     if (selected.type === 'lando') args = ['/etc/lando/exec.sh', ...args];
     const workdir: string[] = [];
@@ -465,6 +542,10 @@ class App {
     fs.rmSync(this._dir, { recursive: true, force: true });
     if (this.config.cache) fs.rmSync(this.cacheDir, { recursive: true, force: true });
     this.state = { services: {}, running: false };
+    this.prepared = false;
+    this.services = [];
+    this.info = [];
+    this.composeData = [];
   }
 }
 

@@ -315,7 +315,7 @@ class L337Service extends EventEmitter {
     // ensure dockerfile is set
     if (!data.dockerfile) data.dockerfile = 'Dockerfile';
     // now pass the imagefile stuff into image parsing
-    this.setBaseImage(path.join(data.context, data.dockerfile), data);
+    this.setBaseImage(path.resolve(data.context, data.dockerfile), data);
     if (data.args) this.addBuildArgs(data.args);
     // make sure we are adding the dockerfile context directly as a source so COPY/ADD instructions work
     // @NOTE: we are not adding a "context" because that also injects dockerfile instructions which we might already have
@@ -948,8 +948,8 @@ class L337Service extends EventEmitter {
   // sets the base image for the service
   setBaseImage(image: StringInput | undefined, buildArgs: BuildConfig = {}) {
     const imported = image instanceof ImportString ? image.getMetadata() : undefined;
-    if (imported?.file) {
-      this.#data.imageFileContext = path.dirname(imported.file);
+    if (imported) {
+      this.#data.imageFileContext = imported.file ? path.dirname(imported.file) : imported.base;
       image = String(image);
     }
     if (typeof image !== 'string' || !image.trim())
@@ -960,7 +960,9 @@ class L337Service extends EventEmitter {
       image = path.join(this.tmpdir, 'Imagefile');
       fs.mkdirSync(path.dirname(image), { recursive: true });
       write(image, content);
-      this.#data.imageFileContext = imported?.file ? path.dirname(imported.file) : this.appRoot;
+      this.#data.imageFileContext = imported?.file
+        ? path.dirname(imported.file)
+        : (imported?.base ?? this.appRoot);
     }
 
     // if imagefile is not an absolute path then test it with the approot as a base

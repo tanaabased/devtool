@@ -1,4 +1,6 @@
 import {
+  App,
+  discoverApp,
   Config,
   configSchemas,
   createDevtool,
@@ -17,12 +19,12 @@ import type {
 /** Compile-only consumer: importing the package must expose useful contracts, not implicit any. */
 export async function consume(engine: Engine) {
   const options = { identity: 'wrapper', cache: false, engine } satisfies ProductOptions;
-  const runtime = createDevtool(options);
-  const app = runtime.loadApp({ cwd: '/fixture' });
+  const product = createDevtool(options);
+  const app = product.loadApp({ cwd: '/fixture' });
   const info: AppInfo = await app.start();
   const state: PersistedState = app.state;
   const result: ExecResult = await app.exec('web', ['printf', 'hello']);
-  return { info, state, result, name: runtime.resolveConfig().commandName };
+  return { info, state, result, name: product.resolveConfig().commandName };
 }
 
 type Assert<T extends true> = T;
@@ -66,4 +68,17 @@ export function consumeProductConfig(root: string) {
   settings.compile();
   const created: boolean = seedConfigFile(`${root}/config.json`, { cache: false }, { context: {} });
   return { settings, created };
+}
+
+export function consumeApp(root: string, input: AppConfig) {
+  const app = new App({ root, data: input });
+  const fromConfig = new App({ root, data: Config.from<AppConfig>(input) });
+  const fromFiles = new App({ root, data: ['arbitrary.yaml', 'overrides.json'] });
+  const found: { root: string; file: string } = discoverApp({
+    cwd: root,
+    filenames: ['application.yaml'],
+  });
+  // @ts-expect-error direct callers must supply the app root
+  new App({ data: input });
+  return { app, fromConfig, fromFiles, found };
 }

@@ -27,6 +27,8 @@ interface SourceBase {
   id: string;
   role?: ConfigRole;
   base?: string;
+  /** Read a section of this source while retaining its file, document and relative-path base. */
+  select?: readonly string[];
 }
 export interface ObjectSource extends SourceBase {
   kind: 'object';
@@ -65,6 +67,8 @@ export interface ConfigOrigin {
   file?: string;
   /** Original imported file, when the value came through a YAML import. */
   importedFrom?: string;
+  /** The value itself is imported text, rather than a child of an imported object. */
+  importedString?: true;
 }
 export type ConfigReadonly<T> = T extends readonly (infer U)[]
   ? readonly ConfigReadonly<U>[]

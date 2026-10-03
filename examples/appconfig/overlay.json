@@ -1,0 +1,1 @@
+{ "config": { "uid": 42 }, "tooling": { "hello": { "cmd": "echo overridden" } } }

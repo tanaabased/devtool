@@ -47,8 +47,7 @@ bun run test
 
 Unit tests exercise utilities and focused library behavior. `bun run build` gates
 artifact generation with typechecking. Leia scenarios exercise the compiled CLI
-and installed SDK tarball; container scenarios and performance measurements run
-in disposable CI only.
+and installed SDK tarball; container scenarios run in disposable CI only.
 See the executable [package](examples/package/README.md), [configuration](examples/config/README.md),
 [service](examples/l337/README.md), [exec](examples/exec/README.md) and
 [isolation](examples/isolation/README.md) examples for more.

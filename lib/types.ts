@@ -57,6 +57,8 @@ export interface Resource {
 }
 
 export interface AppConfig {
+  config?: ProductSettings;
+  tooling?: Record<string, unknown>;
   name?: string;
   services: Record<string, ServiceConfig>;
   networks?: Record<string, Resource>;

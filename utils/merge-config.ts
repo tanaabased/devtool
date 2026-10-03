@@ -45,7 +45,9 @@ export default function mergeConfig(
       next instanceof ImportScalar
         ? next.getMetadata()
         : undefined;
-    const current = metadata?.file ? { ...inherited, importedFrom: metadata.file } : inherited;
+    const current = { ...inherited, ...(metadata?.file ? { importedFrom: metadata.file } : {}) };
+    delete current.importedString;
+    if (next instanceof ImportString) current.importedString = true;
     const id = JSON.stringify(keys);
     provenance.set(id, [...(provenance.get(id) ?? []), current]);
     if (object(next)) {

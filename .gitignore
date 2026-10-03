@@ -2,8 +2,6 @@ node_modules/
 .DS_Store
 dist/
 *.bun-build
-exec-timing.json
-exec-timing.md
 examples/**/.results
 coverage/
 temp/

@@ -144,7 +144,7 @@ describe('API 4 Lando lifecycle (#5)', () => {
     const stream = { write() {} };
     assert.equal(
       await runCli(['start'], {
-        runtime: createDevtool(f.options),
+        product: createDevtool(f.options),
         cwd: f.root,
         stdout: stream,
         stderr: stream,

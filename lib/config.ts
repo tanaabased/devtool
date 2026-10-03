@@ -195,6 +195,40 @@ export default class Config<T extends object = Record<string, unknown>> {
     return result;
   }
 
+  /** Insert isolated source copies, optionally selecting a section without flattening origins. */
+  overlay(
+    other: Config<object>,
+    {
+      select = [],
+      before,
+      prefix = 'app:',
+      role = 'app',
+    }: {
+      select?: readonly string[];
+      before?: string;
+      prefix?: string;
+      role?: ConfigSource['role'];
+    } = {},
+  ): this {
+    const copies = other.fork().#stores;
+    for (const store of copies) {
+      const id = `${prefix}${store.source.id}`;
+      if (this.#stores.some(({ source }) => source.id === id))
+        throw new Error(`Duplicate configuration source: ${id}`);
+      store.source = {
+        ...store.source,
+        id,
+        role,
+        select: [...(store.source.select ?? []), ...select],
+      };
+      store.normalized = undefined;
+    }
+    const index = before === undefined ? this.#stores.length : this.#index(before);
+    this.#stores.splice(index, 0, ...copies);
+    this.#invalidate();
+    return this;
+  }
+
   #load(store: Store): Record<string, unknown> {
     if (store.data !== undefined) return store.data;
     const { source } = store;
@@ -272,9 +306,26 @@ export default class Config<T extends object = Record<string, unknown>> {
     const provenance: Provenance = new Map();
     for (const store of this.#stores) {
       try {
-        const source = (store.normalized ??= normalize(this.#load(store), this.#schema, {
+        let input: unknown = this.#load(store);
+        let importedFrom: string | undefined;
+        for (const key of store.source.select ?? []) {
+          if (input instanceof ImportObject)
+            importedFrom = input.getMetadata().file ?? importedFrom;
+          input =
+            input && typeof input === 'object' && Object.hasOwn(input, key)
+              ? (input as Record<string, unknown>)[key]
+              : undefined;
+        }
+        if (input === undefined) input = {};
+        if (!record(input))
+          throw new Error('Selected configuration section must contain an object');
+        const source = (store.normalized ??= normalize(input, this.#schema, {
           app: store.source.role === 'app',
-          base: store.source.kind === 'file' ? path.dirname(store.source.file) : store.source.base,
+          base: importedFrom
+            ? path.dirname(importedFrom)
+            : store.source.kind === 'file'
+              ? path.dirname(store.source.file)
+              : store.source.base,
         }) as Record<string, unknown>);
         values = mergeConfig(
           values,
@@ -283,6 +334,7 @@ export default class Config<T extends object = Record<string, unknown>> {
             source: store.source.id,
             revision: store.revision,
             file: store.source.kind === 'file' ? store.source.file : undefined,
+            ...(importedFrom ? { importedFrom } : {}),
           },
           provenance,
         );

@@ -7,6 +7,8 @@ import findFile from '../utils/find-file.ts';
 import parseFileTypeInput from '../utils/parse-file-type.ts';
 
 export interface ImportMetadata {
+  /** Explicit base for inline text from an object source. */
+  base?: string;
   raw?: string;
   file?: string;
   type?: string;

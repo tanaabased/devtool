@@ -120,9 +120,8 @@ then returns an uncompiled Config. `createDevtool()` uses the same assembler on
 explicit configuration access; constructing the facade does not load configuration
 or evaluate templates.
 
-Sources merge in this order: defaults, system, managed, user, environment,
-explicit config file, caller options. App settings will insert before environment
-when App integration lands. Source roles describe ownership; array order controls
+Sources merge in this order: defaults, system, managed, user, app settings, environment,
+explicit config file, caller options. Source roles describe ownership; array order controls
 precedence.
 
 System configuration defaults to `/etc/<identity>/config.yaml` on Unix or

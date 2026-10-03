@@ -5,7 +5,7 @@ import path from 'node:path';
 import { createDevtool } from '../lib/devtool.ts';
 import { fixture } from '../utils/create-test-project.ts';
 
-describe('configurable runtime (#2)', () => {
+describe('configurable product (#2)', () => {
   let f: ReturnType<typeof fixture>;
   beforeEach(() => {
     f = fixture();
@@ -75,17 +75,17 @@ describe('configurable runtime (#2)', () => {
 describe('product Config snapshots (#31)', () => {
   it('captures ambient settings once and refreshes explicitly without losing sources', () => {
     const env = { DEVTOOL_COMMAND_NAME: 'first' };
-    const runtime = createDevtool({ env });
+    const product = createDevtool({ env });
     env.DEVTOOL_COMMAND_NAME = 'mutated';
-    assert.equal(runtime.resolveConfig().commandName, 'first');
-    runtime.captureEnvironment({ DEVTOOL_COMMAND_NAME: 'next' });
-    assert.equal(runtime.resolveConfig().commandName, 'next');
+    assert.equal(product.resolveConfig().commandName, 'first');
+    product.captureEnvironment({ DEVTOOL_COMMAND_NAME: 'next' });
+    assert.equal(product.resolveConfig().commandName, 'next');
     assert.deepEqual(
-      runtime.config.sources.map((source) => source.id),
+      product.config.sources.map((source) => source.id),
       ['defaults', 'system', 'managed', 'user', 'environment', 'caller'],
     );
-    const result = runtime.resolveConfig();
+    const result = product.resolveConfig();
     result.appFiles.push('unwanted.yml');
-    assert.equal(runtime.resolveConfig().appFiles.includes('unwanted.yml'), false);
+    assert.equal(product.resolveConfig().appFiles.includes('unwanted.yml'), false);
   });
 });

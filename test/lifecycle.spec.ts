@@ -157,15 +157,15 @@ describe('L337 lifecycle (#4)', () => {
     f.engine.commandError = Object.assign(new Error('container command failed'), { code: 17 });
     const output: (string | Uint8Array)[] = [];
     const stream = { write: (text: string | Uint8Array) => output.push(text) };
-    const runtime = createDevtool(f.options);
+    const product = createDevtool(f.options);
     assert.equal(
-      await runCli(['start'], { runtime, cwd: f.root, stdout: stream, stderr: stream }),
+      await runCli(['start'], { product, cwd: f.root, stdout: stream, stderr: stream }),
       17,
     );
     assert.equal(f.load().state.running, false);
     assert.equal(
       await runCli(['exec', 'web', '--', 'sh', '-c', 'exit 17'], {
-        runtime,
+        product,
         cwd: f.root,
         stdout: stream,
         stderr: stream,

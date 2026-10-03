@@ -20,9 +20,11 @@ describe('L337 characterization (#3)', () => {
       yaml.dump({ services: { web: { type: 'l337', ...service } }, ...extra }),
     );
   it('resolves all restored fixture imports and local build sources without Docker', () => {
-    const app = createDevtool(f.options).loadApp({
-      file: path.resolve(import.meta.dirname, '../../../examples/l337/.devtool.yml'),
-    });
+    const app = createDevtool(f.options)
+      .loadApp({
+        file: path.resolve(import.meta.dirname, '../../../examples/l337/.devtool.yml'),
+      })
+      .prepare();
     assert.equal(app.services.length, 16);
     for (const service of app.services) {
       const context = service.generateBuildContext();
