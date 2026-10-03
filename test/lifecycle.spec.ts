@@ -4,7 +4,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import * as yaml from '../utils/read-fixture-yaml.ts';
 import { runCli } from '../lib/cli.ts';
-import { createDevtool } from '../lib/devtool.ts';
+import { createProductConfig } from '../lib/devtool.ts';
 import { fixture } from '../utils/create-test-project.ts';
 
 describe('L337 lifecycle (#4)', () => {
@@ -157,15 +157,22 @@ describe('L337 lifecycle (#4)', () => {
     f.engine.commandError = Object.assign(new Error('container command failed'), { code: 17 });
     const output: (string | Uint8Array)[] = [];
     const stream = { write: (text: string | Uint8Array) => output.push(text) };
-    const product = createDevtool(f.options);
+    const config = createProductConfig(f.options);
     assert.equal(
-      await runCli(['start'], { product, cwd: f.root, stdout: stream, stderr: stream }),
+      await runCli(['start'], {
+        config,
+        engine: f.engine,
+        cwd: f.root,
+        stdout: stream,
+        stderr: stream,
+      }),
       17,
     );
     assert.equal(f.load().state.running, false);
     assert.equal(
       await runCli(['exec', 'web', '--', 'sh', '-c', 'exit 17'], {
-        product,
+        config,
+        engine: f.engine,
         cwd: f.root,
         stdout: stream,
         stderr: stream,

@@ -48,14 +48,8 @@ const argv = [...process.argv];
 const exitCode = process.exitCode;
 const listeners = EventEmitter.defaultMaxListeners;
 
-const { App, Config, createDevtool } = await import('@tanaab/devtool');
+const { App, Config } = await import('@tanaab/devtool');
 new Config({ sources: [{ id: 'not-loaded', kind: 'file', file: '/nonexistent/config.yml' }] });
-const product = createDevtool({
-  identity: 'consumer',
-  defaults: forbid,
-  configFile: '/nonexistent/config.yaml',
-});
-assert.equal(product.identity, 'consumer');
 const app = new App({
   root: import.meta.dirname,
   config: Config.from({

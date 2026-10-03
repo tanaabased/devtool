@@ -46,28 +46,28 @@ devtool --config product.yml info --json | bun -e 'const info = await Bun.stdin.
 # should read product configuration
 bun -e '
 import assert from "node:assert/strict";
-import { createDevtool } from "@tanaab/devtool";
-const config = createDevtool({ configFile: "product.yml" }).resolveConfig();
+import { createProductConfig } from "@tanaab/devtool";
+const config = createProductConfig({ configFile: "product.yml" }).compile().values;
 assert.equal(config.commandName, "example");
 '
 
 # should prefer explicit options to environment and file values
 bun -e '
 import assert from "node:assert/strict";
-import { createDevtool } from "@tanaab/devtool";
-const config = createDevtool({
+import { createProductConfig } from "@tanaab/devtool";
+const config = createProductConfig({
   configFile: "product.yml",
   env: { DEVTOOL_COMMAND_NAME: "environment" },
   commandName: "explicit",
-}).resolveConfig();
+}).compile().values;
 assert.equal(config.commandName, "explicit");
 '
 
 # should load an imported service definition
 bun -e '
 import assert from "node:assert/strict";
-import { createDevtool } from "@tanaab/devtool";
-const app = createDevtool({ configFile: "product.yml" }).loadApp();
+import { App, createProductConfig } from "@tanaab/devtool";
+const app = new App({ root: process.cwd(), data: [".devtool.yml"], config: createProductConfig({ configFile: "product.yml" }) });
 assert.equal(app.getInfo().services[0].type, "l337");
 '
 ```
@@ -116,9 +116,8 @@ bun assembly.ts
 ## Product sources and seeds
 
 `createProductConfig(options, context)` captures environment and path context,
-then returns an uncompiled Config. `createDevtool()` uses the same assembler on
-explicit configuration access; constructing the facade does not load configuration
-or evaluate templates.
+then returns an uncompiled Config. It evaluates the defaults template when called;
+files load only when configuration is compiled.
 
 Sources merge in this order: defaults, system, managed, user, app settings, environment,
 explicit config file, caller options. Source roles describe ownership; array order controls

@@ -1,13 +1,13 @@
 import assert from 'node:assert/strict';
 import { runCli } from '../lib/cli.ts';
-import { createDevtool, version } from '@tanaab/devtool';
+import { createProductConfig, version } from '@tanaab/devtool';
 
 describe('CLI information and errors', () => {
   const invoke = async (args: string[]) => {
     let stdout = '';
     let stderr = '';
     const code = await runCli(args, {
-      product: createDevtool({ env: {} }),
+      config: createProductConfig({ env: {} }),
       cwd: '/nonexistent-devtool-project',
       stdout: {
         write: (value) => {

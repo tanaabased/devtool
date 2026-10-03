@@ -2,8 +2,8 @@
 
 The CLI discovers appfiles and supplies the root. App accepts an explicit root
 and a definition object, Config, or ordered file list. File names have no special
-meaning to App. `createDevtool().loadApp()` is a compatibility convenience using
-the same discovery helper and App constructor; there is no Runtime owner.
+meaning to App. SDK callers use App and Config directly; `discoverApp()` is
+available when they want the CLI discovery conventions.
 
 App retains separate `definition` and `settings` Config instances. Only the
 definition's `config` section overlays global settings, below environment and

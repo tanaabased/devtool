@@ -1,3 +1,3 @@
-import { createDevtool } from '@tanaab/devtool';
+import { App } from '@tanaab/devtool';
 
-export const app = createDevtool().loadApp();
+export const app = new App({ root: import.meta.dirname, data: ['.devtool.yml'] });

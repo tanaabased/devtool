@@ -1,4 +1,3 @@
-import type { Engine } from '../components/engine.ts';
 import type { ServiceConfig, ComposeService, ServiceInfo } from '../components/service.ts';
 import type { ConfigTemplate } from '../components/config.ts';
 
@@ -37,7 +36,6 @@ export interface ProductOptions extends ProductSettings {
   configFiles?: { system?: string | false; managed?: string | false; user?: string | false };
   defaults?: ConfigTemplate<ProductTemplateContext>;
   env?: NodeJS.ProcessEnv;
-  engine?: Engine;
 }
 
 export interface ProductConfig extends ProductSettings {

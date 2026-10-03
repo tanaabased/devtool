@@ -9,7 +9,7 @@ import { X509Certificate } from 'node:crypto';
 import * as yaml from '../../../utils/read-fixture-yaml.ts';
 import { fixture } from '../../../utils/create-test-project.ts';
 import { runCli } from '../../../lib/cli.ts';
-import { createDevtool } from '../../../lib/devtool.ts';
+import { createProductConfig } from '../../../lib/devtool.ts';
 import L337 from '../../l337/l337.ts';
 import copyBuildSource from '../../../engines/docker/utils/copy-build-source.ts';
 
@@ -144,7 +144,8 @@ describe('API 4 Lando lifecycle (#5)', () => {
     const stream = { write() {} };
     assert.equal(
       await runCli(['start'], {
-        product: createDevtool(f.options),
+        config: createProductConfig(f.options),
+        engine: f.engine,
         cwd: f.root,
         stdout: stream,
         stderr: stream,

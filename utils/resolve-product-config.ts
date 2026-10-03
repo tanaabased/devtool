@@ -3,7 +3,7 @@ import type Config from '../lib/config.ts';
 import type { ProductConfig, ProductSettings } from '../lib/types.ts';
 import clone from './clone-config.ts';
 
-/** Config caches compilation; the compatibility result is a detached, resolved value object. */
+/** Resolve required product settings and derive cache storage from the compiled configuration. */
 export default function resolveProductConfig(config: Config<ProductSettings>): ProductConfig {
   const values = clone(config.compile().values);
   for (const key of [

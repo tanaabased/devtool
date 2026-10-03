@@ -1,10 +1,10 @@
-import type { Devtool } from './devtool.ts';
+import type Config from './config.ts';
 import createProductConfig from './product-config.ts';
 import resolveProductConfig from '../utils/resolve-product-config.ts';
 import discoverApp from '../utils/discover-app.ts';
 import App from './app.ts';
-import type { OutputWriter } from '../components/engine.ts';
-import type { ProductOptions } from './types.ts';
+import type { Engine, OutputWriter } from '../components/engine.ts';
+import type { ProductOptions, ProductSettings } from './types.ts';
 import asError from '../utils/as-error.ts';
 import { parseArgs } from 'node:util';
 import ansis from 'ansis';
@@ -21,11 +21,18 @@ export const runCli = async (
   {
     stdout = process.stdout,
     stderr = process.stderr,
-    product,
+    config: suppliedConfig,
+    engine,
     cwd = process.cwd(),
-  }: { stdout?: OutputWriter; stderr?: OutputWriter; product?: Devtool; cwd?: string } = {},
+  }: {
+    stdout?: OutputWriter;
+    stderr?: OutputWriter;
+    config?: Config<ProductSettings>;
+    engine?: Engine;
+    cwd?: string;
+  } = {},
 ) => {
-  let name = product?.commandName ?? 'devtool';
+  let name = 'devtool';
   try {
     const separator = args.indexOf('--');
     const commandArgs = separator < 0 ? [] : args.slice(separator + 1);
@@ -46,10 +53,10 @@ export const runCli = async (
       },
     });
     const overrides: ProductOptions = {};
-    if (values['data-root']) overrides.dataRoot = values['data-root'];
-    if (values['cache-root']) overrides.cacheRoot = values['cache-root'];
+    if (values['data-root']) overrides.dataRoot = path.resolve(cwd, values['data-root']);
+    if (values['cache-root']) overrides.cacheRoot = path.resolve(cwd, values['cache-root']);
     if (values['no-cache']) overrides.cache = false;
-    const config = product?.config.fork() ?? createProductConfig({}, { root: cwd });
+    const config = suppliedConfig?.fork() ?? createProductConfig({}, { root: cwd });
     if (values.config) {
       const source = {
         id: 'explicit',
@@ -60,7 +67,10 @@ export const runCli = async (
       };
       if (config.sources.some(({ id }) => id === source.id))
         config.replaceSource(source.id, source);
-      else config.addSource(source, { before: 'caller' });
+      else
+        config.addSource(source, {
+          before: config.sources.find(({ role }) => role === 'caller')?.id,
+        });
     }
     config.addSource({ id: 'cli', kind: 'object', role: 'caller', data: overrides });
     const settings = resolveProductConfig(config);
@@ -86,11 +96,11 @@ export const runCli = async (
           '  -i, --interactive    Attach exec to the terminal',
           '',
           color.tp('Environment Variables:'),
-          `  ${product?.envPrefix ?? 'DEVTOOL'}_COMMAND_NAME Name shown in help and diagnostics`,
-          `  ${product?.envPrefix ?? 'DEVTOOL'}_DATA_ROOT    same as --data-root`,
-          `  ${product?.envPrefix ?? 'DEVTOOL'}_CACHE_ROOT   same as --cache-root`,
-          `  ${product?.envPrefix ?? 'DEVTOOL'}_CACHE        false disables persistent caching`,
-          `  ${product?.envPrefix ?? 'DEVTOOL'}_APP_FILES    Comma-separated app filenames`,
+          `  ${settings.envPrefix}_COMMAND_NAME Name shown in help and diagnostics`,
+          `  ${settings.envPrefix}_DATA_ROOT    same as --data-root`,
+          `  ${settings.envPrefix}_CACHE_ROOT   same as --cache-root`,
+          `  ${settings.envPrefix}_CACHE        false disables persistent caching`,
+          `  ${settings.envPrefix}_APP_FILES    Comma-separated app filenames`,
           '',
         ].join('\n'),
       );
@@ -109,7 +119,7 @@ export const runCli = async (
     if (command === 'exec' && (!service || !commandArgs.length))
       throw new Error('Usage: exec <service> -- <command> [arguments...]');
     const found = discoverApp({ cwd, file: values.file, filenames: settings.appFiles });
-    const app = new App({ ...found, data: [found.file], config, engine: product?.engine });
+    const app = new App({ ...found, data: [found.file], config, engine });
     if (command === 'info') {
       const info = values.metadata ? app.getMetadata() : app.getInfo();
       stdout.write(values.json ? `${JSON.stringify(info)}\n` : jsYaml.dump(info));

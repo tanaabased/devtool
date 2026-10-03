@@ -18,7 +18,6 @@ export default function createProductConfig(
     configFiles = {},
     defaults,
     env: suppliedEnv,
-    engine: _engine,
     ...caller
   } = options;
   const root = path.resolve(context.root ?? process.cwd());
