@@ -266,7 +266,7 @@ class L337Service extends EventEmitter {
         this.info = { appMount: this.appMount };
       }
       // debug
-      this.debug('%o autoset appmount to %o, did not select %o', this.id, this.appMount, appMounts);
+      this.debug('%s selected app mount', this.id);
     }
     if (this.info?.state?.IMAGE === 'BUILT' && this.tag) {
       this.addComposeData({ services: { [this.id]: { image: this.tag } } });
@@ -303,7 +303,7 @@ class L337Service extends EventEmitter {
 
     // merge into build args
     this.buildArgs = merge({}, this.buildArgs, Object.fromEntries(entries));
-    this.debug('%o build-args are now %o', this.id, this.buildArgs);
+    this.debug('%s build-arg keys: %s', this.id, Object.keys(this.buildArgs).join(', '));
   }
 
   // this handles our "changes" to docker-composes "build" key but really it just processes it and passes it through
@@ -452,7 +452,7 @@ class L337Service extends EventEmitter {
           },
         });
 
-        this.debug('%o added build group %o', this.id, group);
+        this.debug('%s added build group %s', this.id, group.id ?? group.name ?? 'default');
       });
     }
   }
@@ -605,11 +605,7 @@ class L337Service extends EventEmitter {
 
     // if ssh is not an object at this point then we need to return false
     if (!ssh || typeof ssh !== 'object') {
-      this.debug(
-        '%o could not interpret ssh %o, must be boolean or object, setting to false',
-        this.id,
-        ssh,
-      );
+      this.debug('%s rejected ssh configuration; expected boolean or object', this.id);
       return false;
     }
 
@@ -862,7 +858,7 @@ class L337Service extends EventEmitter {
   normalizeFileInput(data: StringInput, { dest }: { dest?: string } = {}): string {
     // if data is not a stringy then do something else?
     if (!isStringy(data)) {
-      this.debug('%o does not seem to be valid file input data', data);
+      this.debug('invalid file input type');
       return String(data);
     }
 
@@ -1001,11 +997,7 @@ class L337Service extends EventEmitter {
     }
 
     // log
-    this.debug(
-      'set base image to %o with instructions %o',
-      this.#data.image,
-      this.#data.imageInstructions ?? '',
-    );
+    this.debug('configured base image for service %s', this.id);
   }
 }
 

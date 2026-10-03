@@ -27,7 +27,7 @@ describe('CLI information and errors', () => {
   it('should show help and version through their aliases', async () => {
     for (const args of [[], ['--help'], ['-h']]) {
       const result = await invoke(args);
-      assert.equal(result.code, 0);
+      assert.equal(result.code, 0, result.stderr);
       assert.match(result.stdout, /Usage:/);
     }
     for (const flag of ['--version', '-v']) {

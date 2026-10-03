@@ -1,0 +1,13 @@
+# Preserve this primary document.
+name: writable
+config:
+  cache: false
+  data-root: ./data
+  cache-root: ./cache
+  untouched: keep
+services:
+  web: !import ../service/web.yaml
+metadata:
+  original: &labels
+    literal.key: keep
+  copy: *labels

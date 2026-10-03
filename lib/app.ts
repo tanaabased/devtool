@@ -66,12 +66,14 @@ class App {
     root,
     file,
     engine,
+    debug,
   }: {
     config?: ProductSettings | Config<ProductSettings>;
     definition: AppConfig | Config<AppConfig> | readonly string[];
     root: string;
     file?: string;
     engine?: Engine;
+    debug?: ReturnType<typeof createDebug>;
   }) {
     if (!root) throw new Error('App initialization requires an explicit root');
     this.root = fs.realpathSync(root);
@@ -144,8 +146,10 @@ class App {
           throw new Error(`${kind}.${id}: explicit names require external: true`);
       }
     }
-    this.debug = createDebug(`devtool:${config.identity}:app`);
-    this.config = Config.from<ProductConfig>(config).compile().values as ProductConfig;
+    this.debug = debug ?? createDebug(`devtool:${config.identity}:app`);
+    this.config = Config.from<ProductConfig>(config, {
+      debug: this.debug.extend('snapshot'),
+    }).compile().values as ProductConfig;
     this.file = file === undefined ? undefined : path.resolve(this.root, file);
     this.data = data;
     const identity = createHash('sha256')
@@ -239,6 +243,7 @@ class App {
           appRoot: this.root,
           project: this.project,
           config,
+          debug: this.debug.extend('service'),
           type,
           primary,
           context: path.join(this._dir, 'build-contexts', id),

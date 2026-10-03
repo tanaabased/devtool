@@ -831,7 +831,7 @@ export default {
 
       async installPackages() {
         for (const [id, data] of Object.entries(this.packages)) {
-          this.debug('adding package %o with args: %o', id, data);
+          this.debug('adding package %s', id);
           if (!isDisabled(data)) {
             await this.addPackage(id, data);
           }

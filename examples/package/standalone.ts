@@ -114,6 +114,14 @@ exit 17
         } as typeof environment).stdout,
         /Usage: explicit/,
       );
+      const configRead = run(['config', 'get', 'cache', '--json', '--debug']);
+      assert.equal(configRead.status, 0, configRead.stderr);
+      assert.equal(JSON.parse(configRead.stdout), true);
+      assert.match(configRead.stderr, /selected app context/);
+      const configWrite = run(['config', 'set', 'custom.value=false', '--json']);
+      assert.equal(configWrite.status, 0, configWrite.stderr);
+      assert.equal(JSON.parse(configWrite.stdout).edits[0].saved, false);
+      assert.equal(JSON.parse(run(['config', 'get', 'custom.value', '--json']).stdout), false);
       assert.equal(fs.existsSync(data), false, 'information flags must not materialize assets');
       const info = run(['info', '--json']);
       assert.equal(info.status, 0, info.stderr);

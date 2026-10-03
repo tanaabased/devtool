@@ -3,6 +3,9 @@ import path from 'node:path';
 
 import type { FileSource } from '../components/config.ts';
 
+/** Only absence of a primary permits contextual commands to use global settings. */
+export class AppNotFoundError extends Error {}
+
 export interface AppLayer {
   /** Filename stem, relative to the discovered root. YAML is preferred over YML. */
   file: string;
@@ -64,7 +67,8 @@ export default function discoverApp({
     if (selected || parent === directory) break;
     directory = parent;
   }
-  if (!selected) throw new Error(`No app file found (${appFile}.yaml or .yml) from ${cwd}`);
+  if (!selected)
+    throw new AppNotFoundError(`No app file found (${appFile}.yaml or .yml) from ${cwd}`);
   const root = path.dirname(selected);
   const seen = new Set<string>();
   const sources: FileSource[] = entries.map(({ file, optional }, index) => {

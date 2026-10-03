@@ -18,7 +18,7 @@ mkdir -p .results
 
 ```sh
 # should show the available commands
-devtool --help | grep -F 'start, stop, restart, rebuild, info, exec, destroy'
+devtool --help | grep -F 'config get, config set, exec'
 devtool | grep -F 'Usage: devtool'
 devtool -h | grep -F 'Usage: devtool'
 
@@ -70,6 +70,9 @@ for (const file of new Bun.Glob("**/*.sh").scanSync("../../services/lando")) {
 
 # should typecheck examples and public contracts against the installed declarations
 bun --bun ../node_modules/typescript/bin/tsc --project ../tsconfig.json
+
+# should register commands with isolated handlers and debug streams
+bun commands.ts
 
 # should import and construct the SDK without host I/O or consumer process changes
 bun inert-import.ts

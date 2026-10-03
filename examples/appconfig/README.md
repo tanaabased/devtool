@@ -29,7 +29,7 @@ no writable destination. Recipes and an early list-augmentation hook remain futu
 constructing services, creating directories or contacting the engine. `prepare()`
 materializes services once. Rich `getInfo()` and lifecycle methods prepare on
 demand. Later Config edits require a new App to change that initialized snapshot.
-Command descriptors and directory caching follow in #34 and #35.
+Config and exec share serializable command metadata and invocation-owned execution. Full plugin registration and directory caching follow in #34 and #35.
 
 ## Setup
 
@@ -67,6 +67,41 @@ devtool --config layers/discovery-rejected.yaml info --metadata > .results/error
 grep -F 'read-only' .results/error
 DEVTOOL_APP_FILES=application.yaml devtool info --metadata > .results/error 2>&1 && exit 1
 grep -F 'read-only' .results/error
+
+# should read contextual settings from a nested directory without preparation
+rm -rf .results/data .results/cache
+(cd service && devtool config get cache --json) | bun -e 'if (await Bun.stdin.json() !== false) throw new Error("expected app setting")'
+test ! -e .results/data
+test ! -e .results/cache
+
+# should refuse to edit through an imported primary
+cp application.yaml .results/imported-before.yaml
+devtool config set uid=0 > .results/error 2>&1 && exit 1
+grep -F 'scalar or import' .results/error
+cmp application.yaml .results/imported-before.yaml
+
+# should edit only the primary document and preserve its comments and imports
+mkdir -p .results
+cp writable.yaml .results/.devtool.yaml
+(cd .results && devtool config set uid=0 custom.empty= 'custom.array=[false,0,null,""]' --json) > .results/receipt.json
+bun -e 'import assert from "node:assert/strict"; const receipt = await Bun.file(".results/receipt.json").json(); assert.equal(receipt.source, "app:primary"); assert.equal(receipt.edits[0].saved, 0); const text = await Bun.file(".results/.devtool.yaml").text(); for (const value of ["# Preserve this primary document.", "!import ../service/web.yaml", "&labels", "*labels", "untouched: keep"]) assert.ok(text.includes(value)); assert.ok(!text.includes("identity:"));'
+test ! -e .results/data
+
+# should reject protected and read-only app writes without touching the file
+cp .results/.devtool.yaml .results/before.yaml
+(cd .results && devtool config set system.cache=true) > .results/error 2>&1 && exit 1
+cmp .results/before.yaml .results/.devtool.yaml
+(cd .results && devtool config set system.cli.app-file=bad --force) > .results/error 2>&1 && exit 1
+grep -F 'read-only' .results/error
+cmp .results/before.yaml .results/.devtool.yaml
+
+# should reject a malformed app instead of falling back to global configuration
+printf 'config: [broken' > .results/.devtool.yaml
+(cd .results && devtool config get cache --json) > .results/broken.json 2> .results/error && exit 1
+test ! -s .results/broken.json
+(cd .results && DEVTOOL_CONFIG_DIR=global devtool config get cache --global --json) | bun -e 'if (await Bun.stdin.json() !== true) throw new Error("expected global setting")'
+rm .results/.devtool.yaml
+
 ```
 
 ## Testing Library
@@ -74,6 +109,9 @@ grep -F 'read-only' .results/error
 ```sh
 # should accept objects, Config and ordered files with isolated settings and preparation
 bun app.ts
+
+# should preserve primary writes and masking without preparation
+bun contextual.ts
 
 # should use custom CLI policy and preserve documents and snapshots across ordered layer writes
 bun layers.ts

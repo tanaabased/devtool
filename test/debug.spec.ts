@@ -45,3 +45,39 @@ describe('debug namespaces', () => {
     assert.throws(() => debug.contract(0.5), RangeError);
   });
 });
+
+describe('invocation debug filters', () => {
+  it('does not let a failed diagnostic sink change operation outcomes', () => {
+    const debug = createDebug('devtool:config', {
+      namespaces: 'devtool:*',
+      log() {
+        throw new Error('closed diagnostic stream');
+      },
+    });
+    assert.doesNotThrow(() => debug('write succeeded'));
+    assert.doesNotThrow(() => debug.extend('child')('write succeeded'));
+  });
+  it('inherits sinks, reevaluates child namespaces and leaves global state alone', () => {
+    const before = process.env.DEBUG;
+    const outside = createDebug('unrelated:consumer');
+    const enabled = outside.enabled;
+    const lines: unknown[][] = [];
+    const debug = createDebug('devtool:cli', {
+      namespaces: 'devtool:*,-devtool:cli:quiet',
+      log: (...args) => lines.push(args),
+    });
+    debug('visible');
+    debug.extend('quiet')('hidden');
+    debug.extend('other')('visible');
+    debug.replace(1, 'other')('hidden');
+    assert.equal(lines.length, 2);
+    assert.equal(process.env.DEBUG, before);
+    assert.equal(outside.enabled, enabled);
+    const quiet = createDebug('devtool:cli', {
+      namespaces: '',
+      log: (...args) => lines.push(args),
+    });
+    quiet.extend('other')('hidden');
+    assert.equal(lines.length, 2);
+  });
+});
