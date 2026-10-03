@@ -8,7 +8,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import yaml from 'js-yaml';
-import { createDevtool } from '../lib/devtool.ts';
+import { App, createProductConfig } from '../lib/devtool.ts';
 
 export const fixture = (
   services: AppConfig['services'] = {
@@ -73,7 +73,6 @@ export const fixture = (
   const options = {
     dataRoot: path.join(temporary, 'data'),
     cacheRoot: path.join(temporary, 'cache'),
-    engine,
     env: {},
   };
   return {
@@ -86,7 +85,13 @@ export const fixture = (
     engine,
     options,
     load: (overrides: ProductOptions = {}) =>
-      createDevtool({ ...options, ...overrides }).loadApp({ cwd: root }),
+      new App({
+        root,
+        file,
+        data: [path.basename(file)],
+        config: createProductConfig({ ...options, ...overrides }),
+        engine,
+      }).prepare(),
     cleanup: () => fs.rmSync(temporary, { recursive: true, force: true }),
   };
 };

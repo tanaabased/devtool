@@ -1,7 +1,7 @@
-import type { Engine } from '../components/engine.ts';
 import type { ServiceConfig, ComposeService, ServiceInfo } from '../components/service.ts';
+import type { ConfigTemplate } from '../components/config.ts';
 
-export interface ProductOptions {
+export interface ProductSettings {
   identity?: string;
   commandName?: string;
   envPrefix?: string;
@@ -9,16 +9,36 @@ export interface ProductOptions {
   dataRoot?: string;
   cacheRoot?: string;
   cache?: boolean;
-  configFile?: string;
-  env?: NodeJS.ProcessEnv;
-  engine?: Engine;
   uid?: number | string;
   gid?: number | string;
   username?: string;
   npmrc?: string | Record<string, string | number | boolean>;
 }
 
-export interface ProductConfig extends Omit<ProductOptions, 'engine' | 'env' | 'configFile'> {
+export interface ProductConfigContext {
+  root: string;
+  home: string;
+  platform: NodeJS.Platform;
+  env: Readonly<NodeJS.ProcessEnv>;
+}
+
+export interface ProductTemplateContext extends ProductConfigContext {
+  identity: string;
+  configDir: string;
+}
+
+export interface ProductOptions extends ProductSettings {
+  /** Explicit invocation file; takes precedence over environment settings. */
+  configFile?: string;
+  /** Defaults to ~/.<identity>; DEVTOOL_CONFIG_DIR (or the product prefix) also selects it. */
+  configDir?: string;
+  /** Optional conventional files. false disables an individual source. */
+  configFiles?: { system?: string | false; managed?: string | false; user?: string | false };
+  defaults?: ConfigTemplate<ProductTemplateContext>;
+  env?: NodeJS.ProcessEnv;
+}
+
+export interface ProductConfig extends ProductSettings {
   identity: string;
   commandName: string;
   envPrefix: string;
@@ -35,6 +55,8 @@ export interface Resource {
 }
 
 export interface AppConfig {
+  config?: ProductSettings;
+  tooling?: Record<string, unknown>;
   name?: string;
   services: Record<string, ServiceConfig>;
   networks?: Record<string, Resource>;

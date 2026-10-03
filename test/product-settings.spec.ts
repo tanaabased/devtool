@@ -2,19 +2,20 @@ import requireValue from '../utils/require-value.ts';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
-import { createDevtool } from '../lib/devtool.ts';
+import { App, createProductConfig, discoverApp } from '../lib/devtool.ts';
+import productEnvironmentSource from '../utils/product-environment-source.ts';
 import { fixture } from '../utils/create-test-project.ts';
 
-describe('configurable runtime (#2)', () => {
+describe('configurable product (#2)', () => {
   let f: ReturnType<typeof fixture>;
   beforeEach(() => {
     f = fixture();
   });
   afterEach(() => f.cleanup());
-  it('applies defaults, file, environment and explicit overrides, preserving false and replacing arrays', () => {
+  it('applies defaults, environment, explicit file and caller overrides', () => {
     const configFile = path.join(f.temporary, 'product.yml');
     fs.writeFileSync(configFile, 'cache: true\ncommandName: file\nappFiles: [file.yml]\n');
-    const config = createDevtool({
+    const config = createProductConfig({
       configFile,
       envPrefix: 'WRAPPER',
       env: {
@@ -24,11 +25,11 @@ describe('configurable runtime (#2)', () => {
       },
       commandName: 'explicit',
       appFiles: ['chosen.yml'],
-    }).resolveConfig();
+    }).compile().values;
     assert.equal(config.commandName, 'explicit');
-    assert.equal(config.cache, false);
+    assert.equal(config.cache, true);
     assert.deepEqual(config.appFiles, ['chosen.yml']);
-    assert.equal(createDevtool({ configFile, env: {} }).resolveConfig().commandName, 'file');
+    assert.equal(createProductConfig({ configFile, env: {} }).compile().values.commandName, 'file');
   });
   it('isolates products, project identities, roots and their caches', async () => {
     const first = f.load({ identity: 'first', envPrefix: 'FIRST' });
@@ -62,30 +63,35 @@ describe('configurable runtime (#2)', () => {
     fs.renameSync(f.file, path.join(f.root, 'wrapper.yml'));
     const nested = path.join(f.root, 'nested');
     fs.mkdirSync(nested);
-    const app = createDevtool({ ...f.options, appFiles: ['wrapper.yml'] }).loadApp({ cwd: nested });
+    const config = createProductConfig({ ...f.options, appFiles: ['wrapper.yml'] });
+    const found = discoverApp({ cwd: nested, filenames: config.compile().values.appFiles });
+    const app = new App({ ...found, data: [found.file], config });
     assert.equal(app.root, fs.realpathSync(f.root));
   });
   it('keeps generic product YAML separate from app import tags', () => {
     const configFile = path.join(f.temporary, 'product.yml');
     fs.writeFileSync(configFile, 'dataRoot: !import somewhere');
-    assert.throws(() => createDevtool({ configFile }).resolveConfig(), /tag/);
+    assert.throws(() => createProductConfig({ configFile }).compile().values, /tag/);
   });
 });
 
 describe('product Config snapshots (#31)', () => {
   it('captures ambient settings once and refreshes explicitly without losing sources', () => {
     const env = { DEVTOOL_COMMAND_NAME: 'first' };
-    const runtime = createDevtool({ env });
+    const product = createProductConfig({ env });
     env.DEVTOOL_COMMAND_NAME = 'mutated';
-    assert.equal(runtime.resolveConfig().commandName, 'first');
-    runtime.captureEnvironment({ DEVTOOL_COMMAND_NAME: 'next' });
-    assert.equal(runtime.resolveConfig().commandName, 'next');
-    assert.deepEqual(
-      runtime.config.sources.map((source) => source.id),
-      ['defaults', 'environment', 'caller'],
+    assert.equal(product.compile().values.commandName, 'first');
+    product.replaceSource(
+      'environment',
+      productEnvironmentSource('DEVTOOL', { DEVTOOL_COMMAND_NAME: 'next' }),
     );
-    const result = runtime.resolveConfig();
-    result.appFiles.push('unwanted.yml');
-    assert.equal(runtime.resolveConfig().appFiles.includes('unwanted.yml'), false);
+    assert.equal(product.compile().values.commandName, 'next');
+    assert.deepEqual(
+      product.sources.map((source) => source.id),
+      ['defaults', 'system', 'managed', 'user', 'environment', 'caller'],
+    );
+    const result = product.compile().values;
+    assert.throws(() => (result.appFiles as string[]).push('unwanted.yml'), TypeError);
+    assert.equal(product.compile().values.appFiles!.includes('unwanted.yml'), false);
   });
 });

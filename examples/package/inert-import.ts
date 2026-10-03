@@ -48,10 +48,23 @@ const argv = [...process.argv];
 const exitCode = process.exitCode;
 const listeners = EventEmitter.defaultMaxListeners;
 
-const { Config, createDevtool } = await import('@tanaab/devtool');
+const { App, Config } = await import('@tanaab/devtool');
 new Config({ sources: [{ id: 'not-loaded', kind: 'file', file: '/nonexistent/config.yml' }] });
-const runtime = createDevtool({ identity: 'consumer' });
-assert.equal(runtime.identity, 'consumer');
+const app = new App({
+  root: import.meta.dirname,
+  config: Config.from({
+    identity: 'consumer',
+    commandName: 'consumer',
+    envPrefix: 'CONSUMER',
+    appFiles: ['unused.yml'],
+    dataRoot: '/unused/data',
+    cacheRoot: '/unused/cache',
+    cache: false,
+  }),
+  data: { services: { web: { type: 'l337', image: 'alpine' } } },
+});
+assert.deepEqual(app.services, []);
+assert.equal(app.getMetadata().definition.services.web!.image, 'alpine');
 assert.deepEqual(process.argv, argv);
 assert.equal(process.exitCode, exitCode);
 assert.equal(EventEmitter.defaultMaxListeners, listeners);

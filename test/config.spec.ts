@@ -33,6 +33,50 @@ describe('Config foundation (#31)', () => {
   afterEach(() => fs.rmSync(root, { recursive: true, force: true }));
   const write = (file: string, contents: string) => fs.writeFileSync(file, contents);
 
+  it('overlays selected sections with imported bases, original documents and isolated revisions', () => {
+    root = fs.realpathSync(root);
+    fs.mkdirSync(path.join(root, 'nested'));
+    write(
+      path.join(root, 'nested', 'app.yml'),
+      '# preserve me\nconfig:\n  data-root: ./data\n  cache: false\n',
+    );
+    write(path.join(root, 'entry.yml'), '!import nested/app.yml\n');
+    const definition = new Config({
+      root,
+      sources: [{ id: 'definition', kind: 'file', file: 'entry.yml' }],
+    });
+    definition.compile();
+    const settings = new Config({
+      root,
+      schema: configSchemas.runtime,
+      sources: [{ id: 'env', kind: 'object', role: 'environment', data: { cache: true } }],
+    });
+    settings.overlay(definition, { select: ['config'], before: 'env' });
+    settings.compile();
+    assert.equal(settings.get('dataRoot'), path.join(root, 'nested', 'data'));
+    assert.equal(settings.get('cache'), true);
+    assert.equal(
+      settings.explain('dataRoot').winner?.importedFrom,
+      path.join(root, 'nested', 'app.yml'),
+    );
+    assert.match(settings.sourceDocument('app:definition')!.toString(), /!import nested\/app.yml/);
+    definition
+      .replaceSource('definition', {
+        id: 'definition',
+        kind: 'object',
+        data: { config: { dataRoot: 'new' } },
+      })
+      .compile();
+    assert.equal(settings.get('dataRoot'), path.join(root, 'nested', 'data'));
+    assert.throws(
+      () =>
+        settings
+          .overlay(Config.from({ config: { identity: 'other' } }), { select: ['config'] })
+          .compile(),
+      /protected setting/,
+    );
+  });
+
   it('normalizes objects/files/Config inputs and exports declared keys in kebab-case', () => {
     const values = {
       commandName: 'native',

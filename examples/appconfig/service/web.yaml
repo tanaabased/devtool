@@ -1,0 +1,9 @@
+type: l337
+image:
+  imagefile: !import Dockerfile
+volumes:
+  - source: ./content
+    target: /content
+    type: bind
+    bind:
+      create_host_path: false

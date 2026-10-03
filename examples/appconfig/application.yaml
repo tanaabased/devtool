@@ -1,0 +1,11 @@
+name: appconfig
+config:
+  data-root: .results/data
+  cache-root: .results/cache
+  cache: false
+services:
+  web: !import service/web.yaml
+tooling:
+  hello:
+    service: web
+    cmd: echo hello

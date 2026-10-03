@@ -4,3 +4,5 @@ services:
     type: l337
     image: alpine:3.20
     command: [sleep, infinity]
+    volumes:
+      - .results/root:/app:ro

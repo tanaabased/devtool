@@ -52,13 +52,13 @@ The product identity must keep their resources independent.
 # should keep product configuration independent
 bun -e '
 import assert from "node:assert/strict";
-import { createDevtool } from "@tanaab/devtool";
-const first = createDevtool({ identity: "first", env: {}, dataRoot: ".results/first" });
-const second = createDevtool({ identity: "second", env: {}, dataRoot: ".results/second" });
-assert.notEqual(first.loadApp({ file: "first/.devtool.yml" }).project, second.loadApp({ file: "first/.devtool.yml" }).project);
-assert.notEqual(first.resolveConfig().dataRoot, second.resolveConfig().dataRoot);
-assert.equal(first.commandName, "first");
-assert.equal(second.commandName, "second");
+import { App, createProductConfig } from "@tanaab/devtool";
+const first = createProductConfig({ identity: "first", env: {}, dataRoot: ".results/first" });
+const second = createProductConfig({ identity: "second", env: {}, dataRoot: ".results/second" });
+assert.notEqual(new App({ root: "first", data: [".devtool.yml"], config: first }).project, new App({ root: "first", data: [".devtool.yml"], config: second }).project);
+assert.notEqual(first.compile().values.dataRoot, second.compile().values.dataRoot);
+assert.equal(first.get("commandName"), "first");
+assert.equal(second.get("commandName"), "second");
 '
 # should start two embedded products with independent state
 bun -e '

@@ -17,6 +17,7 @@ jobs:
         example:
           - package
           - config
+          - appconfig
           - l337
           # - lando # Re-enable after #25.
           - exec

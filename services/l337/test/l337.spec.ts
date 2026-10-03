@@ -6,7 +6,7 @@ import path from 'node:path';
 import yaml from 'js-yaml';
 import appYaml from '../../../lib/yaml.ts';
 import { fixture } from '../../../utils/create-test-project.ts';
-import { createDevtool } from '../../../lib/devtool.ts';
+import { App, createProductConfig } from '../../../lib/devtool.ts';
 
 describe('L337 characterization (#3)', () => {
   let f: ReturnType<typeof fixture>;
@@ -20,9 +20,13 @@ describe('L337 characterization (#3)', () => {
       yaml.dump({ services: { web: { type: 'l337', ...service } }, ...extra }),
     );
   it('resolves all restored fixture imports and local build sources without Docker', () => {
-    const app = createDevtool(f.options).loadApp({
-      file: path.resolve(import.meta.dirname, '../../../examples/l337/.devtool.yml'),
-    });
+    const root = path.resolve(import.meta.dirname, '../../../examples/l337');
+    const app = new App({
+      root,
+      data: ['.devtool.yml'],
+      config: createProductConfig(f.options),
+      engine: f.engine,
+    }).prepare();
     assert.equal(app.services.length, 16);
     for (const service of app.services) {
       const context = service.generateBuildContext();

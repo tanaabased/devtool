@@ -10,7 +10,15 @@ export default (fragments: ComposeFragment[]): ComposeData => {
       mergeWith(compose, data, (left, right, key) => {
         if (!Array.isArray(right)) return undefined;
         if (key === 'volumes' && Array.isArray(left))
-          return [...new Map([...left, ...right].map((mount) => [mount.target, mount])).values()];
+          return [
+            ...new Map(
+              [...left, ...right].map((mount) => {
+                if (typeof mount !== 'string') return [mount.target, mount];
+                const parts = mount.slice(/^[A-Za-z]:[\\/]/.test(mount) ? 2 : 0).split(':');
+                return [parts[1] ?? parts[0], mount];
+              }),
+            ).values(),
+          ];
         return right;
       });
   }

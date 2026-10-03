@@ -1,6 +1,6 @@
 # Configuration example
 
-Configure devtool with a product file, environment variables and explicit options.
+Configure devtool with global files, environment variables and explicit options.
 The library imports the SDK tarball installed by Setup.
 
 ## Setup
@@ -18,8 +18,22 @@ mkdir -p .results
 # should read product configuration
 devtool --config product.yml --help | grep -F 'Usage: example'
 
-# should prefer the environment to the product file
-DEVTOOL_COMMAND_NAME=custom devtool --config product.yml --help | grep -F 'Usage: custom'
+# should prefer an explicit config file to the environment
+DEVTOOL_COMMAND_NAME=custom devtool --config product.yml --help | grep -F 'Usage: example'
+
+# should read user overrides and prefer environment settings to global files
+DEVTOOL_CONFIG_DIR=global devtool --help | grep -F 'Usage: user-example'
+DEVTOOL_CONFIG_DIR=global DEVTOOL_COMMAND_NAME=custom devtool --help | grep -F 'Usage: custom'
+
+# should show help without seeding missing configuration
+DEVTOOL_CONFIG_DIR=.results/unseeded devtool --help | grep -F 'Usage: devtool'
+test ! -e .results/unseeded
+
+# should read explicitly seeded managed configuration without changing it
+bun assembly.ts
+cp .results/seeded/config.json .results/seed-before.json
+DEVTOOL_CONFIG_DIR=.results/seeded devtool --help | grep -F 'Usage: seeded-example'
+cmp .results/seed-before.json .results/seeded/config.json
 
 # should load an imported service definition
 devtool --config product.yml info --json | bun -e 'const info = await Bun.stdin.json(); if (info.services[0].type !== "l337") throw new Error("expected l337 service")'
@@ -32,28 +46,28 @@ devtool --config product.yml info --json | bun -e 'const info = await Bun.stdin.
 # should read product configuration
 bun -e '
 import assert from "node:assert/strict";
-import { createDevtool } from "@tanaab/devtool";
-const config = createDevtool({ configFile: "product.yml" }).resolveConfig();
+import { createProductConfig } from "@tanaab/devtool";
+const config = createProductConfig({ configFile: "product.yml" }).compile().values;
 assert.equal(config.commandName, "example");
 '
 
 # should prefer explicit options to environment and file values
 bun -e '
 import assert from "node:assert/strict";
-import { createDevtool } from "@tanaab/devtool";
-const config = createDevtool({
+import { createProductConfig } from "@tanaab/devtool";
+const config = createProductConfig({
   configFile: "product.yml",
   env: { DEVTOOL_COMMAND_NAME: "environment" },
   commandName: "explicit",
-}).resolveConfig();
+}).compile().values;
 assert.equal(config.commandName, "explicit");
 '
 
 # should load an imported service definition
 bun -e '
 import assert from "node:assert/strict";
-import { createDevtool } from "@tanaab/devtool";
-const app = createDevtool({ configFile: "product.yml" }).loadApp();
+import { App, createProductConfig } from "@tanaab/devtool";
+const app = new App({ root: process.cwd(), data: [".devtool.yml"], config: createProductConfig({ configFile: "product.yml" }) });
 assert.equal(app.getInfo().services[0].type, "l337");
 '
 ```
@@ -94,4 +108,37 @@ foundation.
 ```sh
 # should compose sources, preserve imported scalar types and resolve source-relative paths
 bun config.ts
+
+# should assemble product sources and seed persistent settings explicitly
+bun assembly.ts
 ```
+
+## Product sources and seeds
+
+`createProductConfig(options, context)` captures environment and path context,
+then returns an uncompiled Config. It evaluates the defaults template when called;
+files load only when configuration is compiled.
+
+Sources merge in this order: defaults, system, managed, user, app settings, environment,
+explicit config file, caller options. Source roles describe ownership; array order controls
+precedence.
+
+System configuration defaults to `/etc/<identity>/config.yaml` on Unix or
+`%ProgramData%/<identity>/config.yaml` on Windows. If ProgramData is unavailable,
+Windows falls back to the user's `AppData/Local` directory. Managed `config.json`
+and user `config.yaml` live under `~/.<identity>` by default. Select their directory
+with `configDir` or `<PREFIX>_CONFIG_DIR`; use `configFiles` to override individual
+locations or set one to `false`. These files are optional and reads never create
+them. An explicitly selected `configFile` must exist.
+
+The `defaults` option accepts an object, file path or synchronous function. A
+function receives the product identity, config directory, root, home, platform and
+captured environment. File defaults retain source-relative paths; object defaults
+use the supplied root. There is no generated base file.
+
+`seedConfigFile(file, template, {context, root, schema})` explicitly creates a
+complete JSON/YAML seed file, returning `true` when created and `false` when the
+destination already exists. Existing destinations are never replaced, including
+when another initializer creates one concurrently. Seed files contain only the
+template's values, not a flattened effective configuration. Existing Config
+instances need an explicit source reload to observe a newly seeded file.

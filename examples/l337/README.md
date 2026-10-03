@@ -162,7 +162,7 @@ bun verify.ts destroyed
 
 ## Testing Library
 
-[`app.ts`](app.ts) imports `createDevtool` from the public package export and
+[`app.ts`](app.ts) imports `App` from the public package export and
 loads this directory's app. Each command below makes an explicit public API call.
 
 ```sh
@@ -329,6 +329,7 @@ assert.equal((await app.exec("web", ["cat", "/data/value"])).stdout.trim(), "ret
 bun -e '
 import assert from "node:assert/strict";
 import { app } from "./app.ts";
+app.prepare();
 const previous = app.state.services.web.fingerprint;
 await Bun.write("image/marker", "changed\n");
 await app.start();
@@ -341,14 +342,14 @@ await Bun.write("image/marker", "original\n");
 # should reject a failed build and recover on retry
 bun -e '
 import assert from "node:assert/strict";
-import { createDevtool } from "@tanaab/devtool";
+import { App } from "@tanaab/devtool";
 await Bun.write("image/instructions", "RUN exit 23\n");
-const app = createDevtool().loadApp();
+const app = new App({ root: process.cwd(), data: [".devtool.yml"] });
 await assert.rejects(app.rebuild());
 assert.deepEqual(app.state.services, {});
 assert.equal(app.state.running, false);
 await Bun.write("image/instructions", "RUN echo main >> /order\n");
-await createDevtool().loadApp().start();
+await new App({ root: process.cwd(), data: [".devtool.yml"] }).start();
 '
 
 # should destroy the app without removing its source files
