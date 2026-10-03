@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import {
   createProductConfig,
   runCli,
+  version,
   type CommandDefinition,
   type CommandRegistration,
 } from '@tanaab/devtool';
@@ -43,11 +44,11 @@ const registration: CommandRegistration = {
     );
   },
 };
-const invoke = async (args: string[], debugNamespaces = '') => {
+const invoke = async (args: string[], debugNamespaces = '', suppliedConfig = config) => {
   let stdout = '';
   let stderr = '';
   const code = await runCli(args, {
-    config,
+    config: suppliedConfig,
     commands: [registration],
     cwd: import.meta.dirname,
     debugNamespaces,
@@ -94,6 +95,44 @@ assert.equal((await invoke(['sample'])).code, 1);
 assert.equal((await invoke(['sample', 'x', '--force'])).code, 1);
 assert.equal((await invoke(['sample', 'x', '--', 'untouched'])).code, 1);
 assert.deepEqual(JSON.parse(JSON.stringify(definition)), definition);
+let reads = 0;
+const invalid = config.fork();
+invalid.addSource({
+  id: 'invalid',
+  kind: 'environment',
+  prefix: 'SAMPLE',
+  values: { SAMPLE_CACHE: 'invalid' },
+  fields: {
+    CACHE: {
+      path: 'cache',
+      parse(value) {
+        reads++;
+        return value;
+      },
+    },
+  },
+});
+const inert = await invoke(['sample', 'inert', '--json'], '', invalid);
+assert.equal(inert.code, 0, inert.stderr);
+assert.equal(JSON.parse(inert.stdout).value, 'inert');
+for (const flag of ['--version', '-v'])
+  assert.deepEqual(await invoke([flag], '', invalid), {
+    code: 0,
+    stdout: `${version}\n`,
+    stderr: '',
+  });
+assert.equal(reads, 0, 'No-initialization commands and version must not load configuration');
+for (const args of [[], ['--help'], ['-h']]) {
+  const result = await invoke(args, '', invalid);
+  assert.equal(result.code, 0, result.stderr);
+  assert.match(result.stdout, /Usage: devtool/);
+  assert.equal(result.stderr, '');
+}
+const required = await invoke(['config', 'get', '--global'], '', invalid);
+assert.equal(required.code, 1);
+assert.equal(required.stdout, '');
+assert.match(required.stderr, /cache: expected boolean/);
+assert.equal(reads, 4);
 process.stdout.write(
   'command metadata, direct handlers, typed output and concurrent debug isolation verified\n',
 );

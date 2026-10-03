@@ -104,28 +104,38 @@ export const runCli = async (
     if (typeof values['cache-root'] === 'string')
       overrides.cacheRoot = path.resolve(cwd, values['cache-root']);
     if (values['no-cache']) overrides.cache = false;
-    const config = (suppliedConfig ?? createProductConfig({}, { root: cwd })).fork({
-      debug: debug.contract().extend('config'),
-    });
-    if (typeof values.config === 'string') {
-      const source = {
-        id: 'explicit',
-        kind: 'file' as const,
-        role: 'caller' as const,
-        file: path.resolve(cwd, values.config),
-        imports: false,
-      };
-      if (config.sources.some(({ id }) => id === source.id))
-        config.replaceSource(source.id, source);
-      else
-        config.addSource(source, {
-          before: config.sources.find(({ role }) => role === 'caller')?.id,
-        });
-    }
-    config.addSource({ id: 'cli', kind: 'object', role: 'caller', data: overrides });
-    const settings = resolveProductConfig(config);
-    name = settings.commandName;
+    const invocationConfig = () => {
+      const config = (suppliedConfig ?? createProductConfig({}, { root: cwd })).fork({
+        debug: debug.contract().extend('config'),
+      });
+      if (typeof values.config === 'string') {
+        const source = {
+          id: 'explicit',
+          kind: 'file' as const,
+          role: 'caller' as const,
+          file: path.resolve(cwd, values.config),
+          imports: false,
+        };
+        if (config.sources.some(({ id }) => id === source.id))
+          config.replaceSource(source.id, source);
+        else
+          config.addSource(source, {
+            before: config.sources.find(({ role }) => role === 'caller')?.id,
+          });
+      }
+      config.addSource({ id: 'cli', kind: 'object', role: 'caller', data: overrides });
+      return config;
+    };
     if (values.help || !args.length) {
+      let envPrefix = 'DEVTOOL';
+      try {
+        const settings = resolveProductConfig(invocationConfig());
+        name = settings.commandName;
+        envPrefix = settings.envPrefix;
+      } catch {
+        // Help remains available to diagnose broken configuration.
+        debug('using default help branding: configuration unavailable');
+      }
       stdout.write(
         [
           `Usage: ${color.bold(name)} ${color.dim('[options]')} <command>`,
@@ -155,10 +165,10 @@ export const runCli = async (
           '      --metadata       Print declarative info without preparing services',
           '',
           color.tp('Environment Variables:'),
-          `  ${settings.envPrefix}_COMMAND_NAME Name shown in help and diagnostics`,
-          `  ${settings.envPrefix}_DATA_ROOT    same as --data-root`,
-          `  ${settings.envPrefix}_CACHE_ROOT   same as --cache-root`,
-          `  ${settings.envPrefix}_CACHE        false disables persistent caching`,
+          `  ${envPrefix}_COMMAND_NAME Name shown in help and diagnostics`,
+          `  ${envPrefix}_DATA_ROOT    same as --data-root`,
+          `  ${envPrefix}_CACHE_ROOT   same as --cache-root`,
+          `  ${envPrefix}_CACHE        false disables persistent caching`,
           '',
         ].join('\n'),
       );
@@ -191,6 +201,9 @@ export const runCli = async (
     const inputs = selected
       ? commandArguments(selected.definition, positionals.slice(command.split(' ').length))
       : {};
+    const config =
+      !selected || selected.definition.initialization !== 'none' ? invocationConfig() : undefined;
+    if (config) name = resolveProductConfig(config).commandName;
     const needsContext =
       !selected ||
       selected.definition.initialization !== 'none' ||
@@ -243,7 +256,7 @@ export const runCli = async (
         stdout,
         stderr,
         debug,
-        ...(selected.definition.initialization === 'config'
+        ...(selected.definition.initialization === 'config' && config
           ? {
               configuration: {
                 kind,

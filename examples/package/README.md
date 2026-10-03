@@ -26,6 +26,15 @@ devtool -h | grep -F 'Usage: devtool'
 test "$(devtool --version)" = "$(bun -e 'import { version } from "@tanaab/devtool"; console.log(version)')"
 test "$(devtool -v)" = "$(devtool --version)"
 
+# should keep help and version available with invalid configuration
+devtool --config invalid.yaml --help | grep -F 'Usage: devtool'
+devtool --config invalid.yaml -h | grep -F 'Usage: devtool'
+test "$(devtool --config invalid.yaml --version)" = "$(devtool --version)"
+test "$(devtool --config invalid.yaml -v)" = "$(devtool --version)"
+devtool --config invalid.yaml config get --global > .results/invalid.out 2> .results/invalid.err && exit 1
+test ! -s .results/invalid.out
+grep -F 'cache: expected boolean' .results/invalid.err
+
 # should reject unknown options
 devtool --unknown > .results/error 2>&1 && exit 1
 grep -F 'error:' .results/error
@@ -71,7 +80,7 @@ for (const file of new Bun.Glob("**/*.sh").scanSync("../../services/lando")) {
 # should typecheck examples and public contracts against the installed declarations
 bun --bun ../node_modules/typescript/bin/tsc --project ../tsconfig.json
 
-# should register commands with isolated handlers and debug streams
+# should honor command initialization and isolate handlers and debug streams
 bun commands.ts
 
 # should import and construct the SDK without host I/O or consumer process changes
