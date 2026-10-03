@@ -13,6 +13,8 @@ export interface ConfigSchema {
   protected?: boolean;
   /** Writes require force, without prohibiting this namespace in app input. */
   writeProtected?: boolean;
+  /** Runtime-owned metadata; reject all source values and edits, even with force. */
+  readOnly?: string;
   /** This subtree contains app overrides even when compiling a definition source. */
   app?: boolean;
   validate?: (value: unknown) => void;

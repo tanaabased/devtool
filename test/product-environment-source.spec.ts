@@ -10,11 +10,16 @@ describe('product environment source', () => {
     assert.equal(source.prefix, 'CUSTOM');
     assert.equal(source.fields.CONFIG_DIR, undefined);
   });
-  it('parses false, zero and lists without accepting malformed booleans', () => {
+  it('parses false and zero without accepting malformed booleans', () => {
     const { fields } = productEnvironmentSource('CUSTOM', {});
     assert.equal(fields.CACHE?.parse?.('0'), false);
     assert.equal(fields.CACHE?.parse?.('true'), true);
-    assert.deepEqual(fields.APP_FILES?.parse?.('app.yml,,other.yaml'), ['app.yml', 'other.yaml']);
+    assert.equal(fields.APP_FILES, undefined);
+    for (const key of ['APP_FILE', 'APP_FILES', 'PRE_FILES', 'POST_FILES'])
+      assert.throws(
+        () => productEnvironmentSource('CUSTOM', { [`CUSTOM_${key}`]: 'other' }),
+        /read-only.*constructing the CLI/,
+      );
     assert.throws(() => fields.CACHE?.parse?.('nope'), /CUSTOM_CACHE/);
   });
 });

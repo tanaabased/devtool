@@ -5,7 +5,6 @@ export const version = metadata.version;
 
 export type {
   ProductOptions,
-  AppLayer,
   ProductConfig,
   ProductSettings,
   ProductConfigContext,
@@ -28,6 +27,8 @@ export type { ServiceConfig, ServiceInfo } from '../components/service.ts';
 export type { ExecutionError } from '../utils/as-error.ts';
 export { default as App } from './app.ts';
 export { default as discoverApp } from '../utils/discover-app.ts';
+export type { AppLayer, AppDiscoveryPolicy, AppDiscoveryOptions } from '../utils/discover-app.ts';
+export { runCli } from './cli.ts';
 
 export { default as Config } from './config.ts';
 export { default as configSchemas } from './config-schemas.ts';

@@ -1,14 +1,14 @@
 import Config from './config.ts';
 import createProductConfig from './product-config.ts';
 import resolveProductConfig from '../utils/resolve-product-config.ts';
-import discoverApp from '../utils/discover-app.ts';
+import discoverApp, { type AppDiscoveryPolicy } from '../utils/discover-app.ts';
 import App from './app.ts';
 import type { Engine, OutputWriter } from '../components/engine.ts';
 import type { AppConfig, ProductOptions, ProductSettings } from './types.ts';
 import asError from '../utils/as-error.ts';
 import { parseArgs } from 'node:util';
 import ansis from 'ansis';
-import { version } from './devtool.ts';
+import { version } from '../package.json';
 import jsYaml from 'js-yaml';
 import path from 'node:path';
 
@@ -24,7 +24,9 @@ export const runCli = async (
     config: suppliedConfig,
     engine,
     cwd = process.cwd(),
-  }: {
+    appFile,
+    appFiles,
+  }: AppDiscoveryPolicy & {
     stdout?: OutputWriter;
     stderr?: OutputWriter;
     config?: Config<ProductSettings>;
@@ -42,7 +44,6 @@ export const runCli = async (
       options: {
         help: { type: 'boolean', short: 'h' },
         version: { type: 'boolean', short: 'v' },
-        file: { type: 'string', short: 'f' },
         config: { type: 'string' },
         'data-root': { type: 'string' },
         'cache-root': { type: 'string' },
@@ -86,7 +87,6 @@ export const runCli = async (
           color.tp('Options:'),
           '  -h, --help           Show help',
           '  -v, --version        Show the package version',
-          '  -f, --file <path>    Select an app file',
           '      --config <path>  Read product configuration',
           '      --data-root <path>   Set generated project storage',
           '      --cache-root <path>  Set persistent cache storage',
@@ -100,7 +100,6 @@ export const runCli = async (
           `  ${settings.envPrefix}_DATA_ROOT    same as --data-root`,
           `  ${settings.envPrefix}_CACHE_ROOT   same as --cache-root`,
           `  ${settings.envPrefix}_CACHE        false disables persistent caching`,
-          `  ${settings.envPrefix}_APP_FILES    Comma-separated app filenames`,
           '',
         ].join('\n'),
       );
@@ -118,22 +117,18 @@ export const runCli = async (
       throw new Error(`Unexpected arguments for ${command}`);
     if (command === 'exec' && (!service || !commandArgs.length))
       throw new Error('Usage: exec <service> -- <command> [arguments...]');
-    const found = discoverApp({
-      cwd,
-      file: values.file,
-      filenames: settings.appFiles,
-      preFiles: settings.preFiles,
-      postFiles: settings.postFiles,
-    });
+    const found = discoverApp({ cwd, appFile, appFiles });
     const app = new App({
       root: found.root,
       file: found.file,
-      data: new Config<AppConfig>({ root: found.root, sources: found.sources }),
+      definition: new Config<AppConfig>({ root: found.root, sources: found.sources }),
       config,
       engine,
     });
     if (command === 'info') {
-      const info = values.metadata ? app.getMetadata() : app.getInfo();
+      const info = values.metadata
+        ? { ...app.getMetadata(), system: { cli: found.policy } }
+        : app.getInfo();
       stdout.write(values.json ? `${JSON.stringify(info)}\n` : jsYaml.dump(info));
     } else if (command === 'exec') {
       if (!service) throw new Error('Missing service');

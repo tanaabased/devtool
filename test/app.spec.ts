@@ -12,7 +12,7 @@ describe('App preparation state', () => {
         { root: f.root },
       );
       const config = createProductConfig(f.options);
-      const app = new App({ root: f.root, data, config, engine: f.engine });
+      const app = new App({ root: f.root, definition: data, config, engine: f.engine });
       const metadata = app.getMetadata();
       assert.equal(fs.existsSync(app._dir), false);
       assert.deepEqual(app.services, []);
@@ -26,7 +26,7 @@ describe('App preparation state', () => {
       });
       assert.equal(app.getMetadata().definition, metadata.definition);
       assert.throws(() => {
-        app.config.appFiles.push('changed');
+        app.config.cache = true;
       }, TypeError);
       app.prepare();
       const service = app.services[0];

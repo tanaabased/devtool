@@ -14,21 +14,18 @@ describe('configurable product (#2)', () => {
   afterEach(() => f.cleanup());
   it('applies defaults, environment, explicit file and caller overrides', () => {
     const configFile = path.join(f.temporary, 'product.yml');
-    fs.writeFileSync(configFile, 'cache: true\ncommandName: file\nappFiles: [file.yml]\n');
+    fs.writeFileSync(configFile, 'cache: true\ncommandName: file\n');
     const config = createProductConfig({
       configFile,
       envPrefix: 'WRAPPER',
       env: {
         WRAPPER_COMMAND_NAME: 'environment',
         WRAPPER_CACHE: 'false',
-        WRAPPER_APP_FILES: 'env.yml,other.yml',
       },
       commandName: 'explicit',
-      appFiles: ['chosen.yml'],
     }).compile().values;
     assert.equal(config.commandName, 'explicit');
     assert.equal(config.cache, true);
-    assert.deepEqual(config.appFiles, ['chosen.yml']);
     assert.equal(createProductConfig({ configFile, env: {} }).compile().values.commandName, 'file');
   });
   it('isolates products, project identities, roots and their caches', async () => {
@@ -63,9 +60,9 @@ describe('configurable product (#2)', () => {
     fs.renameSync(f.file, path.join(f.root, 'wrapper.yml'));
     const nested = path.join(f.root, 'nested');
     fs.mkdirSync(nested);
-    const config = createProductConfig({ ...f.options, appFiles: ['wrapper.yml'] });
-    const found = discoverApp({ cwd: nested, filenames: config.compile().values.appFiles });
-    const app = new App({ ...found, data: [found.file], config });
+    const config = createProductConfig(f.options);
+    const found = discoverApp({ cwd: nested, appFile: 'wrapper' });
+    const app = new App({ ...found, definition: [found.file], config });
     assert.equal(app.root, fs.realpathSync(f.root));
   });
   it('keeps generic product YAML separate from app import tags', () => {
@@ -91,7 +88,7 @@ describe('product Config snapshots (#31)', () => {
       ['defaults', 'system', 'managed', 'user', 'environment', 'caller'],
     );
     const result = product.compile().values;
-    assert.throws(() => (result.appFiles as string[]).push('unwanted.yml'), TypeError);
-    assert.equal(product.compile().values.appFiles!.includes('unwanted.yml'), false);
+    assert.equal(Reflect.set(result, 'commandName', 'unwanted'), false);
+    assert.equal(product.compile().values.commandName, 'next');
   });
 });

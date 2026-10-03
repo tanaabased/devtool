@@ -23,7 +23,7 @@ describe('L337 characterization (#3)', () => {
     const root = path.resolve(import.meta.dirname, '../../../examples/l337');
     const app = new App({
       root,
-      data: ['.devtool.yml'],
+      definition: ['.devtool.yml'],
       config: createProductConfig(f.options),
       engine: f.engine,
     }).prepare();

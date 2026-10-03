@@ -8,6 +8,7 @@ import {
   configSchemas,
   createProductConfig,
   discoverApp,
+  runCli,
   type AppConfig,
 } from '@tanaab/devtool';
 
@@ -17,45 +18,47 @@ const file = path.join(root, '.results/post.yaml');
 fs.copyFileSync(path.join(root, 'layers/post.yaml'), file);
 const product = createProductConfig(
   {
-    configFile: 'layers/product.yaml',
     configFiles: { system: false, managed: false, user: false },
     env: {},
   },
   { root },
 );
-const settings = product.compile().values;
-const found = discoverApp({
-  cwd: path.join(root, 'service'),
-  filenames: settings.appFiles,
-  preFiles: settings.preFiles,
-  postFiles: settings.postFiles,
-});
+const policy = {
+  appFile: 'application',
+  appFiles: [
+    'layers/pre',
+    '.',
+    { file: '.results/optional-missing', optional: true },
+    '.results/post',
+  ],
+};
+const found = discoverApp({ cwd: path.join(root, 'service'), ...policy });
 assert.equal(found.root, root);
 assert.equal(found.writeTarget, 'primary');
 assert.deepEqual(
   found.sources.map(({ id }) => id),
-  ['pre-0', 'primary', 'post-0', 'post-1'],
+  ['layer-0', 'primary', 'layer-2', 'layer-3'],
 );
 const definition = new Config<AppConfig>({
   root,
   schema: configSchemas.appDefinition,
-  sources: found.sources.map((source) => ({ ...source, writable: source.id === 'post-1' })),
+  sources: found.sources.map((source) => ({ ...source, writable: source.id === 'layer-3' })),
 });
 definition.compile();
-const app = new App({ root, data: definition, config: product });
+const app = new App({ root, definition, config: product });
 assert.equal(app.config.uid, 42);
 assert.equal(app.services.length, 0);
 assert.equal(app.config.cacheRoot, path.join(root, '.results/post-cache'));
-assert.equal(app.settings.explain('uid').winner?.source, 'app:post-1');
+assert.equal(app.settings.explain('uid').winner?.source, 'app:layer-3');
 assert.equal(
   app.definition.explain(['services', 'web', 'image', 'imagefile']).winner?.importedFrom,
   path.join(root, 'service/Dockerfile'),
 );
 const before = app.definition.snapshot();
-app.definition.writeSource('post-1', [{ op: 'delete', path: 'config.uid' }]);
+app.definition.writeSource('layer-3', [{ op: 'delete', path: 'config.uid' }]);
 assert.equal(app.definition.get('config.uid'), 7);
-assert.equal(app.definition.explain('config.uid').winner?.source, 'pre-0');
-app.definition.writeSource('post-1', [
+assert.equal(app.definition.explain('config.uid').winner?.source, 'layer-0');
+app.definition.writeSource('layer-3', [
   { op: 'set', path: 'config.uid', value: 0 },
   { op: 'set', path: 'config.cache', value: false },
   { op: 'set', path: 'tooling.hello.cmd', value: 'echo saved' },
@@ -74,23 +77,25 @@ assert.match(saved, /cache-root: .\/post-cache/);
 assert.doesNotMatch(saved, /data-root|imagefile/);
 assert.throws(
   () =>
-    app.definition.writeSource('post-1', [
+    app.definition.writeSource('layer-3', [
       { op: 'set', path: 'services.web.image', value: 'alpine' },
     ]),
   /scalar or import/,
 );
 assert.throws(
   () =>
-    app.definition.writeSource('post-1', [{ op: 'set', path: 'config.system.cache', value: true }]),
+    app.definition.writeSource('layer-3', [
+      { op: 'set', path: 'config.system.cache', value: true },
+    ]),
   /force/,
 );
-app.definition.writeSource('post-1', [{ op: 'set', path: 'config.system.cache', value: true }], {
+app.definition.writeSource('layer-3', [{ op: 'set', path: 'config.system.cache', value: true }], {
   force: true,
 });
 assert.throws(
   () =>
     app.definition.writeSource(
-      'post-1',
+      'layer-3',
       [{ op: 'set', path: 'config.system.identity', value: 'other' }],
       { force: true },
     ),
@@ -98,7 +103,7 @@ assert.throws(
 );
 const reloaded = new App({
   root,
-  data: found.sources
+  definition: found.sources
     .map(({ file }) => file)
     .filter((name) => !name.endsWith('optional-missing.yaml')),
   config: product,
@@ -108,3 +113,27 @@ assert.equal(reloaded.config.cache, false);
 assert.equal(reloaded.config.system?.cache, true);
 assert.equal(reloaded.services.length, 0);
 process.stdout.write('layer order, targeted edits, imports and stable snapshots verified\n');
+
+const output: string[] = [];
+const code = await runCli(['info', '--metadata', '--json'], {
+  ...policy,
+  cwd: path.join(root, 'service'),
+  config: product,
+  stdout: {
+    write: (value) => {
+      output.push(String(value));
+    },
+  },
+  stderr: {
+    write: (value) => {
+      throw new Error(String(value));
+    },
+  },
+});
+assert.equal(code, 0);
+const metadata = JSON.parse(output.join(''));
+assert.equal(metadata.definition.config.uid, 0);
+assert.equal(metadata.definition.tooling.hello.cmd, 'echo saved');
+assert.deepEqual(metadata.system.cli, found.policy);
+assert.equal(product.compile().values.system, undefined);
+process.stdout.write('CLI-owned discovery and read-only metadata verified\n');

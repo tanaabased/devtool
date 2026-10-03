@@ -55,7 +55,7 @@ import assert from "node:assert/strict";
 import path from "node:path";
 import { App } from "@tanaab/devtool";
 const root = process.cwd();
-const app = new App({ root, data: [path.join(root, ".results/root/.devtool.yml")] });
+const app = new App({ root, definition: [path.join(root, ".results/root/.devtool.yml")] });
 assert.equal((await app.exec("web", ["pwd"])).stdout.trim(), "/app");
 assert.equal((await app.exec("web", ["pwd"], { cwd: path.join(root, ".results") })).stdout.trim(), "/app/.results");
 '

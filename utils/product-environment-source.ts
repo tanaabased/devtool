@@ -5,6 +5,12 @@ export default function productEnvironmentSource(
   prefix: string,
   values: Readonly<NodeJS.ProcessEnv>,
 ): EnvironmentSource {
+  for (const name of ['APP_FILE', 'APP_FILES', 'PRE_FILES', 'POST_FILES']) {
+    if (values[`${prefix}_${name}`] !== undefined)
+      throw new Error(
+        `${prefix}_${name}: app discovery is read-only; set appFile and appFiles when constructing the CLI`,
+      );
+  }
   return {
     id: 'environment',
     kind: 'environment',
@@ -15,7 +21,6 @@ export default function productEnvironmentSource(
       COMMAND_NAME: { path: 'commandName' },
       DATA_ROOT: { path: 'dataRoot' },
       CACHE_ROOT: { path: 'cacheRoot' },
-      APP_FILES: { path: 'appFiles', parse: (value) => value.split(',').filter(Boolean) },
       CACHE: {
         path: 'cache',
         parse: (value) => {

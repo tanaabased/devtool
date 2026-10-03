@@ -41,6 +41,7 @@ export default function editConfigDocument(
       : { schema: node.items ?? node.values ?? {}, key, aliases: [key] };
   };
   const guard = (node: ConfigSchema, location: string, appInput: boolean) => {
+    if (node.readOnly) throw new Error(`${location}: ${node.readOnly}`);
     if (appInput && node.protected)
       throw new Error(`${location}: protected setting cannot be supplied by an app`);
     if (!force && (node.protected || node.writeProtected))

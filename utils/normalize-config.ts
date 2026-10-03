@@ -24,6 +24,7 @@ export default function normalizeConfig(
     directory = base,
     appInput = app,
   ): unknown => {
+    if (node.readOnly) throw new Error(`${location}: ${node.readOnly}`);
     appInput ||= Boolean(node.app);
     if (!value || typeof value !== 'object') {
       if (typeof value === 'function' || typeof value === 'symbol' || typeof value === 'bigint')

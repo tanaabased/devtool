@@ -88,7 +88,7 @@ export const fixture = (
       new App({
         root,
         file,
-        data: [path.basename(file)],
+        definition: [path.basename(file)],
         config: createProductConfig({ ...options, ...overrides }),
         engine,
       }).prepare(),

@@ -1,24 +1,8 @@
-import path from 'node:path';
-
 import type { ConfigSchema } from '../components/config.ts';
 
 const string: ConfigSchema = { type: 'string' };
-const layers: ConfigSchema = {
-  type: 'array',
-  protected: true,
-  items: {
-    type: 'object',
-    required: ['file'],
-    properties: {
-      file: {
-        ...string,
-        validate(value) {
-          if (!value) throw new Error('Layer file must not be empty');
-        },
-      },
-      optional: { type: 'boolean' },
-    },
-  },
+const discovery: ConfigSchema = {
+  readOnly: 'App discovery is read-only; set appFile and appFiles when constructing the CLI',
 };
 const selector = (id: string): ConfigSchema => ({
   ...string,
@@ -46,20 +30,10 @@ const product: ConfigSchema = {
     },
     commandName: { ...string, protected: true },
     envPrefix: { ...string, protected: true },
-    appFiles: {
-      type: 'array',
-      protected: true,
-      items: string,
-      validate(value) {
-        if (
-          !(value as string[]).length ||
-          (value as string[]).some((file) => path.basename(file) !== file)
-        )
-          throw new Error('appFiles must be a nonempty list of filenames');
-      },
-    },
-    preFiles: layers,
-    postFiles: layers,
+    appFile: discovery,
+    appFiles: discovery,
+    preFiles: discovery,
+    postFiles: discovery,
     dataRoot: { ...string, path: true },
     cacheRoot: { ...string, path: true },
     cache: { type: 'boolean' },
@@ -83,7 +57,11 @@ const runtime: ConfigSchema = {
   type: 'object',
   properties: {
     ...product.properties,
-    system: { type: 'object', writeProtected: true, properties: product.properties },
+    system: {
+      type: 'object',
+      writeProtected: true,
+      properties: { ...product.properties, cli: discovery },
+    },
     core: {
       type: 'object',
       properties: { engine: selector('docker-engine'), orchestrator: selector('docker-compose') },

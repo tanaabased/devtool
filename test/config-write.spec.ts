@@ -73,6 +73,48 @@ describe('Config write revisions', () => {
     assert.equal(config.snapshot(), snapshot);
     assert.equal(fs.readFileSync(file, 'utf8'), '{"cache":false}');
   });
+  it('rejects discovery edits even with force and preserves the source and snapshot', () => {
+    const file = path.join(root, 'config.yaml');
+    fs.writeFileSync(file, 'cache: true\n');
+    for (const schema of [schemas.runtime, schemas.appDefinition]) {
+      const config = new Config({
+        schema,
+        sources: [{ id: 'settings', kind: 'file', file, writable: true }],
+      });
+      const snapshot = config.compile();
+      const prefix = schema === schemas.appDefinition ? 'config.' : '';
+      for (const key of [
+        'appFile',
+        'app-files',
+        'preFiles',
+        'post-files',
+        'system.appFiles',
+        'system.cli',
+        'system.cli.appFile',
+      ]) {
+        for (const op of ['set', 'delete'] as const)
+          assert.throws(
+            () =>
+              config.writeSource('settings', [{ op, path: prefix + key, value: [] }], {
+                force: true,
+              }),
+            /read-only/,
+          );
+      }
+      assert.throws(
+        () =>
+          config.writeSource(
+            'settings',
+            [{ op: 'set', path: prefix + 'system', value: { cli: { appFile: 'other' } } }],
+            { force: true },
+          ),
+        /read-only/,
+      );
+      assert.equal(config.snapshot(), snapshot);
+      assert.equal(fs.readFileSync(file, 'utf8'), 'cache: true\n');
+    }
+  });
+
   it('requires writable destinations and explicit creation, including for object-only input', () => {
     const config = new Config({
       root,

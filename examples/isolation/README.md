@@ -18,29 +18,29 @@ mkdir -p .results
 
 ```sh
 # should start two apps with distinct projects and containers
-devtool --file first/.devtool.yml start
-devtool --file second/.devtool.yml start
-devtool --file first/.devtool.yml info --json > .results/first.json
-devtool --file second/.devtool.yml info --json > .results/second.json
+(cd first && devtool start)
+(cd second && devtool start)
+(cd first && devtool info --json) > .results/first.json
+(cd second && devtool info --json) > .results/second.json
 bun verify.ts running
 
 # should keep each app’s volume contents independent
-devtool --file first/.devtool.yml exec web -- sh -c 'echo first > /data/value'
-devtool --file second/.devtool.yml exec web -- test ! -f /data/value
-devtool --file second/.devtool.yml exec web -- sh -c 'echo second > /data/value'
-test "$(devtool --file first/.devtool.yml exec web -- cat /data/value)" = first
-test "$(devtool --file second/.devtool.yml exec web -- cat /data/value)" = second
+(cd first && devtool exec web -- sh -c 'echo first > /data/value')
+(cd second && devtool exec web -- test ! -f /data/value)
+(cd second && devtool exec web -- sh -c 'echo second > /data/value')
+test "$(cd first && devtool exec web -- cat /data/value)" = first
+test "$(cd second && devtool exec web -- cat /data/value)" = second
 
 # should destroy one app while preserving the other app and its cached state
-devtool --file first/.devtool.yml destroy
+(cd first && devtool destroy)
 bun verify.ts destroyed
-test "$(devtool --file second/.devtool.yml exec web -- cat /data/value)" = second
+test "$(cd second && devtool exec web -- cat /data/value)" = second
 
 # should restart and destroy the remaining app
-devtool --file second/.devtool.yml stop
-devtool --file second/.devtool.yml restart
-test "$(devtool --file second/.devtool.yml exec web -- cat /data/value)" = second
-devtool --file second/.devtool.yml destroy
+(cd second && devtool stop)
+(cd second && devtool restart)
+test "$(cd second && devtool exec web -- cat /data/value)" = second
+(cd second && devtool destroy)
 ```
 
 ## Testing Library
@@ -55,7 +55,7 @@ import assert from "node:assert/strict";
 import { App, createProductConfig } from "@tanaab/devtool";
 const first = createProductConfig({ identity: "first", env: {}, dataRoot: ".results/first" });
 const second = createProductConfig({ identity: "second", env: {}, dataRoot: ".results/second" });
-assert.notEqual(new App({ root: "first", data: [".devtool.yml"], config: first }).project, new App({ root: "first", data: [".devtool.yml"], config: second }).project);
+assert.notEqual(new App({ root: "first", definition: [".devtool.yml"], config: first }).project, new App({ root: "first", definition: [".devtool.yml"], config: second }).project);
 assert.notEqual(first.compile().values.dataRoot, second.compile().values.dataRoot);
 assert.equal(first.get("commandName"), "first");
 assert.equal(second.get("commandName"), "second");

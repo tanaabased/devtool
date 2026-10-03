@@ -71,7 +71,7 @@ assert.equal(config.commandName, "explicit");
 bun -e '
 import assert from "node:assert/strict";
 import { App, createProductConfig } from "@tanaab/devtool";
-const app = new App({ root: process.cwd(), data: [".devtool.yml"], config: createProductConfig({ configFile: "product.yml" }) });
+const app = new App({ root: process.cwd(), definition: [".devtool.yml"], config: createProductConfig({ configFile: "product.yml" }) });
 assert.equal(app.getInfo().services[0].type, "l337");
 '
 ```
@@ -109,7 +109,7 @@ or `delete` operations to an explicitly writable JSON/YAML source and atomically
 publishes a validated revision. Deletion reveals lower layers; `null` remains a
 value. A write never saves the merged snapshot. `create` permits a missing file;
 `force` permits protected writes, including `system.*`, but cannot bypass app
-identity restrictions. Changed files require an explicit reload before writing.
+identity restrictions or read-only CLI discovery metadata. Changed files require an explicit reload before writing.
 Edits through imports, anchors or aliases are rejected rather than flattened.
 Config commands remain #38.
 

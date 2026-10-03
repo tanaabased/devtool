@@ -1,19 +1,10 @@
 import type { ServiceConfig, ComposeService, ServiceInfo } from '../components/service.ts';
 import type { ConfigTemplate } from '../components/config.ts';
 
-export interface AppLayer {
-  file: string;
-  /** Required unless explicitly optional. Paths resolve at the discovered root. */
-  optional?: boolean;
-}
-
 export interface ProductSettings {
   identity?: string;
   commandName?: string;
   envPrefix?: string;
-  appFiles?: string[];
-  preFiles?: AppLayer[];
-  postFiles?: AppLayer[];
   dataRoot?: string;
   cacheRoot?: string;
   cache?: boolean;
@@ -55,7 +46,6 @@ export interface ProductConfig extends ProductSettings {
   identity: string;
   commandName: string;
   envPrefix: string;
-  appFiles: string[];
   dataRoot: string;
   cacheRoot: string;
   cache: boolean;

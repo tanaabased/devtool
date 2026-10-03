@@ -56,12 +56,11 @@ const app = new App({
     identity: 'consumer',
     commandName: 'consumer',
     envPrefix: 'CONSUMER',
-    appFiles: ['unused.yml'],
     dataRoot: '/unused/data',
     cacheRoot: '/unused/cache',
     cache: false,
   }),
-  data: { services: { web: { type: 'l337', image: 'alpine' } } },
+  definition: { services: { web: { type: 'l337', image: 'alpine' } } },
 });
 assert.deepEqual(app.services, []);
 assert.equal(app.getMetadata().definition.services.web!.image, 'alpine');
