@@ -62,13 +62,13 @@ class App {
 
   constructor({
     config: settings,
-    data: input,
+    definition: input,
     root,
     file,
     engine,
   }: {
     config?: ProductSettings | Config<ProductSettings>;
-    data: AppConfig | Config<AppConfig> | readonly string[];
+    definition: AppConfig | Config<AppConfig> | readonly string[];
     root: string;
     file?: string;
     engine?: Engine;

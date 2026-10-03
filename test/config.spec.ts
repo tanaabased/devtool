@@ -180,7 +180,7 @@ describe('Config foundation (#31)', () => {
             data: { 'app-files': ['other.yml'] },
           })
           .compile(),
-      /protected/,
+      /read-only/,
     );
   });
 

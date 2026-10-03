@@ -2,10 +2,12 @@ import fs from 'node:fs';
 import { createRequire } from 'node:module';
 import path from 'node:path';
 
-import { type Document, visit } from 'yaml';
+import { Document, visit } from 'yaml';
 
 import type {
   ConfigFormat,
+  ConfigEdit,
+  ConfigWriteResult,
   ConfigOrigin,
   ConfigPath,
   ConfigReadonly,
@@ -15,10 +17,12 @@ import type {
   SourceInfo,
 } from '../components/config.ts';
 import clone from '../utils/clone-config.ts';
+import editConfigDocument from '../utils/edit-config-document.ts';
 import mergeConfig, { type Provenance } from '../utils/merge-config.ts';
 import normalize from '../utils/normalize-config.ts';
 import validate from '../utils/validate-config.ts';
-import yaml, { ImportObject, loadFile } from './yaml.ts';
+import writeConfigFile from '../utils/write-config-file.ts';
+import yaml, { ImportObject, loadFile, readDocument } from './yaml.ts';
 
 // Explicit user-supplied modules are data inputs, never dependencies hidden from the bundler.
 const loadModule = createRequire(import.meta.url);
@@ -28,6 +32,8 @@ interface Store {
   data?: Record<string, unknown>;
   normalized?: Record<string, unknown>;
   document?: Document;
+  /** Exact loaded bytes; null means an absent optional file. */
+  text?: string | null;
   dependencies: string[];
 }
 const segments = (key: ConfigPath) => (typeof key === 'string' ? key.split('.') : [...key]);
@@ -176,6 +182,7 @@ export default class Config<T extends object = Record<string, unknown>> {
     store.data = undefined;
     store.normalized = undefined;
     store.document = undefined;
+    store.text = undefined;
     store.dependencies = [];
     store.revision++;
     this.#invalidate();
@@ -270,10 +277,12 @@ export default class Config<T extends object = Record<string, unknown>> {
         if (format === 'yaml') {
           const loaded = loadFile(source.file, { imports: source.imports });
           store.document = loaded.document;
+          store.text = loaded.text;
           store.dependencies = [...loaded.dependencies];
           value = loaded.value;
         } else if (format === 'json') {
-          value = JSON.parse(fs.readFileSync(source.file, 'utf8'));
+          store.text = fs.readFileSync(source.file, 'utf8');
+          value = JSON.parse(store.text);
           store.dependencies = [source.file];
         } else {
           delete loadModule.cache[loadModule.resolve(source.file)];
@@ -289,9 +298,10 @@ export default class Config<T extends object = Record<string, unknown>> {
           source.optional &&
           (error as NodeJS.ErrnoException).code === 'ENOENT' &&
           (error as NodeJS.ErrnoException).path === source.file
-        )
+        ) {
           value = {};
-        else throw error;
+          store.text = null;
+        } else throw error;
       }
     }
     if (!record(value)) throw new Error('Configuration source must contain an object');
@@ -392,5 +402,76 @@ export default class Config<T extends object = Record<string, unknown>> {
   sourceDocument(id: string): Document | undefined {
     this.snapshot();
     return cloneDocument(this.#stores[this.#index(id)]!.document);
+  }
+
+  /**
+   * Atomically persist source-local edits, never the effective snapshot. select is respected.
+   * Requires a writable JSON/YAML source; create explicitly permits a missing destination.
+   * A successful write installs a validated revision. Failures preserve this Config and file.
+   * Deletion removes the source override, revealing lower layers. Paths through imports/aliases
+   * are rejected; force bypasses write protection only, never app identity restrictions.
+   */
+  writeSource(
+    id: string,
+    edits: readonly ConfigEdit[],
+    { force = false, create = false }: { force?: boolean; create?: boolean } = {},
+  ): ConfigWriteResult {
+    const index = this.#index(id);
+    const source = this.#stores[index]!.source;
+    if (source.kind !== 'file' || !source.writable || this.#format(source) === 'javascript')
+      throw new Error(`${id}: select an explicitly writable JSON/YAML source`);
+    if (!edits.length) throw new Error(`${id}: at least one edit is required`);
+    try {
+      const candidate = this.fork();
+      const store = candidate.#stores[index]!;
+      if (create && store.source.kind === 'file') store.source.optional = true;
+      const data = candidate.#load(store);
+      const expected = store.text!;
+      const document = editConfigDocument(
+        store.document ?? new Document(data),
+        edits,
+        this.#schema,
+        {
+          select: source.select,
+          force,
+          app: source.role === 'app',
+        },
+      );
+      const format = this.#format(source);
+      const text =
+        format === 'yaml' ? String(document) : JSON.stringify(document.toJS(), null, 2) + '\n';
+      const dependencies = new Set<string>([source.file]);
+      const parsed =
+        format === 'yaml'
+          ? readDocument(text, {
+              base: path.dirname(source.file),
+              filename: source.file,
+              imports: source.imports,
+              stack: [source.file],
+              dependencies,
+            })
+          : { value: JSON.parse(text) as unknown, document: undefined };
+      if (!record(parsed.value)) throw new Error('Configuration source must contain an object');
+      store.source = clone(source);
+      store.data = normalize(parsed.value) as Record<string, unknown>;
+      store.normalized = undefined;
+      store.document = parsed.document;
+      store.text = text;
+      store.dependencies = [...dependencies];
+      store.revision++;
+      candidate.#invalidate();
+      candidate.compile();
+      writeConfigFile(source.file, text, expected, { create });
+      this.#stores = candidate.#stores;
+      this.#revision = candidate.#revision;
+      this.#snapshot = candidate.#snapshot;
+      this.#provenance = candidate.#provenance;
+      return { source: id, file: source.file, revision: this.#revision };
+    } catch (error) {
+      throw new Error(
+        `${id} (${source.file}): ${error instanceof Error ? error.message : String(error)}`,
+        { cause: error },
+      );
+    }
   }
 }

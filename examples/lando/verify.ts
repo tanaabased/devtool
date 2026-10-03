@@ -16,7 +16,8 @@ assert.equal(process.env.GITHUB_ACTIONS, 'true', 'Container assertions run only 
 const root = path.join(fixtureRoot, 'lando');
 const file = path.join(root, '.devtool.yml');
 const cli = (...args: string[]) => {
-  const result = spawnSync('devtool', ['--file', file, ...args], {
+  const result = spawnSync('devtool', args, {
+    cwd: root,
     encoding: 'utf8',
     timeout: 240000,
   });

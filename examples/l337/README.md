@@ -344,12 +344,12 @@ bun -e '
 import assert from "node:assert/strict";
 import { App } from "@tanaab/devtool";
 await Bun.write("image/instructions", "RUN exit 23\n");
-const app = new App({ root: process.cwd(), data: [".devtool.yml"] });
+const app = new App({ root: process.cwd(), definition: [".devtool.yml"] });
 await assert.rejects(app.rebuild());
 assert.deepEqual(app.state.services, {});
 assert.equal(app.state.running, false);
 await Bun.write("image/instructions", "RUN echo main >> /order\n");
-await new App({ root: process.cwd(), data: [".devtool.yml"] }).start();
+await new App({ root: process.cwd(), definition: [".devtool.yml"] }).start();
 '
 
 # should destroy the app without removing its source files

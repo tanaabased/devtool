@@ -1,0 +1,5 @@
+config:
+  uid: 7
+tooling:
+  hello:
+    cmd: echo pre

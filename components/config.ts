@@ -11,10 +11,25 @@ export interface ConfigSchema {
   required?: readonly string[];
   /** App overlays cannot supply this field. SDK persistence must require force. */
   protected?: boolean;
+  /** Writes require force, without prohibiting this namespace in app input. */
+  writeProtected?: boolean;
+  /** Runtime-owned metadata; reject all source values and edits, even with force. */
+  readOnly?: string;
+  /** This subtree contains app overrides even when compiling a definition source. */
+  app?: boolean;
   validate?: (value: unknown) => void;
 }
 
 export type ConfigPath = string | readonly string[];
+/** Paths are source-local (relative to select), using schema keys or literal dictionary keys. */
+export type ConfigEdit =
+  { op: 'set'; path: ConfigPath; value: unknown } | { op: 'delete'; path: ConfigPath };
+
+export interface ConfigWriteResult {
+  source: string;
+  file: string;
+  revision: number;
+}
 export type ConfigRole =
   'defaults' | 'plugin-defaults' | 'global' | 'app' | 'environment' | 'caller';
 export type ConfigFormat = 'yaml' | 'json' | 'javascript';

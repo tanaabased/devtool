@@ -1,8 +1,22 @@
-import path from 'node:path';
-
 import type { ConfigSchema } from '../components/config.ts';
 
 const string: ConfigSchema = { type: 'string' };
+const discovery: ConfigSchema = {
+  readOnly: 'App discovery is read-only; set appFile and appFiles when constructing the CLI',
+};
+const selector = (id: string): ConfigSchema => ({
+  ...string,
+  validate(value) {
+    if (value !== id) throw new Error(`Unsupported component: ${String(value)} (expected ${id})`);
+  },
+});
+const component: ConfigSchema = {
+  type: 'object',
+  validate(value) {
+    if (Object.keys(value as object).length)
+      throw new Error('This built-in component exposes no configuration fields');
+  },
+};
 const product: ConfigSchema = {
   type: 'object',
   properties: {
@@ -16,18 +30,10 @@ const product: ConfigSchema = {
     },
     commandName: { ...string, protected: true },
     envPrefix: { ...string, protected: true },
-    appFiles: {
-      type: 'array',
-      protected: true,
-      items: string,
-      validate(value) {
-        if (
-          !(value as string[]).length ||
-          (value as string[]).some((file) => path.basename(file) !== file)
-        )
-          throw new Error('appFiles must be a nonempty list of filenames');
-      },
-    },
+    appFile: discovery,
+    appFiles: discovery,
+    preFiles: discovery,
+    postFiles: discovery,
     dataRoot: { ...string, path: true },
     cacheRoot: { ...string, path: true },
     cache: { type: 'boolean' },
@@ -51,17 +57,24 @@ const runtime: ConfigSchema = {
   type: 'object',
   properties: {
     ...product.properties,
-    system: { type: 'object', protected: true, properties: product.properties },
-    core: { type: 'object', properties: { engine: string, orchestrator: string } },
-    'docker-engine': { type: 'object' },
-    'docker-compose': { type: 'object' },
+    system: {
+      type: 'object',
+      writeProtected: true,
+      properties: { ...product.properties, cli: discovery },
+    },
+    core: {
+      type: 'object',
+      properties: { engine: selector('docker-engine'), orchestrator: selector('docker-compose') },
+    },
+    'docker-engine': component,
+    'docker-compose': component,
   },
 };
 const appDefinition: ConfigSchema = {
   type: 'object',
   properties: {
     name: string,
-    config: runtime,
+    config: { ...runtime, app: true },
     services: {
       type: 'object',
       values: {

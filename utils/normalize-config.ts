@@ -22,7 +22,10 @@ export default function normalizeConfig(
     node: ConfigSchema,
     location: string,
     directory = base,
+    appInput = app,
   ): unknown => {
+    if (node.readOnly) throw new Error(`${location}: ${node.readOnly}`);
+    appInput ||= Boolean(node.app);
     if (!value || typeof value !== 'object') {
       if (typeof value === 'function' || typeof value === 'symbol' || typeof value === 'bigint')
         throw new Error(`${location}: expected configuration data`);
@@ -51,7 +54,7 @@ export default function normalizeConfig(
       const childBase = importedFrom ? path.dirname(importedFrom) : directory;
       if (Array.isArray(value)) {
         const items = value.map((item, index) =>
-          visit(item, node.items ?? {}, `${location}[${index}]`, childBase),
+          visit(item, node.items ?? {}, `${location}[${index}]`, childBase, appInput),
         );
         return value instanceof ImportArray && !external
           ? new ImportArray(items, value.getMetadata())
@@ -78,7 +81,7 @@ export default function normalizeConfig(
         const destination = recognized ? (external ? kebabCase(canonical) : canonical) : key;
         if (Object.hasOwn(result, destination))
           throw new Error(`${location}: ambiguous key ${key}`);
-        if (app && recognized && field.protected)
+        if (appInput && recognized && field.protected)
           throw new Error(`${location}.${key}: protected setting cannot be supplied by an app`);
         Object.defineProperty(result, destination, {
           value: visit(
@@ -86,6 +89,7 @@ export default function normalizeConfig(
             recognized ? field : (node.values ?? {}),
             `${location}.${key}`,
             childBase,
+            appInput,
           ),
           enumerable: true,
           writable: true,

@@ -47,7 +47,6 @@ export default function createProductConfig(
         identity,
         commandName,
         envPrefix,
-        appFiles: ['.devtool.yml', '.devtool.yaml'],
         cache: true,
         dataRoot: path.join(home, `.${identity}`),
       },

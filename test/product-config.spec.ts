@@ -76,6 +76,42 @@ describe('product source assembly', () => {
     assert.equal(generated.get('cache'), false);
   });
 
+  it('rejects discovery fields from every product source, including shadowed and nested values', () => {
+    const fields = [
+      'appFile',
+      'app-file',
+      'appFiles',
+      'app-files',
+      'preFiles',
+      'pre-files',
+      'postFiles',
+      'post-files',
+    ];
+    for (const key of fields) {
+      for (const data of [{ [key]: null }, { system: { [key]: [] } }]) {
+        const config = createProductConfig(
+          { configFiles: { system: false, managed: false, user: false } },
+          { root, home: root, env: {} },
+        );
+        config.addSource({ id: 'invalid', kind: 'object', data });
+        config.addSource({ id: 'mask', kind: 'object', data: { system: false } });
+        assert.throws(() => config.compile(), /read-only.*constructing the CLI/);
+      }
+    }
+    const file = path.join(root, 'invalid.yaml');
+    fs.writeFileSync(file, 'system:\n  cli:\n    app-file: other\n');
+    for (const options of [
+      { configFile: file },
+      { configFiles: { system: file } },
+      { configFiles: { managed: file } },
+      { configFiles: { user: file } },
+    ])
+      assert.throws(
+        () => createProductConfig(options, { root, home: root, env: {} }).compile(),
+        /read-only/,
+      );
+  });
+
   it('does not create optional files and fails on a missing explicit file', () => {
     const context = { root, home: root, env: { WRAPPER_CONFIG_DIR: 'settings' } };
     const config = createProductConfig(

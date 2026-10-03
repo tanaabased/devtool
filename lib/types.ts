@@ -5,7 +5,6 @@ export interface ProductSettings {
   identity?: string;
   commandName?: string;
   envPrefix?: string;
-  appFiles?: string[];
   dataRoot?: string;
   cacheRoot?: string;
   cache?: boolean;
@@ -13,6 +12,11 @@ export interface ProductSettings {
   gid?: number | string;
   username?: string;
   npmrc?: string | Record<string, string | number | boolean>;
+  system?: Omit<ProductSettings, 'system' | 'core' | 'dockerEngine' | 'dockerCompose'>;
+  core?: { engine?: 'docker-engine'; orchestrator?: 'docker-compose' };
+  /** Built-in components currently expose no configuration fields. */
+  dockerEngine?: Record<string, never>;
+  dockerCompose?: Record<string, never>;
 }
 
 export interface ProductConfigContext {
@@ -42,7 +46,6 @@ export interface ProductConfig extends ProductSettings {
   identity: string;
   commandName: string;
   envPrefix: string;
-  appFiles: string[];
   dataRoot: string;
   cacheRoot: string;
   cache: boolean;

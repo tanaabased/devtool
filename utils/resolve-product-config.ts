@@ -6,14 +6,7 @@ import clone from './clone-config.ts';
 /** Resolve required product settings and derive cache storage from the compiled configuration. */
 export default function resolveProductConfig(config: Config<ProductSettings>): ProductConfig {
   const values = clone(config.compile().values);
-  for (const key of [
-    'identity',
-    'commandName',
-    'envPrefix',
-    'appFiles',
-    'dataRoot',
-    'cache',
-  ] as const)
+  for (const key of ['identity', 'commandName', 'envPrefix', 'dataRoot', 'cache'] as const)
     if (values[key] === undefined) throw new Error(`Product configuration requires ${key}`);
   return {
     ...values,

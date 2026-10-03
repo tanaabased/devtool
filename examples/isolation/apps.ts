@@ -5,11 +5,11 @@ import path from 'node:path';
 const root = path.join(import.meta.dirname, 'first');
 export const first = new App({
   root,
-  data: ['.devtool.yml'],
+  definition: ['.devtool.yml'],
   config: createProductConfig({ identity: 'first', envPrefix: 'DEVTOOL' }),
 });
 export const second = new App({
   root,
-  data: ['.devtool.yml'],
+  definition: ['.devtool.yml'],
   config: createProductConfig({ identity: 'second', envPrefix: 'DEVTOOL' }),
 });

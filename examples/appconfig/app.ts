@@ -13,16 +13,20 @@ const input: AppConfig = {
   services: { web: { type: 'l337', image: 'alpine:3.20' } },
   config: { cache: false },
 };
-const raw = new App({ root, data: input, config: product });
+const raw = new App({ root, definition: input, config: product });
 const source = Config.from<AppConfig>(input, { root });
-const configured = new App({ root, data: source, config: product });
+const configured = new App({ root, definition: source, config: product });
 assert.deepEqual(raw.getMetadata(), configured.getMetadata());
 assert.equal(raw.file, undefined);
 input.services.web!.image = 'changed';
 assert.equal(raw.data.services.web!.image, 'alpine:3.20');
-assert.throws(() => new App({ root: '', data: input }), /explicit root/);
+assert.throws(() => new App({ root: '', definition: input }), /explicit root/);
 
-const layered = new App({ root, data: ['application.yaml', 'overlay.json'], config: product });
+const layered = new App({
+  root,
+  definition: ['application.yaml', 'overlay.json'],
+  config: product,
+});
 assert.equal(layered.config.uid, 42);
 assert.equal(layered.config.cache, false);
 assert.equal(layered.config.dataRoot, path.join(root, '.results/data'));
@@ -45,9 +49,13 @@ const environment = createProductConfig(
   { configFiles: { system: false, managed: false, user: false }, env: { DEVTOOL_CACHE: 'true' } },
   { root },
 );
-assert.equal(new App({ root, data: ['application.yaml'], config: environment }).config.cache, true);
+assert.equal(
+  new App({ root, definition: ['application.yaml'], config: environment }).config.cache,
+  true,
+);
 assert.throws(
-  () => new App({ root, data: { ...input, config: { identity: 'forbidden' } }, config: product }),
+  () =>
+    new App({ root, definition: { ...input, config: { identity: 'forbidden' } }, config: product }),
   /protected setting/,
 );
 

@@ -9,14 +9,13 @@ describe('resolved product settings', () => {
       identity: 'example',
       commandName: 'example',
       envPrefix: 'EXAMPLE',
-      appFiles: ['app.yml'],
       dataRoot: '/data',
       cache: true,
     });
     const resolved = resolve(config);
     assert.equal(resolved.cacheRoot, '/data/cache');
-    resolved.appFiles.push('another');
-    assert.deepEqual(resolve(config).appFiles, ['app.yml']);
+    resolved.commandName = 'another';
+    assert.equal(resolve(config).commandName, 'example');
     assert.equal(config.get('cacheRoot'), undefined);
     assert.throws(() => resolve(Config.from<ProductSettings>({})), /requires identity/);
   });

@@ -19,7 +19,7 @@ import type {
 export async function consume(engine: Engine) {
   const options = { identity: 'wrapper', cache: false } satisfies ProductOptions;
   const config = createProductConfig(options);
-  const app = new App({ root: '/fixture', data: ['app.yml'], config, engine });
+  const app = new App({ root: '/fixture', definition: ['app.yml'], config, engine });
   const info: AppInfo = await app.start();
   const state: PersistedState = app.state;
   const result: ExecResult = await app.exec('web', ['printf', 'hello']);
@@ -42,19 +42,19 @@ export type PublicContractChecks = [
 
 /** Config is independently consumable; typed reads and snapshots do not expose mutable state. */
 export function consumeConfig() {
-  const config = new Config<{ commandName: string; appFiles: string[] }>({
+  const config = new Config<{ commandName: string; tags: string[] }>({
     schema: configSchemas.product,
     sources: [
-      { id: 'caller', kind: 'object', data: { commandName: 'wrapper', appFiles: ['app.yml'] } },
+      { id: 'caller', kind: 'object', data: { commandName: 'wrapper', tags: ['example'] } },
     ],
   });
   config.compile();
   const definition: AppConfig = { services: { web: { type: 'l337', image: 'alpine' } } };
   Config.from<AppConfig>(definition, { schema: configSchemas.appDefinition });
   const name: string = config.get('commandName');
-  const files: readonly string[] = config.get('appFiles');
+  const files: readonly string[] = config.get('tags');
   // @ts-expect-error compiled snapshots are immutable
-  config.get('appFiles').push('wrong');
+  config.get('tags').push('wrong');
   return { name, files, serialized: config.export('yaml') };
 }
 
@@ -74,14 +74,18 @@ export function consumeProductConfig(root: string) {
 }
 
 export function consumeApp(root: string, input: AppConfig) {
-  const app = new App({ root, data: input });
-  const fromConfig = new App({ root, data: Config.from<AppConfig>(input) });
-  const fromFiles = new App({ root, data: ['arbitrary.yaml', 'overrides.json'] });
+  const app = new App({ root, definition: input });
+  const fromConfig = new App({ root, definition: Config.from<AppConfig>(input) });
+  const fromFiles = new App({ root, definition: ['arbitrary.yaml', 'overrides.json'] });
   const found: { root: string; file: string } = discoverApp({
     cwd: root,
-    filenames: ['application.yaml'],
+    appFile: 'application',
   });
   // @ts-expect-error direct callers must supply the app root
-  new App({ data: input });
+  new App({ definition: input });
+  // @ts-expect-error data is not a constructor input
+  new App({ root, data: input });
+  // @ts-expect-error discovery is not a product setting
+  createProductConfig({ appFiles: ['application'] });
   return { app, fromConfig, fromFiles, found };
 }
