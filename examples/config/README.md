@@ -38,6 +38,10 @@ cmp .results/seed-before.json .results/seeded/config.json
 # should load an imported service definition
 devtool --config product.yml info --json | bun -e 'const info = await Bun.stdin.json(); if (info.services[0].type !== "l337") throw new Error("expected l337 service")'
 
+# should read targeted SDK writes without persisting the masking environment value
+bun persistence.ts
+DEVTOOL_CONFIG_DIR=.results/edited devtool --help | grep -F 'Usage: saved-example'
+
 ```
 
 ## Testing Library
@@ -100,8 +104,14 @@ module; its transitive JavaScript dependencies retain Bun's module caching.
 JavaScript sources are read-only. `export()` serializes effective data into a new
 document; it does not edit sources or carry comments from multiple files.
 `sourceDocument(id)` returns a detached YAML document retaining comments, anchors
-and import tags. Targeted persistence and config CLI commands follow this read
-foundation.
+and import tags. `writeSource(id, edits, {force, create})` applies a batch of `set`
+or `delete` operations to an explicitly writable JSON/YAML source and atomically
+publishes a validated revision. Deletion reveals lower layers; `null` remains a
+value. A write never saves the merged snapshot. `create` permits a missing file;
+`force` permits protected writes, including `system.*`, but cannot bypass app
+identity restrictions. Changed files require an explicit reload before writing.
+Edits through imports, anchors or aliases are rejected rather than flattened.
+Config commands remain #38.
 
 ## Testing Library Config
 
@@ -111,6 +121,9 @@ bun config.ts
 
 # should assemble product sources and seed persistent settings explicitly
 bun assembly.ts
+
+# should persist only requested overrides and retain source and snapshot isolation
+bun persistence.ts
 ```
 
 ## Product sources and seeds

@@ -10,6 +10,13 @@ definition's `config` section overlays global settings, below environment and
 caller overrides. Identity and discovery settings are protected from app input.
 Host paths use their declaring source; container destinations remain unchanged.
 
+Product `preFiles` and `postFiles` contain ordered `{file, optional?}` layers.
+They resolve at the discovered root and do not identify roots themselves. Missing
+layers fail unless marked optional; defaults are empty. Discovery returns ordered
+`sources` and the `primary` write target. Explicit `--file` changes the primary
+and root while retaining this layer policy. SDK callers choose writable sources
+through Config file descriptors; a plain file list has no writable destination.
+
 `getMetadata()` returns the initialized definition without reading saved state,
 constructing services, creating directories or contacting the engine. `prepare()`
 materializes services once. Rich `getInfo()` and lifecycle methods prepare on
@@ -38,6 +45,14 @@ DEVTOOL_APP_FILES=application.yaml devtool info --metadata --json | bun -e 'cons
 
 # should prepare rich service information on demand
 devtool --file application.yaml info --json | bun -e 'const info = await Bun.stdin.json(); if (info.services[0].type !== "l337") throw new Error("missing service")'
+
+# should compile pre and post layers and read saved overrides without preparing services
+bun layers.ts
+devtool --config layers/product.yaml info --metadata --json | bun -e 'const m = await Bun.stdin.json(); if (m.definition.config.uid !== 0 || m.definition.tooling.hello.cmd !== "echo saved") throw new Error("missing saved layer")'
+
+# should retain layer policy when the primary is selected explicitly
+bun layers.ts
+devtool --config layers/product.yaml --file application.yaml info --metadata --json | bun -e 'const m = await Bun.stdin.json(); if (m.definition.config.system.cache !== true) throw new Error("missing system override")'
 ```
 
 ## Testing Library
@@ -45,4 +60,7 @@ devtool --file application.yaml info --json | bun -e 'const info = await Bun.std
 ```sh
 # should accept objects, Config and ordered files with isolated settings and preparation
 bun app.ts
+
+# should preserve documents, imports and snapshots across targeted layer writes
+bun layers.ts
 ```

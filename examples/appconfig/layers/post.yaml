@@ -1,0 +1,13 @@
+# Keep this comment and the source-relative import when saving an override.
+config:
+  uid: 42
+  cache-root: ./post-cache
+services:
+  web: !import ../service/web.yaml
+tooling:
+  hello:
+    cmd: echo post
+metadata:
+  labels: &labels
+    Literal_Label: false
+  copy: *labels

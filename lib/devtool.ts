@@ -5,6 +5,7 @@ export const version = metadata.version;
 
 export type {
   ProductOptions,
+  AppLayer,
   ProductConfig,
   ProductSettings,
   ProductConfigContext,
@@ -34,6 +35,8 @@ export { default as createProductConfig } from './product-config.ts';
 export { default as seedConfigFile } from './seed-config-file.ts';
 export type {
   ConfigSource,
+  ConfigEdit,
+  ConfigWriteResult,
   ConfigSchema,
   ConfigSnapshot,
   ConfigReadonly,

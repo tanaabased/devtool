@@ -156,8 +156,9 @@ export function loadFile(file: string, options: YamlOptions = {}) {
   const canonical = fs.realpathSync(file);
   const dependencies = options.dependencies ?? new Set<string>();
   dependencies.add(canonical);
+  const text = fs.readFileSync(canonical, 'utf8');
   return {
-    ...readDocument(fs.readFileSync(canonical, 'utf8'), {
+    ...readDocument(text, {
       ...options,
       dependencies,
       base: path.dirname(canonical),
@@ -165,6 +166,7 @@ export function loadFile(file: string, options: YamlOptions = {}) {
       stack: [canonical],
     }),
     dependencies,
+    text,
   };
 }
 

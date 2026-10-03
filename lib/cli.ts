@@ -1,10 +1,10 @@
-import type Config from './config.ts';
+import Config from './config.ts';
 import createProductConfig from './product-config.ts';
 import resolveProductConfig from '../utils/resolve-product-config.ts';
 import discoverApp from '../utils/discover-app.ts';
 import App from './app.ts';
 import type { Engine, OutputWriter } from '../components/engine.ts';
-import type { ProductOptions, ProductSettings } from './types.ts';
+import type { AppConfig, ProductOptions, ProductSettings } from './types.ts';
 import asError from '../utils/as-error.ts';
 import { parseArgs } from 'node:util';
 import ansis from 'ansis';
@@ -118,8 +118,20 @@ export const runCli = async (
       throw new Error(`Unexpected arguments for ${command}`);
     if (command === 'exec' && (!service || !commandArgs.length))
       throw new Error('Usage: exec <service> -- <command> [arguments...]');
-    const found = discoverApp({ cwd, file: values.file, filenames: settings.appFiles });
-    const app = new App({ ...found, data: [found.file], config, engine });
+    const found = discoverApp({
+      cwd,
+      file: values.file,
+      filenames: settings.appFiles,
+      preFiles: settings.preFiles,
+      postFiles: settings.postFiles,
+    });
+    const app = new App({
+      root: found.root,
+      file: found.file,
+      data: new Config<AppConfig>({ root: found.root, sources: found.sources }),
+      config,
+      engine,
+    });
     if (command === 'info') {
       const info = values.metadata ? app.getMetadata() : app.getInfo();
       stdout.write(values.json ? `${JSON.stringify(info)}\n` : jsYaml.dump(info));

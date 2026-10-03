@@ -1,0 +1,7 @@
+app-files: [application.yaml]
+pre-files:
+  - file: layers/pre.yaml
+post-files:
+  - file: .results/optional-missing.yaml
+    optional: true
+  - file: .results/post.yaml
