@@ -67,6 +67,9 @@ import { app } from "./app.ts";
 assert.equal((await app.exec("web", ["printf", "%s", "a b;$HOME"])).stdout, "a b;$HOME");
 '
 
+# should execute a declarative SDK command through the existing adapter
+bun commands.ts
+
 # should return standard output and standard error separately
 bun -e '
 import assert from "node:assert/strict";

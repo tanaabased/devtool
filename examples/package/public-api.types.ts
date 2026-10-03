@@ -1,5 +1,6 @@
 import {
   App,
+  runCli,
   discoverApp,
   Config,
   configSchemas,
@@ -13,6 +14,8 @@ import type {
   ExecResult,
   PersistedState,
   ProductOptions,
+  CommandDefinition,
+  CommandRegistration,
 } from '@tanaab/devtool';
 
 /** Compile-only consumer: importing the package must expose useful contracts, not implicit any. */
@@ -88,4 +91,41 @@ export function consumeApp(root: string, input: AppConfig) {
   // @ts-expect-error discovery is not a product setting
   createProductConfig({ appFiles: ['application'] });
   return { app, fromConfig, fromFiles, found };
+}
+
+/** Definitions remain serializable; implementations are supplied separately. */
+export function consumeCommands() {
+  const definition: CommandDefinition = {
+    name: 'example',
+    help: 'Example',
+    availability: 'both',
+    initialization: 'none',
+    execution: { kind: 'handler', id: 'example' },
+  };
+  const registration: CommandRegistration = {
+    definition,
+    handler: ({ cwd, debug }) => {
+      debug('example invoked');
+      return { cwd };
+    },
+    render: (result, { stdout }) => {
+      stdout.write(JSON.stringify(result));
+    },
+  };
+  const declarative: CommandDefinition = {
+    name: 'hello',
+    help: 'Print hello',
+    availability: 'app',
+    initialization: 'app',
+    execution: { kind: 'container-exec', service: 'web', argv: ['printf', 'hello'] },
+  };
+  // @ts-expect-error functions do not belong in descriptors
+  const invalid: CommandDefinition = { ...definition, execution: () => {} };
+  return {
+    invalid,
+    result: runCli(['example', '--json'], {
+      commands: [registration, { definition: declarative }],
+      debugNamespaces: '',
+    }),
+  };
 }

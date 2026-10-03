@@ -1,6 +1,27 @@
 import Debug from 'debug';
 import type { Debugger as BaseDebugger } from 'debug';
 
+export interface DebugOptions {
+  /** Captured namespace filter; an empty string disables this logger and its children. */
+  namespaces?: string;
+  log?: BaseDebugger['log'];
+}
+
+const matches = (namespace: string, filter: string) => {
+  const patterns = filter.split(/[\s,]+/).filter(Boolean);
+  const match = (pattern: string) =>
+    new RegExp(
+      `^${pattern
+        .split('*')
+        .map((part) => part.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
+        .join('.*')}$`,
+    ).test(namespace);
+  return (
+    !patterns.some((pattern) => pattern.startsWith('-') && match(pattern.slice(1))) &&
+    patterns.some((pattern) => !pattern.startsWith('-') && match(pattern))
+  );
+};
+
 export interface Debugger extends BaseDebugger {
   extend(namespace: string, delimiter?: string): Debugger;
   /** Remove namespace segments; zero leaves the namespace intact. */
@@ -10,10 +31,21 @@ export interface Debugger extends BaseDebugger {
 }
 
 /** A debug-compatible logger with reversible namespace helpers. No global configuration changes. */
-export default function createDebug(namespace: string): Debugger {
+export default function createDebug(namespace: string, options: DebugOptions = {}): Debugger {
   const debug = Debug(namespace) as Debugger;
+  if (options.namespaces !== undefined) debug.enabled = matches(namespace, options.namespaces);
+  if (options.log) {
+    const log = options.log;
+    debug.log = (...args) => {
+      try {
+        log(...args);
+      } catch {
+        // A diagnostic sink must not turn a committed config write into a reported failure.
+      }
+    };
+  }
   const child = (name: string) => {
-    const next = createDebug(name);
+    const next = createDebug(name, options);
     next.log = debug.log;
     return next;
   };

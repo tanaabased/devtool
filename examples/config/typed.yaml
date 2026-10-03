@@ -1,0 +1,9 @@
+values:
+  boolean: false
+  zero: 0
+  nullable: null
+  empty: ''
+  array: [false, 0, null, '']
+  empty-array: []
+  empty-object: {}
+  text: 'false'

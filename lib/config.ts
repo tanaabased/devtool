@@ -17,6 +17,7 @@ import type {
   SourceInfo,
 } from '../components/config.ts';
 import clone from '../utils/clone-config.ts';
+import createDebug, { type Debugger } from './debug.ts';
 import editConfigDocument from '../utils/edit-config-document.ts';
 import mergeConfig, { type Provenance } from '../utils/merge-config.ts';
 import normalize from '../utils/normalize-config.ts';
@@ -70,13 +71,21 @@ export default class Config<T extends object = Record<string, unknown>> {
   #snapshot?: ConfigSnapshot<T>;
   #provenance: Provenance = new Map();
   readonly root: string;
+  private debug: Debugger;
 
   constructor({
     sources = [],
     schema = {},
     root = '.',
-  }: { sources?: readonly ConfigSource[]; schema?: ConfigSchema; root?: string } = {}) {
+    debug = createDebug('devtool:config'),
+  }: {
+    sources?: readonly ConfigSource[];
+    schema?: ConfigSchema;
+    root?: string;
+    debug?: Debugger;
+  } = {}) {
     this.root = path.resolve(root);
+    this.debug = debug;
     // Schema functions are deliberately retained; all mutable schema containers are copied.
     this.#schema = clone(schema);
     for (const source of sources) this.addSource(source);
@@ -85,10 +94,10 @@ export default class Config<T extends object = Record<string, unknown>> {
   /** Raw objects remain a permanent convenience; Config inputs retain loaded source context. */
   static from<T extends object = Record<string, unknown>>(
     input: Config<T> | object,
-    options: { schema?: ConfigSchema; root?: string } = {},
+    options: { schema?: ConfigSchema; root?: string; debug?: Debugger } = {},
   ): Config<T> {
     if (input instanceof Config) {
-      const copy = input.fork();
+      const copy = input.fork({ debug: options.debug });
       if (options.root && path.resolve(options.root) !== copy.root)
         throw new Error('A Config input retains its explicit root');
       if (options.schema) {
@@ -188,8 +197,8 @@ export default class Config<T extends object = Record<string, unknown>> {
     this.#invalidate();
     return this;
   }
-  fork(): Config<T> {
-    const result = new Config<T>({ root: this.root, schema: this.#schema });
+  fork({ debug = this.debug }: { debug?: Debugger } = {}): Config<T> {
+    const result = new Config<T>({ root: this.root, schema: this.#schema, debug });
     result.#stores = this.#stores.map((store) => ({
       ...store,
       source: clone(store.source),
@@ -312,10 +321,15 @@ export default class Config<T extends object = Record<string, unknown>> {
   /** Loads/normalizes/validates once per revision. No persisted cache or host writes. */
   compile(): ConfigSnapshot<T> {
     if (this.#snapshot) return this.#snapshot;
+    this.debug(
+      'compile sources in ascending precedence: %s',
+      this.#stores.map(({ source }) => source.id).join(', '),
+    );
     let values: Record<string, unknown> = {};
     const provenance: Provenance = new Map();
     for (const store of this.#stores) {
       try {
+        this.debug('load source %s', store.source.id);
         let input: unknown = this.#load(store);
         let importedFrom: string | undefined;
         for (const key of store.source.select ?? []) {
@@ -349,6 +363,7 @@ export default class Config<T extends object = Record<string, unknown>> {
           provenance,
         );
       } catch (error) {
+        this.debug('source rejected: %s', store.source.id);
         throw new Error(
           `${store.source.id}${store.source.kind === 'file' ? ` (${store.source.file})` : ''}: ${String(error instanceof Error ? error.message : error)}`,
           { cause: error },
@@ -358,12 +373,14 @@ export default class Config<T extends object = Record<string, unknown>> {
     try {
       validate(values, this.#schema);
     } catch (error) {
+      this.debug('validation failed');
       throw new Error(
         `${String(error instanceof Error ? error.message : error)} [sources: ${this.#stores.map((store) => store.source.id).join(', ')}]`,
         { cause: error },
       );
     }
     this.#provenance = provenance;
+    this.debug('validation succeeded');
     this.#snapshot = freeze({
       revision: this.#revision,
       values: values as ConfigReadonly<T>,
@@ -421,6 +438,13 @@ export default class Config<T extends object = Record<string, unknown>> {
     if (source.kind !== 'file' || !source.writable || this.#format(source) === 'javascript')
       throw new Error(`${id}: select an explicitly writable JSON/YAML source`);
     if (!edits.length) throw new Error(`${id}: at least one edit is required`);
+    this.debug(
+      'write target %s; keys %s; force=%s create=%s',
+      id,
+      edits.map(({ path }) => segments(path).join('.')).join(', '),
+      force,
+      create,
+    );
     try {
       const candidate = this.fork();
       const store = candidate.#stores[index]!;
@@ -466,8 +490,10 @@ export default class Config<T extends object = Record<string, unknown>> {
       this.#revision = candidate.#revision;
       this.#snapshot = candidate.#snapshot;
       this.#provenance = candidate.#provenance;
+      this.debug('write succeeded: %s', id);
       return { source: id, file: source.file, revision: this.#revision };
     } catch (error) {
+      this.debug('write failed: %s', id);
       throw new Error(
         `${id} (${source.file}): ${error instanceof Error ? error.message : String(error)}`,
         { cause: error },

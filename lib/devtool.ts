@@ -49,3 +49,13 @@ export type {
   EnvironmentSource,
   ConfigTemplate,
 } from '../components/config.ts';
+
+export type {
+  CommandDefinition,
+  CommandOption,
+  CommandContext,
+  CommandConfigContext,
+  CommandRegistration,
+  CommandHandler,
+  CommandRenderer,
+} from '../components/command.ts';
