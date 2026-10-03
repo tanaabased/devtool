@@ -1,7 +1,7 @@
 # Execute commands
 
-Pass arguments unchanged, capture output and handle failures. Container scenarios
-run in disposable CI. Timing measurements belong to the manual timing workflow.
+Pass arguments unchanged, preserve working directories through symlinked mounts,
+capture output and handle failures. Container scenarios run in disposable CI.
 
 ## Setup
 
@@ -10,6 +10,7 @@ run in disposable CI. Timing measurements belong to the manual timing workflow.
 rm -rf ../.tmp/install-cache
 bun install --cwd .. --frozen-lockfile --ignore-scripts --force --cache-dir .tmp/install-cache
 mkdir -p .results
+ln -sfn "$PWD" .results/root
 ```
 
 ## Testing CLI
@@ -17,6 +18,10 @@ mkdir -p .results
 ```sh
 # should start the service
 devtool start
+
+# should map the current directory through a symlinked app mount
+test "$(devtool exec web -- pwd)" = /app
+(cd .results && test "$(devtool exec web -- pwd)" = /app/.results)
 
 # should preserve spaces and shell metacharacters
 test "$(devtool exec web -- printf '%s' 'a b;$HOME')" = 'a b;$HOME'
@@ -43,6 +48,17 @@ devtool destroy
 ```sh
 # should start the service
 bun -e 'import { app } from "./app.ts"; await app.start()'
+
+# should map the current directory with an absolute app file through a symlink
+bun -e '
+import assert from "node:assert/strict";
+import path from "node:path";
+import { App } from "@tanaab/devtool";
+const root = process.cwd();
+const app = new App({ root, data: [path.join(root, ".results/root/.devtool.yml")] });
+assert.equal((await app.exec("web", ["pwd"])).stdout.trim(), "/app");
+assert.equal((await app.exec("web", ["pwd"], { cwd: path.join(root, ".results") })).stdout.trim(), "/app/.results");
+'
 
 # should preserve spaces and shell metacharacters
 bun -e '
